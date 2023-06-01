@@ -1,2 +1,2 @@
 # korol.uk
-~ a site ✨
+~ a beautiful site, harboring some of my projects and achievements ✨
