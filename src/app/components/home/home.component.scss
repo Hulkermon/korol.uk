@@ -3,9 +3,15 @@
   width: $shadow-size;
   height: $shadow-size;
   border-radius: $shadow-size;
-  background: black;
+  background: #00d9ff5b;
   position: absolute;
   display: none;
+  z-index: 1;
+}
+
+.cursor-background,
+.card-text {
+  pointer-events: none;
 }
 
 .introduction-container {
