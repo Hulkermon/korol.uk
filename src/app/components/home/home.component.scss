@@ -2,74 +2,72 @@
   background: linear-gradient(180deg, #ffc0fa 25%, #ffffff 100%);
   height: 60vh;
   padding: 25vh 15vw 0;
+}
 
-  .hello-text h1 {
-    font-family: "Book Antiqua";
-    $name-size: 75px;
-    font-size: $name-size;
-    line-height: $name-size;
-    color: #8d4487;
-    margin-bottom: 120px;
-  }
+.hello-text h1 {
+  font-family: "Book Antiqua";
+  $name-size: 75px;
+  font-size: $name-size;
+  line-height: $name-size;
+  color: #8d4487;
+  margin-bottom: 120px;
+}
 
-  .animated-text-color {
-    color: transparent;
-    background: linear-gradient(90deg, #d14242 0%, #8d4487 50%, #35bbc5 100%);
-    background-clip: text;
-    background-size: 1000% 100%;
+.animated-text-color {
+  color: transparent;
+  background: linear-gradient(90deg, #d14242 0%, #8d4487 50%, #35bbc5 100%);
+  background-clip: text;
+  background-size: 1000% 100%;
+  background-position: 50%;
+  animation: fading-text-color 16s ease-in-out infinite 2s /*<- delay*/;
+}
+
+@keyframes fading-text-color {
+  0%,
+  100% {
     background-position: 50%;
-    animation: fading-text-color 16s ease-in-out infinite 2s /*<- delay*/;
   }
 
-  @keyframes fading-text-color {
-    0%,
-    100% {
-      background-position: 50%;
-    }
-
-    25% {
-      background-position: 100%;
-    }
-    75% {
-      background-position: 0%;
-    }
+  25% {
+    background-position: 100%;
   }
-
-  .intro-text {
-    margin-bottom: 100px;
-    h2 {
-      $intro-size: 45px;
-      font-size: $intro-size;
-      line-height: $intro-size;
-      font-weight: lighter;
-      text-align: right;
-    }
+  75% {
+    background-position: 0%;
   }
+}
 
-  .flippy-card {
-    background: #e1edff;
-    padding: 50px;
-    border: 2px solid #a899e0;
-    border-radius: 20px;
-    width: 300px;
-    height: 150px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: auto;
-    transition: transform 200ms ease-in-out;
+.intro-text {
+  margin-bottom: 100px;
+  h2 {
+    $intro-size: 45px;
+    font-size: $intro-size;
+    line-height: $intro-size;
+    font-weight: lighter;
+    text-align: right;
+  }
+}
 
-    &:hover {
-      // box-shadow: #ffc0cb67 0 0 20px 20px;
-      transform: scale(105%);
-      transform: translate(10px, 10px);
-      cursor: pointer;
-    }
+.flippy-card {
+  background: #e1edff;
+  padding: 50px;
+  border: 2px solid #a899e0;
+  border-radius: 20px;
+  width: 300px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-size: 45px;
+  font-weight: lighter;
+  cursor: pointer;
+  transition: transform 200ms ease-in-out;
 
-    .card-text {
-      font-size: 45px;
-      font-weight: lighter;
-    }
+  &:hover {
+    // box-shadow: #ffc0cb67 0 0 20px 20px;
+    transform: scale(105%);
+    transform: translate(10px, 10px);
+    cursor: pointer;
   }
 }
 
