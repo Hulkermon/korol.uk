@@ -1,14 +1,25 @@
+.cursor-background {
+  $shadow-size: 100px;
+  width: $shadow-size;
+  height: $shadow-size;
+  border-radius: $shadow-size;
+  background: black;
+  position: absolute;
+  display: none;
+}
+
 .introduction-container {
   background: linear-gradient(180deg, #ffc0fa 25%, #ffffff 100%);
   height: 60vh;
+  padding: 25vh 15vw 0;
 
-  .introduction-text {
-    font-family: 'Book Antiqua';
-    $intro-size: 75px;
-    font-size: $intro-size;
-    line-height: $intro-size;
+  .hello-text h1 {
+    font-family: "Book Antiqua";
+    $name-size: 75px;
+    font-size: $name-size;
+    line-height: $name-size;
     color: #8d4487;
-    padding: 20vh 0 0 15vw;
+    margin-bottom: 120px;
   }
 
   .animated-text-color {
@@ -31,6 +42,42 @@
     }
     75% {
       background-position: 0%;
+    }
+  }
+
+  .intro-text {
+    margin-bottom: 100px;
+    h2 {
+      $intro-size: 45px;
+      font-size: $intro-size;
+      line-height: $intro-size;
+      font-weight: lighter;
+      text-align: right;
+    }
+  }
+
+  .flippy-card {
+    background: #ffc0cb;
+    padding: 50px;
+    border-radius: 20px;
+    width: 300px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    transition: transform 200ms ease-in-out;
+
+    &:hover {
+      // box-shadow: #ffc0cb67 0 0 20px 20px;
+      transform: scale(105%);
+      transform: translate(10px, 10px);
+      cursor: pointer;
+    }
+
+    .card-text {
+      font-size: 45px;
+      font-weight: lighter;
     }
   }
 }
