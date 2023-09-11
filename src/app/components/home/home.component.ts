@@ -16,11 +16,10 @@ export class HomeComponent implements AfterViewInit {
   }
 
   private updateShadowPos(posX: number, posY: number) {
-    const backgroundSize = 100;
     if (this.doCssTrickery) {
       this.cursorBgElRef!.nativeElement.style.display = 'inherit';
-      this.cursorBgElRef!.nativeElement.style.left = `${posX - backgroundSize / 2}px`;
-      this.cursorBgElRef!.nativeElement.style.top = `${posY - backgroundSize / 2}px`;
+      this.cursorBgElRef!.nativeElement.style.left = `${posX}px`;
+      this.cursorBgElRef!.nativeElement.style.top = `${posY}px`;
     }
     else {
       this.cursorBgElRef!.nativeElement.style.display = 'none';
