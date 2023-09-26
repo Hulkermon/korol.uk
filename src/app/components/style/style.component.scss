@@ -1,7 +1,6 @@
 * {
   // Variables
   --bg: #fff;
-  --padding: 20px;
 }
 
 .header {
@@ -11,11 +10,9 @@
 
 main {
   height: 100vh;
-
+  padding: 0 20px;
   background-color: var(--bg);
 }
-
-
 
 .elements {
   display: flex;
@@ -24,11 +21,11 @@ main {
 }
 
 .group {
-  width: clamp(40ch, 20vw, 90vw);
+  width: clamp(50ch, 20vw, 90vw);
   // flex-grow: 1;
-  
+
   margin: 40px clamp(2px, 0.25vw, 5px) 0;
-  padding: 10px;
+  padding: 20px;
 
   border: #999999 1px solid;
   border-radius: 10px;
@@ -37,13 +34,28 @@ main {
     display: flex;
     justify-content: center;
 
-    --title-size: 1.5em;
-    font-size: var(--title-size);
-    transform: translateY(calc(var(--title-size) * -2 / 3));
+    font-size: 1.5em;
+    transform: translateY(-35px);
 
     .title {
       padding: 0 clamp(1vw, 50px, 15vw);
       background: var(--bg);
     }
+  }
+}
+
+.headings {
+  --subheader-spacing: 2px;
+  --text-spacing: 15px;
+  h1 {
+    margin-bottom: var(--subheader-spacing);
+  }
+  h2, h3 {
+    margin-top: var(--subheader-spacing);
+    margin-bottom: var(--text-spacing);
+  }
+  p {
+    margin-top: var(--text-spacing);
+    text-align: justify;
   }
 }
