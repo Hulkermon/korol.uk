@@ -9,28 +9,30 @@ export class HomeComponent implements AfterViewInit {
   // doCssTrickery = false;
   hoveringCard = false;
 
-  @ViewChild('cursorBackground') cursorBgElRef?: ElementRef;
-  @ViewChild('flippyCard') cardElRef?: ElementRef;
+  // @ViewChild('cursorBackground') cursorBgElRef?: ElementRef;
+  // @ViewChild('flippyCard') cardElRef?: ElementRef;
 
   @HostListener('mousemove', ['$event']) onMouseMove(event: MouseEvent) {
     // this.updateShadowPos(event.clientX, event.clientY);
     this.updateCardShadow(event.clientX, event.clientY);
   }
 
+  /** Follows the mouse cursor.  
+   * Probably gonna get rid of this soon as it was more of a proof of concept. */
   private updateCardShadow(mousePosX: number, mousePosY: number) {
-    if (this.hoveringCard) {
-      const cardEl = (this.cardElRef!.nativeElement as Element);
-      const cardBounds = cardEl.getBoundingClientRect();
-      const cardPosX = (cardBounds.right + cardBounds.left) / 2;
-      const cardPosY = (cardBounds.bottom + cardBounds.top) / 2;
-      const shadowPosX = (cardPosX - mousePosX) / 5;
-      const shadowPosY = (cardPosY - mousePosY) / 5;
-      this.cardElRef!.nativeElement.style.boxShadow = `#ffc0cb67 ${shadowPosX}px ${shadowPosY}px 20px 20px`;
-      this.cardElRef!.nativeElement.style.transition = 'box-shadow 0ms';
-    } else {
-      this.cardElRef!.nativeElement.style.boxShadow = 'none';
-      this.cardElRef!.nativeElement.style.transition = 'box-shadow 350ms ease';
-    }
+    // if (this.hoveringCard) {
+    //   const cardEl = (this.cardElRef!.nativeElement as Element);
+    //   const cardBounds = cardEl.getBoundingClientRect();
+    //   const cardPosX = (cardBounds.right + cardBounds.left) / 2;
+    //   const cardPosY = (cardBounds.bottom + cardBounds.top) / 2;
+    //   const shadowPosX = (cardPosX - mousePosX) / 5;
+    //   const shadowPosY = (cardPosY - mousePosY) / 5;
+    //   this.cardElRef!.nativeElement.style.boxShadow = `#ffc0cb67 ${shadowPosX}px ${shadowPosY}px 20px 20px`;
+    //   this.cardElRef!.nativeElement.style.transition = 'box-shadow 0ms';
+    // } else {
+    //   this.cardElRef!.nativeElement.style.boxShadow = 'none';
+    //   this.cardElRef!.nativeElement.style.transition = 'box-shadow 350ms ease';
+    // }
   }
 
   // private updateShadowPos(posX: number, posY: number) {
@@ -45,7 +47,7 @@ export class HomeComponent implements AfterViewInit {
   // }
 
   @HostListener('mouseover', ['$event.target']) onHover(targetElement: any) {
-    this.hoveringCard = targetElement == this.cardElRef!.nativeElement;
+    // this.hoveringCard = targetElement == this.cardElRef!.nativeElement;
   }
 
   // @HostListener('mouseout', ['$event.target']) offHover(hoveredElement: any) {
@@ -54,8 +56,8 @@ export class HomeComponent implements AfterViewInit {
   // }
 
   ngAfterViewInit(): void {
-    if (this.cardElRef === undefined) {
-      throw new Error("card element (#flilppyCard) not found.");
-    }
+    // if (this.cardElRef === undefined) {
+    //   throw new Error("card element (#flilppyCard) not found.");
+    // }
   }
 }
