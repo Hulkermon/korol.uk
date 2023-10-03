@@ -8,9 +8,6 @@ body {
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
-  ::selection {
-    background-color: #c0c0c0;
-  }
 }
 
 h1 {
@@ -30,13 +27,4 @@ h3 {
 
 p {
   font-weight: 300;
-}
-
-a {
-  text-decoration: line-through 1.2rem;
-  text-decoration-color: #0ed4393b;
-  color: #000;
-  &:visited {
-    text-decoration-color: #9331ee3b;
-  }
 }
