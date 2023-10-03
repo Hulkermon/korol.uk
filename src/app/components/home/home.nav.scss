@@ -1,0 +1,27 @@
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+
+  display: flex;
+	justify-content: center;
+	column-gap: 75px;
+	@media (max-width: 767.98px){
+		column-gap: 20px;
+	}
+}
+
+.nav-link {
+	padding: 18px;
+	
+	color: #ffffff;
+	font-size: 20px;
+	text-underline-offset: 10px;
+
+	transition: background 200ms;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.15);
+	}
+}
