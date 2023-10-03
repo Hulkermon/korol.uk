@@ -5,23 +5,25 @@
   width: 100%;
 
   display: flex;
-	justify-content: center;
-	column-gap: 75px;
-	@media (max-width: 767.98px){
-		column-gap: 20px;
-	}
+  justify-content: center;
+  column-gap: 75px;
+  @media (max-width: 767.98px) {
+    column-gap: 20px;
+  }
 }
 
 .nav-link {
-	padding: 18px;
-	
-	color: #ffffff;
-	font-size: 20px;
-	text-underline-offset: 10px;
+  padding: 18px;
 
-	transition: background 200ms;
+  color: #ffffff;
+  font-size: 20px;
+  text-underline-offset: 10px;
 
-	&:hover {
-		background: rgba(0, 0, 0, 0.15);
-	}
+  &:hover {
+    --shadow-offset: -0.2;
+    --shadow-x: calc(var(--mouse-x-from-nav) * var(--shadow-offset) * 1px);
+    --shadow-y: calc(var(--mouse-y-from-nav) * var(--shadow-offset) * 1px);
+    --shadow-blur: calc(var(--shadow-x) * 2);
+    text-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) #000;
+  }
 }
