@@ -11,13 +11,17 @@ const routes: Routes = [
   {
     path: '',
     component: HomeComponent,
-    title: 'Koroluk',
+    title: 'Koroluk'
   },
   {
     path: 'style',
     component: StyleComponent,
-    title: 'Koroluk - Style',
+    title: 'Koroluk - Style'
   },
+  {
+    path: '**',
+    redirectTo: ''
+  }
 ];
 
 @NgModule({
