@@ -1,5 +1,6 @@
 # [korol.uk](https://korol.uk/)
 ~ a beautiful site, harboring some of my projects and achievements ✨
+> edit: or I guess just a boring WIP page...
 
 ## Requirements
 - Node.js v18+
