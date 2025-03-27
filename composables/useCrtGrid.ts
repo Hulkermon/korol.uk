@@ -37,6 +37,13 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Add a new state to track if we're waiting for initial keypress
   const waitingForKeyPress = ref(true);
 
+  // Extracted logic for handling initial keypress
+  const handleInitialKeyPress = () => {
+    waitingForKeyPress.value = false;
+    resetGrid();
+    cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+  };
+
   // Initialize the grid with spaces
   const initializeGrid = () => {
     const newGrid: string[][] = [];
@@ -77,9 +84,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   const writeChar = (char: string) => {
     // First keypress should just clear the screen if we're in waiting mode
     if (waitingForKeyPress.value) {
-      waitingForKeyPress.value = false;
-      resetGrid();
-      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      handleInitialKeyPress();
       return;
     }
 
@@ -104,9 +109,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   const deleteChar = () => {
     // Ignore backspace when in waiting mode
     if (waitingForKeyPress.value) {
-      waitingForKeyPress.value = false;
-      resetGrid();
-      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      handleInitialKeyPress();
       return;
     }
 
@@ -124,9 +127,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   const newLine = () => {
     // Treat Enter as any key when in waiting mode
     if (waitingForKeyPress.value) {
-      waitingForKeyPress.value = false;
-      resetGrid();
-      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      handleInitialKeyPress();
       return;
     }
 
@@ -148,9 +149,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   const moveCursor = (direction: 'up' | 'down' | 'left' | 'right') => {
     // Treat arrow keys as any key when in waiting mode
     if (waitingForKeyPress.value) {
-      waitingForKeyPress.value = false;
-      resetGrid();
-      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      handleInitialKeyPress();
       return;
     }
 
