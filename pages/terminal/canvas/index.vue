@@ -1,6 +1,6 @@
 <template>
   <div
-    class="crt-container bg-[#0a0a0a] text-[#33ff00] h-screen flex justify-center items-center">
+    class="crt-container">
     <canvas ref="crtCanvas" class="crt-screen" />
   </div>
 </template>
@@ -24,7 +24,6 @@
     newLine,
     moveCursor,
     loadWelcomeScreen,
-    waitingForKeyPress,
   } = useCrtGrid(defaultGridConfig);
 
   // Initialize the renderer
@@ -64,11 +63,7 @@
 
 <style scoped>
   .crt-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    position: relative;
+    @apply flex h-screen justify-center items-center bg-[#0a0a0a] text-[#33ff00];
   }
 
   .crt-screen {
@@ -77,37 +72,5 @@
       inset 0 0 30px rgba(0, 0, 0, 0.8);
     border-radius: 10px;
     position: relative;
-  }
-
-  .crt-screen::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      rgba(18, 16, 16, 0) 50%,
-      rgba(0, 0, 0, 0.25) 50%
-    );
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .crt-screen::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(
-      transparent 0px,
-      rgba(0, 0, 0, 0.05) 1px,
-      transparent 2px
-    );
-    pointer-events: none;
-    z-index: 1;
   }
 </style>

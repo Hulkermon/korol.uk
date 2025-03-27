@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue';
-import { logo, systemInfo } from "~/utils/terminalMessages";
+import { logo, systemInfo } from '~/utils/terminalMessages';
 
 export interface GridConfig {
   cols: number;
@@ -10,7 +10,6 @@ export interface GridConfig {
   glowStrength?: number;
   backgroundColor?: string;
   scanlineOpacity?: number;
-  refreshRate?: number;
 }
 
 export const defaultGridConfig: GridConfig = {
@@ -19,10 +18,9 @@ export const defaultGridConfig: GridConfig = {
   cellWidth: 12,
   cellHeight: 20,
   charColor: '#33ff00', // Classic green terminal color
-  glowStrength: 3,
-  backgroundColor: '#0a0a0a',
-  scanlineOpacity: 0.15,
-  refreshRate: 60,
+  glowStrength: 1,
+  backgroundColor: 'black',
+  scanlineOpacity: 0.1,
 };
 
 export interface CursorPosition {
@@ -172,7 +170,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Generate 80s style welcome screen
   const generateWelcomeScreen = () => {
     const demoGrid = initializeGrid();
-    
+
     // Add logo at top
     for (let i = 0; i < logo.length && i < config.rows; i++) {
       writeTextCentered(logo[i], i + 1);
@@ -182,9 +180,9 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
     for (let i = 0; i < systemInfo.length && i + 18 < config.rows; i++) {
       writeTextCentered(systemInfo[i], i + 18);
     }
-    
+
     return demoGrid;
-    
+
     function writeTextCentered(text: string, y: number) {
       if (y < 0 || y >= config.rows) return;
       const startX = Math.floor((config.cols - text.length) / 2);
@@ -194,7 +192,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
         }
       }
     }
-    
+
     function writeTextAt(text: string, x: number, y: number) {
       if (y < 0 || y >= config.rows) return;
       for (let i = 0; i < text.length; i++) {
