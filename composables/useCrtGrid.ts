@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue';
+import { logo, systemInfo } from "~/utils/terminalMessages";
 
 export interface GridConfig {
   cols: number;
@@ -13,8 +14,8 @@ export interface GridConfig {
 }
 
 export const defaultGridConfig: GridConfig = {
-  cols: 80,
-  rows: 24,
+  cols: 128,
+  rows: 48,
   cellWidth: 12,
   cellHeight: 20,
   charColor: '#33ff00', // Classic green terminal color
@@ -172,54 +173,15 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Generate 80s style welcome screen
   const generateWelcomeScreen = () => {
     const demoGrid = initializeGrid();
-
-    // Format date in old-school format: DD-MMM-YYYY
-    const now = new Date();
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    const dateString = `${String(now.getDate()).padStart(2, '0')}-${months[now.getMonth()]}-${now.getFullYear()}`;
-    const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    
-    // ASCII art logo
-    const logo = [
-      '  ██████╗██████╗ ████████╗    ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗     ',
-      ' ██╔════╝██╔══██╗╚══██╔══╝    ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║████╗  ██║██╔══██╗██║     ',
-      ' ██║     ██████╔╝   ██║          ██║   █████╗  ██████╔╝██╔████╔██║██║██╔██╗ ██║███████║██║     ',
-      ' ██║     ██╔══██╗   ██║          ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║     ',
-      ' ╚██████╗██║  ██║   ██║          ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗',
-      '  ╚═════╝╚═╝  ╚═╝   ╚═╝          ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝',
-    ];
     
     // Add logo at top
     for (let i = 0; i < logo.length && i < config.rows; i++) {
       writeTextCentered(logo[i], i + 1);
     }
 
-    // System information
-    const systemInfo = [
-      '═════════════════════════════════ SYSTEM INFORMATION ════════════════════════════════',
-      '',
-      `  BIOS VERSION.....: KOR-80 STANDARD BIOS v2.0`,
-      `  PROCESSOR........: Z80A CPU @ 4.77 MHz`,
-      `  MEMORY...........: 640K CONVENTIONAL, 384K EXTENDED`,
-      `  GRAPHICS.........: CGA ADAPTER (320x200, 4 COLORS)`,
-      `  STORAGE..........: 2 x 5.25" FLOPPY DRIVES (360KB)`,
-      `  OPERATING SYSTEM.: KORT-DOS v3.25`,
-      '',
-      `  DATE.............: ${dateString}`,
-      `  TIME.............: ${timeString}`,
-      '',
-      '═════════════════════════════════════════════════════════════════════════════════════',
-      '',
-      '  SYSTEM INITIALIZATION COMPLETE',
-      '  ALL DEVICES FUNCTIONING WITHIN NORMAL PARAMETERS',
-      '',
-      '                         PRESS ANY KEY TO CONTINUE...',
-      '',
-    ];
-
     // Add system info after logo
-    for (let i = 0; i < systemInfo.length && i + 8 < config.rows; i++) {
-      writeTextAt(systemInfo[i], 0, i + 8);
+    for (let i = 0; i < systemInfo.length && i + 18 < config.rows; i++) {
+      writeTextCentered(systemInfo[i], i + 18);
     }
     
     return demoGrid;
