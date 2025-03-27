@@ -8,7 +8,7 @@
   import { ref, onMounted, onUnmounted } from 'vue';
   // prettier-ignore
   import { useCrtGrid, type GridConfig } from '~/composables/terminal/useCrtGrid';
-  import { useCrtRenderer } from '~/composables/charts/useCrtRenderer';
+  import { useCrtRenderer } from '~/composables/terminal/useCrtRenderer';
   import { useCrtKeyboard } from '~/composables/terminal/useCrtKeyboard';
 
   // Canvas reference

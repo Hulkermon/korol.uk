@@ -7,12 +7,12 @@
         <div class="flex flex-col lg:flex-row gap-6">
           <!-- Table on the left side -->
           <div class="lg:w-1/2">
-            <DataTable :data="sampleData" />
+            <Charts-DataTable :data="sampleData" />
           </div>
 
           <!-- Chart on the right side -->
           <div class="lg:w-1/2 relative">
-            <TimeSeriesChart :data="sampleData" />
+            <Charts-TimeSeriesChart :data="sampleData" />
           </div>
         </div>
       </div>
@@ -22,7 +22,7 @@
 
 <script lang="ts" setup>
   import { onMounted } from 'vue';
-  import { useSampleData } from '~/composables/terminal/useSampleData';
+  import { useSampleData } from '~/composables/charts/useSampleData';
 
   const { sampleData, generateData } = useSampleData();
 

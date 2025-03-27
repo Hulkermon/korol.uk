@@ -1,5 +1,5 @@
 import { onMounted, onUnmounted } from 'vue';
-import type { CursorPosition } from './useCrtGrid';
+import type { CursorPosition } from '../terminal/useCursor';
 
 interface KeyboardHandlers {
   onCharInput?: (char: string) => void;

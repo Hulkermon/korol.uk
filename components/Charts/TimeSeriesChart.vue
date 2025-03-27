@@ -6,7 +6,7 @@
 
 <script lang="ts" setup>
   import { onMounted, watch } from 'vue';
-  import type { SampleData } from '~/composables/terminal/useSampleData';
+  import type { SampleData } from '~/composables/charts/useSampleData';
   import { useChartJs } from '~/composables/charts/useChartJs';
 
   const props = defineProps<{

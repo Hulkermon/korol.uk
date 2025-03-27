@@ -1,6 +1,6 @@
 import { ref, onMounted, onBeforeUnmount, type Ref } from 'vue';
 import Chart from 'chart.js/auto';
-import type { SampleData } from '../terminal/useSampleData';
+import type { SampleData } from './useSampleData';
 
 export function useChartJs(sampleData: Ref<SampleData[]>) {
   const chartCanvas = ref<HTMLCanvasElement | null>(null);

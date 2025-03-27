@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { titleScreen } from '~/utils/terminalMessages';
+import { useCursor, type CursorPosition } from './useCursor';
 
 export interface GridConfig {
   cols: number;
@@ -12,24 +13,16 @@ export interface GridConfig {
   scanlineOpacity?: number;
 }
 
-export interface CursorPosition {
-  x: number;
-  y: number;
-}
-
 export function useCrtGrid(config: GridConfig) {
   // Terminal state
   const grid = ref<string[][]>([]);
-  const cursorPos = ref<CursorPosition>({ x: 0, y: 0 });
-  // // Add a new state to track if we're waiting for initial keypress
-  // const waitingForKeyPress = ref(true);
 
-  // // Extracted logic for handling initial keypress
-  // const handleInitialKeyPress = () => {
-  //   waitingForKeyPress.value = false;
-  //   resetGrid();
-  //   cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
-  // };
+  // Initialize cursor controls
+  const { cursorPos, moveCursor, newLine, resetCursor } = useCursor({
+    blinkIntervalMs: 500,
+    cols: config.cols,
+    rows: config.rows,
+  });
 
   // Initialize the grid with spaces
   const initializeGrid = () => {
@@ -69,12 +62,6 @@ export function useCrtGrid(config: GridConfig) {
 
   // Write a character at the cursor position and advance cursor
   const writeChar = (char: string) => {
-    // First keypress should just clear the screen if we're in waiting mode
-    // if (waitingForKeyPress.value) {
-    //   handleInitialKeyPress();
-    //   return;
-    // }
-
     if (char.length !== 1) return;
 
     grid.value[cursorPos.value.y][cursorPos.value.x] = char;
@@ -94,12 +81,6 @@ export function useCrtGrid(config: GridConfig) {
 
   // Delete a character at the current cursor position (backspace)
   const deleteChar = () => {
-    // Ignore backspace when in waiting mode
-    // if (waitingForKeyPress.value) {
-    //   handleInitialKeyPress();
-    //   return;
-    // }
-
     if (cursorPos.value.x > 0) {
       cursorPos.value.x--;
       grid.value[cursorPos.value.y][cursorPos.value.x] = ' ';
@@ -110,50 +91,10 @@ export function useCrtGrid(config: GridConfig) {
     }
   };
 
-  // Handle new line (Enter key)
-  const newLine = () => {
-    // Treat Enter as any key when in waiting mode
-    // if (waitingForKeyPress.value) {
-    //   handleInitialKeyPress();
-    //   return;
-    // }
-
-    cursorPos.value.x = 0;
-    if (cursorPos.value.y < config.rows - 1) {
-      cursorPos.value.y++;
-    } else {
-      scrollUp();
-    }
-  };
-
   // Scroll the grid up by one line
   const scrollUp = () => {
     grid.value.shift();
     grid.value.push(Array(config.cols).fill(' '));
-  };
-
-  // Move cursor in a specified direction
-  const moveCursor = (direction: 'up' | 'down' | 'left' | 'right') => {
-    // Treat arrow keys as any key when in waiting mode
-    // if (waitingForKeyPress.value) {
-    //   handleInitialKeyPress();
-    //   return;
-    // }
-
-    switch (direction) {
-      case 'up':
-        if (cursorPos.value.y > 0) cursorPos.value.y--;
-        break;
-      case 'down':
-        if (cursorPos.value.y < config.rows - 1) cursorPos.value.y++;
-        break;
-      case 'left':
-        if (cursorPos.value.x > 0) cursorPos.value.x--;
-        break;
-      case 'right':
-        if (cursorPos.value.x < config.cols - 1) cursorPos.value.x++;
-        break;
-    }
   };
 
   // Generate 80s style welcome screen
@@ -190,7 +131,6 @@ export function useCrtGrid(config: GridConfig) {
   // Load welcome screen
   const loadWelcomeScreen = () => {
     grid.value = generateWelcomeScreen();
-    // waitingForKeyPress.value = true;
   };
 
   // Generate demo content for the grid (keeping this for compatibility)
@@ -206,7 +146,7 @@ export function useCrtGrid(config: GridConfig) {
   // Reset the grid (clear all content)
   const resetGrid = () => {
     grid.value = initializeGrid();
-    cursorPos.value = { x: 0, y: 0 };
+    resetCursor();
   };
 
   return {
@@ -217,12 +157,11 @@ export function useCrtGrid(config: GridConfig) {
     writeTextCentered,
     writeChar,
     deleteChar,
-    newLine,
+    newLine: () => newLine(scrollUp),
     scrollUp,
     moveCursor,
     loadDemoContent,
     loadWelcomeScreen,
-    // waitingForKeyPress,
     resetGrid,
   };
 }
