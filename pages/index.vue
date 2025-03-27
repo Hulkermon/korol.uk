@@ -1,15 +1,12 @@
 <template>
-  <div class="website-container">
+  <div class="homepage-container">
     <!-- Early 2000s fancy header -->
     <div class="header">
       <div class="site-title">
         <h1 class="blink">KOROL.UK</h1>
-        <client-only>
-          <marquee scrollamount="5" direction="left"
-            >***** WELCOME TO MY HOMEPAGE ***** UNDER CONSTRUCTION
-            *****</marquee
-          >
-        </client-only>
+        <marquee scrollamount="5" direction="left">
+          ***** WELCOME TO MY HOMEPAGE ***** UNDER CONSTRUCTION *****
+        </marquee>
       </div>
       <div class="counter">Visitors: 12345</div>
     </div>
@@ -49,9 +46,82 @@
     </div>
   </div>
 </template>
+<style>
+  HTML,
+  BODY {
+    cursor: url('https://downloads.totallyfreecursors.com/cursor_files/hellokitty.cur'),
+      url('https://downloads.totallyfreecursors.com/thumbnails/kitty.gif'), auto;
+  }
+</style>
+
+<script lang="ts"></script>
+
+<script lang="ts" setup>
+  import {
+    fairyDustCursor,
+    snowflakeCursor,
+    ghostCursor,
+    bubbleCursor,
+    trailingCursor,
+    clockCursor,
+    characterCursor,
+    rainbowCursor,
+  } from 'cursor-effects';
+
+  let cursorEffectsContainer: HTMLElement;
+  const cursorsEffects = [
+    fairyDustCursor,
+    snowflakeCursor,
+    ghostCursor,
+    bubbleCursor,
+    trailingCursor,
+    clockCursor,
+    characterCursor,
+    rainbowCursor,
+  ];
+
+  // prettier-ignore
+  const randomCursorEffect = cursorsEffects[Math.floor(Math.random() * cursorsEffects.length)];
+
+  // prettier-ignore
+  onMounted(() => {
+    if (!document.querySelector('.cursor-effect-container')) {
+      document.body.appendChild(document.createElement('div')).className = 'cursor-effect-container';
+    }
+
+    cursorEffectsContainer = document.querySelector('.cursor-effect-container')!; // trust me bro
+    randomCursorEffect({
+      element: cursorEffectsContainer,
+      randomDelay: true,
+      particles: 69,
+      rate: 0.4 + Math.random() * 0.6,
+      characters: ['baddadan'.split(''), ['✧','✦','✧','✦','✧','✦','✧','✦','✧','✦','✧','✦']][Math.floor(Math.random() * 2)],
+      characterLifeSpanFunction: () => [75 + Math.random() * 50, 2000][Math.floor(Math.random() * 1.05)],
+      size: 2 + (Math.random() * 4) ** 3,
+    });
+  });
+
+  onUnmounted(() => {
+    if (cursorEffectsContainer) {
+      cursorEffectsContainer.remove();
+    }
+  });
+</script>
+
+<style>
+  .cursor-effect-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
+</style>
 
 <style scoped>
-  .website-container {
+  .homepage-container {
+    position: relative; /* Add position relative */
+    z-index: 1; /* Give it a positive z-index to place it above cursor container */
     max-width: 1000px;
     margin: 0 auto;
     font-family: 'Comic Sans MS', cursive, sans-serif;
