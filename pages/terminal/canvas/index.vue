@@ -1,18 +1,29 @@
 <template>
-  <div
-    class="crt-container">
+  <div class="crt-container">
     <canvas ref="crtCanvas" class="crt-screen" />
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted } from 'vue';
-  import { useCrtGrid, defaultGridConfig } from '~/composables/terminal/useCrtGrid';
+  // prettier-ignore
+  import { useCrtGrid, type GridConfig } from '~/composables/terminal/useCrtGrid';
   import { useCrtRenderer } from '~/composables/charts/useCrtRenderer';
   import { useCrtKeyboard } from '~/composables/terminal/useCrtKeyboard';
 
   // Canvas reference
   const crtCanvas = ref<HTMLCanvasElement | null>(null);
+
+  const gridConfig: GridConfig = {
+    cols: 128,
+    rows: 48,
+    cellWidth: 12,
+    cellHeight: 20,
+    charColor: '#33ff00',
+    glowStrength: 1,
+    backgroundColor: 'black',
+    scanlineOpacity: 0.1,
+  };
 
   // Initialize the CRT grid with default settings
   const {
@@ -24,7 +35,7 @@
     newLine,
     moveCursor,
     loadWelcomeScreen,
-  } = useCrtGrid(defaultGridConfig);
+  } = useCrtGrid(gridConfig);
 
   // Initialize the renderer
   const { startRendering, stopRendering, handleResize } = useCrtRenderer(
@@ -70,7 +81,7 @@
     image-rendering: pixelated;
     box-shadow: 0 0 10px rgba(51, 255, 0, 0.5), 0 0 20px rgba(51, 255, 0, 0.2),
       inset 0 0 30px rgba(0, 0, 0, 0.8);
-    border-radius: 10px;
+    border-radius: 16px;
     position: relative;
   }
 </style>

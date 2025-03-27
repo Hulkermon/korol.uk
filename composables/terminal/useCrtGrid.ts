@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue';
-import { logo, systemInfo } from '~/utils/terminalMessages';
+import { titleScreen } from '~/utils/terminalMessages';
 
 export interface GridConfig {
   cols: number;
@@ -12,35 +12,24 @@ export interface GridConfig {
   scanlineOpacity?: number;
 }
 
-export const defaultGridConfig: GridConfig = {
-  cols: 128,
-  rows: 48,
-  cellWidth: 12,
-  cellHeight: 20,
-  charColor: '#33ff00', // Classic green terminal color
-  glowStrength: 1,
-  backgroundColor: 'black',
-  scanlineOpacity: 0.1,
-};
-
 export interface CursorPosition {
   x: number;
   y: number;
 }
 
-export function useCrtGrid(config: GridConfig = defaultGridConfig) {
+export function useCrtGrid(config: GridConfig) {
   // Terminal state
   const grid = ref<string[][]>([]);
   const cursorPos = ref<CursorPosition>({ x: 0, y: 0 });
-  // Add a new state to track if we're waiting for initial keypress
-  const waitingForKeyPress = ref(true);
+  // // Add a new state to track if we're waiting for initial keypress
+  // const waitingForKeyPress = ref(true);
 
-  // Extracted logic for handling initial keypress
-  const handleInitialKeyPress = () => {
-    waitingForKeyPress.value = false;
-    resetGrid();
-    cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
-  };
+  // // Extracted logic for handling initial keypress
+  // const handleInitialKeyPress = () => {
+  //   waitingForKeyPress.value = false;
+  //   resetGrid();
+  //   cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+  // };
 
   // Initialize the grid with spaces
   const initializeGrid = () => {
@@ -81,10 +70,10 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Write a character at the cursor position and advance cursor
   const writeChar = (char: string) => {
     // First keypress should just clear the screen if we're in waiting mode
-    if (waitingForKeyPress.value) {
-      handleInitialKeyPress();
-      return;
-    }
+    // if (waitingForKeyPress.value) {
+    //   handleInitialKeyPress();
+    //   return;
+    // }
 
     if (char.length !== 1) return;
 
@@ -106,10 +95,10 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Delete a character at the current cursor position (backspace)
   const deleteChar = () => {
     // Ignore backspace when in waiting mode
-    if (waitingForKeyPress.value) {
-      handleInitialKeyPress();
-      return;
-    }
+    // if (waitingForKeyPress.value) {
+    //   handleInitialKeyPress();
+    //   return;
+    // }
 
     if (cursorPos.value.x > 0) {
       cursorPos.value.x--;
@@ -124,10 +113,10 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Handle new line (Enter key)
   const newLine = () => {
     // Treat Enter as any key when in waiting mode
-    if (waitingForKeyPress.value) {
-      handleInitialKeyPress();
-      return;
-    }
+    // if (waitingForKeyPress.value) {
+    //   handleInitialKeyPress();
+    //   return;
+    // }
 
     cursorPos.value.x = 0;
     if (cursorPos.value.y < config.rows - 1) {
@@ -146,10 +135,10 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Move cursor in a specified direction
   const moveCursor = (direction: 'up' | 'down' | 'left' | 'right') => {
     // Treat arrow keys as any key when in waiting mode
-    if (waitingForKeyPress.value) {
-      handleInitialKeyPress();
-      return;
-    }
+    // if (waitingForKeyPress.value) {
+    //   handleInitialKeyPress();
+    //   return;
+    // }
 
     switch (direction) {
       case 'up':
@@ -171,14 +160,11 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   const generateWelcomeScreen = () => {
     const demoGrid = initializeGrid();
 
-    // Add logo at top
-    for (let i = 0; i < logo.length && i < config.rows; i++) {
-      writeTextCentered(logo[i], i + 7);
-    }
-
-    // Add system info after logo
-    for (let i = 0; i < systemInfo.length && i < config.rows; i++) {
-      writeTextCentered(systemInfo[i], i + 22);
+    // Print title screen
+    for (let i = 0; i < titleScreen.length && i < config.rows; i++) {
+      setTimeout(() => {
+        writeTextCentered(titleScreen[i], i + 7);
+      }, i * 25);
     }
 
     return demoGrid;
@@ -187,9 +173,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
       if (y < 0 || y >= config.rows) return;
       const startX = Math.floor((config.cols - text.length) / 2);
       for (let i = 0; i < text.length; i++) {
-        if (startX + i >= 0 && startX + i < config.cols) {
-          demoGrid[y][startX + i] = text[i];
-        }
+        demoGrid[y][startX + i] = text[i];
       }
     }
 
@@ -206,7 +190,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Load welcome screen
   const loadWelcomeScreen = () => {
     grid.value = generateWelcomeScreen();
-    waitingForKeyPress.value = true;
+    // waitingForKeyPress.value = true;
   };
 
   // Generate demo content for the grid (keeping this for compatibility)
@@ -238,7 +222,7 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
     moveCursor,
     loadDemoContent,
     loadWelcomeScreen,
-    waitingForKeyPress,
+    // waitingForKeyPress,
     resetGrid,
   };
 }

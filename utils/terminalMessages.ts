@@ -3,7 +3,7 @@
  */
 
 // ASCII art logo
-export const logo = [
+const logo = [
   '                                                                                               ',
   '                                                                                               ',
   '  ██████╗██████╗ ████████╗    ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗     ',
@@ -17,7 +17,7 @@ export const logo = [
 ];
 
 // System information
-export const systemInfo = [
+const systemInfo = [
   '═══════════════════════ SYSTEM INFORMATION ══════════════════════',
   '',
   `     BIOS VERSION.....:  KOR-80 STANDARD BIOS v2.0               `,
@@ -36,3 +36,5 @@ export const systemInfo = [
   '',
   'ALL DEVICES FUNCTIONING WITHIN NORMAL PARAMETERS',
 ];
+
+export const titleScreen = [...logo, ...systemInfo];
