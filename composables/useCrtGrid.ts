@@ -33,6 +33,8 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
   // Terminal state
   const grid = ref<string[][]>([]);
   const cursorPos = ref<CursorPosition>({ x: 0, y: 0 });
+  // Add a new state to track if we're waiting for initial keypress
+  const waitingForKeyPress = ref(true);
 
   // Initialize the grid with spaces
   const initializeGrid = () => {
@@ -72,6 +74,14 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
 
   // Write a character at the cursor position and advance cursor
   const writeChar = (char: string) => {
+    // First keypress should just clear the screen if we're in waiting mode
+    if (waitingForKeyPress.value) {
+      waitingForKeyPress.value = false;
+      resetGrid();
+      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      return;
+    }
+
     if (char.length !== 1) return;
 
     grid.value[cursorPos.value.y][cursorPos.value.x] = char;
@@ -91,6 +101,14 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
 
   // Delete a character at the current cursor position (backspace)
   const deleteChar = () => {
+    // Ignore backspace when in waiting mode
+    if (waitingForKeyPress.value) {
+      waitingForKeyPress.value = false;
+      resetGrid();
+      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      return;
+    }
+
     if (cursorPos.value.x > 0) {
       cursorPos.value.x--;
       grid.value[cursorPos.value.y][cursorPos.value.x] = ' ';
@@ -103,6 +121,14 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
 
   // Handle new line (Enter key)
   const newLine = () => {
+    // Treat Enter as any key when in waiting mode
+    if (waitingForKeyPress.value) {
+      waitingForKeyPress.value = false;
+      resetGrid();
+      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      return;
+    }
+
     cursorPos.value.x = 0;
     if (cursorPos.value.y < config.rows - 1) {
       cursorPos.value.y++;
@@ -119,6 +145,14 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
 
   // Move cursor in a specified direction
   const moveCursor = (direction: 'up' | 'down' | 'left' | 'right') => {
+    // Treat arrow keys as any key when in waiting mode
+    if (waitingForKeyPress.value) {
+      waitingForKeyPress.value = false;
+      resetGrid();
+      cursorPos.value = { x: 0, y: config.rows - 1 }; // Position cursor at bottom left
+      return;
+    }
+
     switch (direction) {
       case 'up':
         if (cursorPos.value.y > 0) cursorPos.value.y--;
@@ -135,69 +169,95 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
     }
   };
 
-  // Generate demo content for the grid
-  const generateDemoContent = () => {
+  // Generate 80s style welcome screen
+  const generateWelcomeScreen = () => {
     const demoGrid = initializeGrid();
 
-    // Header row
-    const headerText = '*** CRT TERMINAL EMULATOR ***';
-    for (let i = 0; i < headerText.length; i++) {
-      if (i < config.cols) {
-        demoGrid[1][Math.floor((config.cols - headerText.length) / 2) + i] =
-          headerText[i];
-      }
+    // Format date in old-school format: DD-MMM-YYYY
+    const now = new Date();
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const dateString = `${String(now.getDate()).padStart(2, '0')}-${months[now.getMonth()]}-${now.getFullYear()}`;
+    const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    // ASCII art logo
+    const logo = [
+      '  ██████╗██████╗ ████████╗    ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗     ',
+      ' ██╔════╝██╔══██╗╚══██╔══╝    ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║████╗  ██║██╔══██╗██║     ',
+      ' ██║     ██████╔╝   ██║          ██║   █████╗  ██████╔╝██╔████╔██║██║██╔██╗ ██║███████║██║     ',
+      ' ██║     ██╔══██╗   ██║          ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║     ',
+      ' ╚██████╗██║  ██║   ██║          ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗',
+      '  ╚═════╝╚═╝  ╚═╝   ╚═╝          ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝',
+    ];
+    
+    // Add logo at top
+    for (let i = 0; i < logo.length && i < config.rows; i++) {
+      writeTextCentered(logo[i], i + 1);
     }
 
-    // Add some static content
-    const lines = [
+    // System information
+    const systemInfo = [
+      '═════════════════════════════════ SYSTEM INFORMATION ════════════════════════════════',
       '',
-      'SYSTEM READY',
-      'MEMORY CHECK: OK',
-      'CPU STATUS: NOMINAL',
+      `  BIOS VERSION.....: KOR-80 STANDARD BIOS v2.0`,
+      `  PROCESSOR........: Z80A CPU @ 4.77 MHz`,
+      `  MEMORY...........: 640K CONVENTIONAL, 384K EXTENDED`,
+      `  GRAPHICS.........: CGA ADAPTER (320x200, 4 COLORS)`,
+      `  STORAGE..........: 2 x 5.25" FLOPPY DRIVES (360KB)`,
+      `  OPERATING SYSTEM.: KORT-DOS v3.25`,
       '',
-      'C:\\> TYPE README.TXT',
+      `  DATE.............: ${dateString}`,
+      `  TIME.............: ${timeString}`,
       '',
-      'This is a canvas-based CRT terminal emulator',
-      'that mimics the look and feel of old green',
-      'phosphor monitors. Each cell in this grid',
-      'can display exactly one ASCII character.',
+      '═════════════════════════════════════════════════════════════════════════════════════',
       '',
-      'Press any key to activate cursor...',
+      '  SYSTEM INITIALIZATION COMPLETE',
+      '  ALL DEVICES FUNCTIONING WITHIN NORMAL PARAMETERS',
+      '',
+      '                         PRESS ANY KEY TO CONTINUE...',
+      '',
     ];
 
-    for (let i = 0; i < lines.length && i + 3 < config.rows; i++) {
-      const line = lines[i];
-      for (let j = 0; j < line.length && j < config.cols; j++) {
-        demoGrid[i + 3][j] = line[j];
-      }
+    // Add system info after logo
+    for (let i = 0; i < systemInfo.length && i + 8 < config.rows; i++) {
+      writeTextAt(systemInfo[i], 0, i + 8);
     }
-
-    // Add some ASCII art
-    const asciiArt = [
-      '   ╔════════════╗',
-      '   ║ TERMINAL   ║',
-      '   ╚════════════╝',
-    ];
-
-    for (let i = 0; i < asciiArt.length && i + 18 < config.rows; i++) {
-      const line = asciiArt[i];
-      for (let j = 0; j < line.length && j < config.cols; j++) {
-        demoGrid[i + 18][j + 10] = line[j];
-      }
-    }
-
-    // Add current date
-    const dateText = `DATE: ${new Date().toLocaleDateString()}`;
-    for (let i = 0; i < dateText.length; i++) {
-      if (i < config.cols) demoGrid[config.rows - 2][i] = dateText[i];
-    }
-
+    
     return demoGrid;
+    
+    function writeTextCentered(text: string, y: number) {
+      if (y < 0 || y >= config.rows) return;
+      const startX = Math.floor((config.cols - text.length) / 2);
+      for (let i = 0; i < text.length; i++) {
+        if (startX + i >= 0 && startX + i < config.cols) {
+          demoGrid[y][startX + i] = text[i];
+        }
+      }
+    }
+    
+    function writeTextAt(text: string, x: number, y: number) {
+      if (y < 0 || y >= config.rows) return;
+      for (let i = 0; i < text.length; i++) {
+        if (x + i >= 0 && x + i < config.cols) {
+          demoGrid[y][x + i] = text[i];
+        }
+      }
+    }
   };
 
-  // Load demo content
+  // Load welcome screen
+  const loadWelcomeScreen = () => {
+    grid.value = generateWelcomeScreen();
+    waitingForKeyPress.value = true;
+  };
+
+  // Generate demo content for the grid (keeping this for compatibility)
+  const generateDemoContent = () => {
+    return generateWelcomeScreen();
+  };
+
+  // Load demo content (keeping this for compatibility)
   const loadDemoContent = () => {
-    grid.value = generateDemoContent();
+    loadWelcomeScreen();
   };
 
   // Reset the grid (clear all content)
@@ -218,6 +278,8 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
     scrollUp,
     moveCursor,
     loadDemoContent,
+    loadWelcomeScreen,
+    waitingForKeyPress,
     resetGrid,
   };
 }

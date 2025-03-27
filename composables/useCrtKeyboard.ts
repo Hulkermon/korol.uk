@@ -10,6 +10,11 @@ interface KeyboardHandlers {
 
 export function useCrtKeyboard(handlers: KeyboardHandlers = {}) {
   const handleKeyDown = (e: KeyboardEvent) => {
+    // Prevent default behavior for keys that might cause browser actions
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Backspace'].includes(e.key)) {
+      e.preventDefault();
+    }
+    
     // Handle special keys
     if (e.key === 'Backspace') {
       handlers.onBackspace?.();

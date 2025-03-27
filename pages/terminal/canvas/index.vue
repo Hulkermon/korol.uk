@@ -23,7 +23,8 @@
     deleteChar,
     newLine,
     moveCursor,
-    loadDemoContent,
+    loadWelcomeScreen,
+    waitingForKeyPress,
   } = useCrtGrid(defaultGridConfig);
 
   // Initialize the renderer
@@ -44,8 +45,8 @@
 
   // Setup on mount
   onMounted(() => {
-    // Load demo content
-    loadDemoContent();
+    // Load welcome screen instead of demo content
+    loadWelcomeScreen();
 
     // Start the rendering loop
     startRendering();
