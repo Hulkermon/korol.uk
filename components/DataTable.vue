@@ -9,8 +9,16 @@
         </tr>
       </thead>
       <tbody class="bg-gray-600">
-        <tr v-for="item in data" :key="item.id" class="border-t border-gray-500 hover:bg-gray-700 transition-colors">
-          <td class="px-4 py-2 font-mono text-xs text-gray-300 truncate max-w-xs">{{ item.id }}</td>
+        <tr
+          v-for="item in data"
+          :key="item.id"
+          class="border-t border-gray-500 hover:bg-gray-700 transition-colors"
+        >
+          <td
+            class="px-4 py-2 font-mono text-xs text-gray-300 truncate max-w-xs"
+          >
+            {{ item.id }}
+          </td>
           <td class="px-4 py-2">{{ formatTime(item.timestamp) }}</td>
           <td class="px-4 py-2 text-right">{{ item.value }}</td>
         </tr>
@@ -20,10 +28,10 @@
 </template>
 
 <script lang="ts" setup>
-import { formatTime } from '~/utils/format';
-import type { SampleData } from '~/composables/useSampleData';
+  import { formatTime } from '~/utils/format';
+  import type { SampleData } from '~/composables/useSampleData';
 
-defineProps<{
-  data: SampleData[]
-}>();
+  defineProps<{
+    data: SampleData[];
+  }>();
 </script>
