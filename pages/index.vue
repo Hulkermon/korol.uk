@@ -46,15 +46,6 @@
     </div>
   </div>
 </template>
-<style>
-  HTML,
-  BODY {
-    cursor: url('https://downloads.totallyfreecursors.com/cursor_files/hellokitty.cur'),
-      url('https://downloads.totallyfreecursors.com/thumbnails/kitty.gif'), auto;
-  }
-</style>
-
-<script lang="ts"></script>
 
 <script lang="ts" setup>
   import {
@@ -67,21 +58,6 @@
     characterCursor,
     rainbowCursor,
   } from 'cursor-effects';
-
-  let cursorEffectsContainer: HTMLElement;
-  const cursorsEffects = [
-    fairyDustCursor,
-    snowflakeCursor,
-    ghostCursor,
-    bubbleCursor,
-    trailingCursor,
-    clockCursor,
-    characterCursor,
-    rainbowCursor,
-  ];
-
-  // prettier-ignore
-  const randomCursorEffect = cursorsEffects[Math.floor(Math.random() * cursorsEffects.length)];
 
   // prettier-ignore
   onMounted(() => {
@@ -99,13 +75,69 @@
       characterLifeSpanFunction: () => [75 + Math.random() * 50, 2000][Math.floor(Math.random() * 1.05)],
       size: 2 + (Math.random() * 4) ** 3,
     });
+    
+    if (customCursor.framesUrl) {
+      console.log("Animating", customCursor.framesUrl);
+      document.body.style.animation = 'cursor 0.5s linear infinite';
+    } else {
+      console.log("Static", customCursor.url);
+      document.body.style.cursor = `url(${customCursor.url}), ${customCursor.type || 'auto'}`;
+    }
+    console.log("body style => ", document.body.style);
   });
 
   onUnmounted(() => {
-    if (cursorEffectsContainer) {
-      cursorEffectsContainer.remove();
-    }
+    cursorEffectsContainer?.remove();
+    document.body.style.cursor = 'auto'; // Reset to default cursor
   });
+
+  let cursorEffectsContainer: HTMLElement;
+  const cursorsEffects = [
+    fairyDustCursor,
+    snowflakeCursor,
+    ghostCursor,
+    bubbleCursor,
+    trailingCursor,
+    clockCursor,
+    characterCursor,
+    rainbowCursor,
+  ];
+
+  // prettier-ignore
+  const randomCursorEffect = cursorsEffects[Math.floor(Math.random() * cursorsEffects.length)];
+
+  const cusomCursors: {
+    name: string;
+    type?: 'default' | 'pointer' | 'text' | 'wait';
+    url: string;
+    /** currently hard coded to 3 frames */
+    framesUrl?: string;
+  }[] = [
+    {
+      name: 'Flame',
+      url: '/cursors/flame/Arrow.cur',
+    },
+    {
+      name: 'Hello Kitty',
+      url: '/cursors/hello-kitty/default.gif',
+    },
+    {
+      name: 'Rainbow',
+      url: '/cursors/rainbow/default.gif',
+    },
+    {
+      name: 'Pink Mustache',
+      url: '/cursors/pink-mustache/default.gif',
+      framesUrl: '/cursors/pink-mustache/frames/default/',
+    },
+    // {
+    //   name: 'Middle Finger',
+    //   url: '/cursors/middle-finger/pointer.png',
+    // },
+  ];
+
+  const customCursor =
+    cusomCursors[Math.floor(Math.random() * cusomCursors.length)];
 </script>
 
 <style>
@@ -115,6 +147,21 @@
     left: 0;
     bottom: 0;
     right: 0;
+  }
+
+  @keyframes cursor {
+    0% {
+      cursor: url('/cursors/pink-mustache/frames/default/0.png'), auto;
+    }
+    33% {
+      cursor: url('/cursors/pink-mustache/frames/default/1.png'), auto;
+    }
+    66% {
+      cursor: url('/cursors/pink-mustache/frames/default/2.png'), auto;
+    }
+    100% {
+      cursor: url('/cursors/pink-mustache/frames/default/0.png'), auto;
+    }
   }
 </style>
 
