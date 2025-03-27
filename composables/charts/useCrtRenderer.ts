@@ -9,6 +9,7 @@ export function useCrtRenderer(
 ) {
   let ctx: CanvasRenderingContext2D | null = null;
   let animationFrameId: number | null = null;
+  let vignetteGradient: CanvasGradient | null = null;
 
   // Set up canvas dimensions and context
   const setupCanvas = () => {
@@ -23,6 +24,26 @@ export function useCrtRenderer(
     ctx = canvas.value.getContext('2d');
     if (ctx) {
       ctx.imageSmoothingEnabled = false;
+      
+      // Set up font configuration once
+      ctx.font = `${config.cellHeight * 0.8}px Courier New`;
+      ctx.textBaseline = 'middle';
+      
+      // Set up glow effect configuration once
+      ctx.shadowColor = config.charColor;
+      ctx.shadowBlur = config.glowStrength || 0;
+      
+      // Create the vignette gradient once
+      vignetteGradient = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        height / 10,
+        width / 2,
+        height / 2,
+        width
+      );
+      vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
     }
   };
 
@@ -36,14 +57,6 @@ export function useCrtRenderer(
     // Clear the canvas
     ctx.fillStyle = config.backgroundColor || '#0a0a0a';
     ctx.fillRect(0, 0, canvas.value.width, canvas.value.height);
-
-    // Draw characters
-    ctx.font = `${config.cellHeight * 0.8}px monospace`;
-    ctx.textBaseline = 'middle';
-
-    // Apply a subtle glow effect
-    ctx.shadowColor = config.charColor;
-    ctx.shadowBlur = config.glowStrength || 0;
 
     // Draw each character in the grid
     for (let y = 0; y < grid.value.length; y++) {
@@ -90,22 +103,14 @@ export function useCrtRenderer(
     }
 
     // CRT vignette effect (darker corners)
-    const gradient = ctx.createRadialGradient(
-      width / 2,
-      height / 2,
-      height / 10,
-      width / 2,
-      height / 2,
-      width
-    );
-    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
+    if (vignetteGradient) {
+      ctx.fillStyle = vignetteGradient;
+      ctx.fillRect(0, 0, width, height);
+    }
 
     // Random slight noise/flicker effect
     if (Math.random() > 0.98) {
-      ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.03})`;
+      ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.02})`;
       ctx.fillRect(0, 0, width, height);
     }
   };

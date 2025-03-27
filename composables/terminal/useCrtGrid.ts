@@ -173,12 +173,12 @@ export function useCrtGrid(config: GridConfig = defaultGridConfig) {
 
     // Add logo at top
     for (let i = 0; i < logo.length && i < config.rows; i++) {
-      writeTextCentered(logo[i], i + 1);
+      writeTextCentered(logo[i], i + 7);
     }
 
     // Add system info after logo
-    for (let i = 0; i < systemInfo.length && i + 18 < config.rows; i++) {
-      writeTextCentered(systemInfo[i], i + 18);
+    for (let i = 0; i < systemInfo.length && i < config.rows; i++) {
+      writeTextCentered(systemInfo[i], i + 22);
     }
 
     return demoGrid;

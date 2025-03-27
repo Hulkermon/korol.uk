@@ -16,21 +16,31 @@ export function useCrtKeyboard(handlers: KeyboardHandlers = {}) {
     }
     
     // Handle special keys
-    if (e.key === 'Backspace') {
+    switch (e.key) {
+      case 'Backspace':
       handlers.onBackspace?.();
-    } else if (e.key === 'Enter') {
+      break;
+      case 'Enter':
       handlers.onEnter?.();
-    } else if (e.key === 'ArrowLeft') {
+      break;
+      case 'ArrowLeft':
       handlers.onArrow?.('left');
-    } else if (e.key === 'ArrowRight') {
+      break;
+      case 'ArrowRight':
       handlers.onArrow?.('right');
-    } else if (e.key === 'ArrowUp') {
+      break;
+      case 'ArrowUp':
       handlers.onArrow?.('up');
-    } else if (e.key === 'ArrowDown') {
+      break;
+      case 'ArrowDown':
       handlers.onArrow?.('down');
-    } else if (e.key.length === 1) {
-      // Handle regular character input
-      handlers.onCharInput?.(e.key);
+      break;
+      default:
+      if (e.key.length === 1) {
+        // Handle regular character input
+        handlers.onCharInput?.(e.key);
+      }
+      break;
     }
   };
 
