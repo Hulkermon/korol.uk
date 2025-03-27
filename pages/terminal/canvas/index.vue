@@ -7,9 +7,9 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted } from 'vue';
-  import { useCrtGrid, defaultGridConfig } from '~/composables/useCrtGrid';
-  import { useCrtRenderer } from '~/composables/useCrtRenderer';
-  import { useCrtKeyboard } from '~/composables/useCrtKeyboard';
+  import { useCrtGrid, defaultGridConfig } from '~/composables/terminal/useCrtGrid';
+  import { useCrtRenderer } from '~/composables/charts/useCrtRenderer';
+  import { useCrtKeyboard } from '~/composables/terminal/useCrtKeyboard';
 
   // Canvas reference
   const crtCanvas = ref<HTMLCanvasElement | null>(null);

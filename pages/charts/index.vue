@@ -22,7 +22,7 @@
 
 <script lang="ts" setup>
   import { onMounted } from 'vue';
-  import { useSampleData } from '~/composables/useSampleData';
+  import { useSampleData } from '~/composables/terminal/useSampleData';
 
   const { sampleData, generateData } = useSampleData();
 

@@ -1,5 +1,5 @@
 import { ref, type Ref, onUnmounted } from 'vue';
-import type { GridConfig, CursorPosition } from './useCrtGrid';
+import type { GridConfig, CursorPosition } from '../terminal/useCrtGrid';
 
 export function useCrtRenderer(
   canvas: Ref<HTMLCanvasElement | null>,

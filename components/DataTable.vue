@@ -29,7 +29,7 @@
 
 <script lang="ts" setup>
   import { formatTime } from '~/utils/format';
-  import type { SampleData } from '~/composables/useSampleData';
+  import type { SampleData } from '~/composables/terminal/useSampleData';
 
   defineProps<{
     data: SampleData[];
