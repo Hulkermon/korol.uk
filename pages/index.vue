@@ -37,12 +37,22 @@
             <div class="card-cta">ENTER NOW!</div>
           </div>
         </NuxtLink>
+
+        <NuxtLink to="/cia" class="nav-card">
+          <div class="card-inner">
+            <div class="card-title">CIA</div>
+            <div class="card-desc">
+              Access top secret 3D visualization system!
+            </div>
+            <div class="card-cta">CLASSIFIED!</div>
+          </div>
+        </NuxtLink>
       </div>
     </div>
 
     <div class="footer">
       <p>Best viewed in Netscape Navigator 4.0 or Internet Explorer 5.5</p>
-      <p>© 2025 KOROL.UK - Last updated: March 27, 2025</p>
+      <p>© 2025 KOROL.UK - Last updated: March 30, 2025</p>
     </div>
   </div>
 </template>
