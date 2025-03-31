@@ -12,28 +12,32 @@ export function useRotationController() {
   // Create reusable objects to avoid unnecessary allocations
   const quaternion = new Quaternion();
   const euler = new Euler();
-  
+
   /**
    * Apply rotation to a Three.js object based on trick rotation values and progress
    * @param object3D - The Three.js object to rotate
    * @param rotation - The rotation values in degrees for each axis
    * @param progress - Interpolation factor between 0 and 1 (0 = start, 1 = complete rotation)
    */
-  const spin = (object3D: Object3D, rotation: TrickRotation, progress: number): void => {
+  const spin = (
+    object3D: Object3D,
+    rotation: TrickRotation,
+    progress: number
+  ): void => {
     // Clamp progress between 0 and 1
     const t = MathUtils.clamp(progress, 0, 1);
-    
+
     // Convert degrees to radians and multiply by progress
     const yawRad = MathUtils.degToRad(rotation.yaw * t);
     const pitchRad = MathUtils.degToRad(rotation.pitch * t);
     const rollRad = MathUtils.degToRad(rotation.roll * t);
-    
+
     // Set euler angles in ZYX order (yaw, pitch, roll)
     euler.set(pitchRad, yawRad, rollRad, 'ZYX');
-    
+
     // Convert to quaternion for smooth rotation without gimbal lock
     quaternion.setFromEuler(euler);
-    
+
     // Apply the quaternion rotation to the object
     object3D.quaternion.copy(quaternion);
   };
@@ -48,6 +52,6 @@ export function useRotationController() {
 
   return {
     spin,
-    resetRotation
+    resetRotation,
   };
 }

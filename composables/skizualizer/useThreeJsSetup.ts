@@ -33,7 +33,7 @@ export function useThreeJsSetup(canvasRef: any) {
     if (!canvasRef.value || isInitialized.value) return;
 
     const canvas = canvasRef.value as HTMLCanvasElement;
-    
+
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb); // Sky blue background
@@ -68,7 +68,7 @@ export function useThreeJsSetup(canvasRef: any) {
       renderer,
       controls,
       skiMesh,
-      animationFrameId: null
+      animationFrameId: null,
     };
 
     // Store the raw object in the shallowRef
@@ -131,7 +131,7 @@ export function useThreeJsSetup(canvasRef: any) {
    */
   const addLights = () => {
     if (!contextRaw) return;
-    
+
     const { scene } = contextRaw;
 
     // Ambient light
@@ -157,7 +157,7 @@ export function useThreeJsSetup(canvasRef: any) {
    */
   const addGround = () => {
     if (!contextRaw) return;
-    
+
     const { scene } = contextRaw;
 
     const groundGeometry = new THREE.PlaneGeometry(10, 10);
@@ -174,14 +174,16 @@ export function useThreeJsSetup(canvasRef: any) {
   /**
    * Animate the scene
    */
-  const startAnimationLoop = (animateCallback?: (ctx: ThreeJsContext) => void) => {
+  const startAnimationLoop = (
+    animateCallback?: (ctx: ThreeJsContext) => void
+  ) => {
     if (!contextRaw) return;
-    
+
     const { renderer, scene, camera, controls } = contextRaw;
 
     const animate = () => {
       if (!contextRaw) return;
-      
+
       const animFrameId = requestAnimationFrame(animate);
       if (contextRaw) {
         contextRaw.animationFrameId = animFrameId;
@@ -190,7 +192,7 @@ export function useThreeJsSetup(canvasRef: any) {
           context.value.animationFrameId = animFrameId;
         }
       }
-      
+
       // Execute custom animation callback if provided
       if (animateCallback && contextRaw) {
         animateCallback(contextRaw);
@@ -211,10 +213,10 @@ export function useThreeJsSetup(canvasRef: any) {
    */
   const handleResize = () => {
     if (!contextRaw || !canvasRef.value) return;
-    
+
     const { camera, renderer } = contextRaw;
     const canvas = canvasRef.value as HTMLCanvasElement;
-    
+
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
 
@@ -231,7 +233,7 @@ export function useThreeJsSetup(canvasRef: any) {
    */
   const setupAndRender = (animateCallback?: (ctx: ThreeJsContext) => void) => {
     initialize();
-    
+
     if (contextRaw) {
       createSkis();
       addLights();
@@ -285,6 +287,6 @@ export function useThreeJsSetup(canvasRef: any) {
     startAnimationLoop,
     handleResize,
     setupAndRender,
-    cleanup
+    cleanup,
   };
 }

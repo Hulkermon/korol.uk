@@ -3,19 +3,18 @@
     <canvas ref="skiCanvas" class="ski-canvas"></canvas>
   </div>
   <div class="trick-controls">
-    <input
-      type="text"
-      v-model="trickName"
-      placeholder="backflip"
-      class="border p-2 m-2"
-      @keyup.enter="startRotation"
+    <input type="text" v-model="trickName" placeholder="backflip" class="border
+    p-2 m-2" @keyup.enter="startRotation"
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted } from 'vue';
+  // prettier-ignore
   import { useTrickParser, type TrickRotation } from '~/composables/skizualizer/useTrickParser';
+  // prettier-ignore
   import { useRotationController } from '~/composables/skizualizer/useRotationController';
+  // prettier-ignore
   import { useThreeJsSetup, type ThreeJsContext } from '~/composables/skizualizer/useThreeJsSetup';
 
   // Canvas reference
@@ -24,7 +23,8 @@
   // Get composables
   const { parseTrick } = useTrickParser();
   const { spin, resetRotation: resetObjectRotation } = useRotationController();
-  const { setupAndRender, handleResize, cleanup, context } = useThreeJsSetup(skiCanvas);
+  const { setupAndRender, handleResize, cleanup, context } =
+    useThreeJsSetup(skiCanvas);
 
   // Default rotation (360 yaw)
   const trickName = ref('');

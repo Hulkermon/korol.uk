@@ -6,9 +6,9 @@
  * Represents rotation in degrees for each axis
  */
 export interface TrickRotation {
-  yaw: number;   // Horizontal rotation (left/right)
+  yaw: number; // Horizontal rotation (left/right)
   pitch: number; // Vertical forward/backward flip
-  roll: number;  // Barrel roll / spin along forward axis
+  roll: number; // Barrel roll / spin along forward axis
 }
 
 /**
@@ -26,7 +26,7 @@ export function useTrickParser() {
     const rotation: TrickRotation = {
       yaw: 0,
       pitch: 0,
-      roll: 0
+      roll: 0,
     };
 
     // Normalize input to lowercase for case-insensitive matching
@@ -61,6 +61,6 @@ export function useTrickParser() {
   };
 
   return {
-    parseTrick
+    parseTrick,
   };
 }
