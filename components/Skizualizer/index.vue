@@ -6,10 +6,19 @@
       <div class="icon-text">trick list.txt</div>
     </div>
 
-    <!-- Main title bar for the desktop -->
+    <!-- Taskbar with running programs -->
     <div class="win95-taskbar">
       <div class="start-button">
         <span>Start</span>
+      </div>
+      <!-- Running programs section -->
+      <div class="taskbar-programs">
+        <div class="taskbar-program-button active">
+          <span>Ski Visualizer</span>
+        </div>
+        <div class="taskbar-program-button">
+          <span>Trick Controls</span>
+        </div>
       </div>
       <div class="taskbar-time">{{ currentTime }}</div>
     </div>
