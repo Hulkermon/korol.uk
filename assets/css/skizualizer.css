@@ -1,19 +1,250 @@
-/* Skizualizer component styles */
-.skizualizer-container {
+/* Windows 95 Skizualizer styles */
+
+/* Font family for Windows 95 look */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* Colors */
+:root {
+  --win95-bg: #008080;
+  --win95-window-bg: #c0c0c0;
+  --win95-button-face: #c0c0c0;
+  --win95-button-highlight: #ffffff;
+  --win95-button-shadow: #808080;
+  --win95-title-active: #000080;
+  --win95-title-inactive: #808080;
+  --win95-text: #000000;
+  --win95-text-inverted: #ffffff;
+}
+
+/* Desktop environment */
+.win95-desktop {
+  position: relative;
+  background-color: var(--win95-bg);
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'VT323', 'MS Sans Serif', Arial, sans-serif;
+  color: var(--win95-text);
+  user-select: none;
+}
+
+/* Taskbar */
+.win95-taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background-color: var(--win95-window-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 2px solid var(--win95-button-highlight);
+  padding: 0 2px;
+  z-index: 9999;
+}
+
+.start-button {
+  display: flex;
+  align-items: center;
+  padding: 2px 6px;
+  margin-left: 2px;
+  height: 22px;
+  background-color: var(--win95-button-face);
+  border: 2px outset var(--win95-button-highlight);
+  font-weight: bold;
+}
+
+.start-button:hover {
+  cursor: pointer;
+}
+
+.taskbar-time {
+  background-color: var(--win95-button-face);
+  border: 1px inset var(--win95-button-shadow);
+  padding: 2px 8px;
+  font-size: 12px;
+  margin-right: 5px;
+}
+
+/* Windows */
+.win95-window {
+  position: absolute;
+  background-color: var(--win95-window-bg);
+  border: 2px outset var(--win95-button-highlight);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ski-program {
+  top: 50px;
+  left: 260px;
+  width: calc(100% - 300px);
+  height: calc(100vh - 140px);
+  z-index: 10;
+}
+
+.controls-program {
+  top: 150px;
+  left: 20px;
+  width: 220px;
+  height: 260px;
+  z-index: 20;
+}
+
+.win95-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--win95-title-active);
+  color: var(--win95-text-inverted);
+  padding: 2px 4px;
+  height: 20px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.title-bar-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title-bar-controls {
+  display: flex;
+  gap: 2px;
+}
+
+.title-bar-controls button {
+  width: 16px;
+  height: 14px;
+  background-color: var(--win95-button-face);
+  border: 1px outset var(--win95-button-highlight);
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.title-bar-controls button:hover {
+  cursor: pointer;
+}
+
+.win95-window-content {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+  position: relative;
+}
+
+.win95-status-bar {
+  height: 20px;
+  border-top: 1px solid var(--win95-button-shadow);
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+/* Desktop icons */
+.desktop-icon {
+  position: absolute;
+  top: 15px;
+  left: 15px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
-  padding: 1rem;
+  width: 64px;
+  cursor: pointer;
 }
 
+.icon-image {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 5px;
+}
+
+.text-file-icon {
+  background-image: url('../images/win95_txt_file.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.icon-text {
+  color: white;
+  font-size: 12px;
+  text-align: center;
+  text-shadow: 1px 1px 1px black;
+}
+
+/* Control Elements */
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 5px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.win95-input {
+  border: 2px inset var(--win95-button-highlight);
+  background-color: white;
+  padding: 3px 5px;
+  font-family: 'VT323', 'MS Sans Serif', Arial, sans-serif;
+}
+
+.win95-button {
+  border: 2px outset var(--win95-button-highlight);
+  background-color: var(--win95-button-face);
+  padding: 3px 10px;
+  margin-top: 5px;
+  cursor: pointer;
+  font-family: 'VT323', 'MS Sans Serif', Arial, sans-serif;
+}
+
+.win95-button:active {
+  border-style: inset;
+}
+
+.win95-slider {
+  width: 100%;
+  height: 20px;
+  margin: 5px 0;
+  appearance: none;
+  background-color: var(--win95-button-face);
+  border: 2px inset var(--win95-button-shadow);
+}
+
+.win95-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: var(--win95-button-face);
+  border: 2px outset var(--win95-button-highlight);
+}
+
+.win95-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background-color: var(--win95-button-face);
+  border: 2px outset var(--win95-button-highlight);
+}
+
+/* Canvas container */
 .ski-canvas-container {
   width: 100%;
-  height: 70vh;
-  max-width: 1200px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  height: 100%;
+  border: 2px inset var(--win95-button-shadow);
+  background-color: #000000;
   overflow: hidden;
 }
 
