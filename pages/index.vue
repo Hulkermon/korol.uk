@@ -38,13 +38,23 @@
           </div>
         </NuxtLink>
 
-        <NuxtLink to="/cia" class="nav-card">
+        <NuxtLink to="/3D" class="nav-card">
           <div class="card-inner">
-            <div class="card-title">CIA</div>
+            <div class="card-title">Three Dimensions</div>
             <div class="card-desc">
               Access top secret 3D visualization system!
             </div>
             <div class="card-cta">CLASSIFIED!</div>
+          </div>
+        </NuxtLink>
+
+        <NuxtLink to="/skizualizer" class="nav-card">
+          <div class="card-inner">
+            <div class="card-title">SKIZUALIZER</div>
+            <div class="card-desc">
+              Visualize your gnarbunctuos ski tricks with Skizualizer!
+            </div>
+            <div class="card-cta">ENVISION!</div>
           </div>
         </NuxtLink>
       </div>
@@ -143,7 +153,7 @@
     {
       name: 'Dragon',
       url: '/cursors/dragon/default.png',
-    }
+    },
     // {
     //   name: 'Middle Finger',
     //   url: '/cursors/middle-finger/pointer.png',

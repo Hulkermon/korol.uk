@@ -122,7 +122,7 @@
       <div class="hacker-overlay">
         <div class="console-text">
           <div class="console-header">
-            C.I.A. TOP SECRET - CLASSIFIED NEURAL NETWORK v2.5.8
+            TOP SECRET - CLASSIFIED NEURAL NETWORK v4.20
           </div>
           <div class="console-content" ref="consoleContent">
             [ Initialization sequence complete ]<br>
