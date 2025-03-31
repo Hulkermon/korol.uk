@@ -1,10 +1,9 @@
 /**
  * Composable for handling Three.js setup and management for the ski visualizer
  */
-import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
+import { ref, shallowRef } from 'vue';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { TrickRotation } from './useTrickParser';
 
 export interface ThreeJsContext {
   scene: THREE.Scene;
@@ -25,6 +24,11 @@ export function useThreeJsSetup(canvasRef: any) {
 
   // Store a raw reference to the context that isn't wrapped in Vue's reactivity system
   let contextRaw: ThreeJsContext | null = null;
+
+  // Helper function to execute code only if context exists
+  const withContext = (fn: (ctx: ThreeJsContext) => void) => {
+    if (contextRaw) fn(contextRaw);
+  };
 
   /**
    * Initialize Three.js scene
@@ -79,96 +83,52 @@ export function useThreeJsSetup(canvasRef: any) {
   };
 
   /**
-   * Create a pair of skis using box geometry
+   * Set up scene with ground, lights and skis
    */
-  const createSkis = () => {
-    if (!contextRaw) return;
+  const setupScene = () => {
+    withContext((ctx) => {
+      const { scene, skiMesh } = ctx;
 
-    const { scene, skiMesh } = contextRaw;
+      // Add ground
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(10, 10),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
 
-    // Dimensions for a single ski
-    const skiLength = 1.8;
-    const skiWidth = 0.1;
-    const skiHeight = 0.02;
+      // Add lights
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-    // Materials
-    const skiMaterial = new THREE.MeshStandardMaterial({
-      color: 0x3366cc, // Blue-ish color for skis
-      roughness: 0.3,
-      metalness: 0.7,
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(5, 10, 7.5);
+      directionalLight.castShadow = true;
+      directionalLight.shadow.mapSize.width = 1024;
+      directionalLight.shadow.mapSize.height = 1024;
+      scene.add(directionalLight);
+
+      // Create skis
+      const skiMaterial = new THREE.MeshStandardMaterial({
+        color: 0x3366cc,
+        roughness: 0.3,
+        metalness: 0.7,
+      });
+
+      // Create ski geometry once and reuse
+      const skiGeometry = new THREE.BoxGeometry(0.1, 0.02, 1.8);
+
+      const leftSki = new THREE.Mesh(skiGeometry, skiMaterial);
+      leftSki.position.x = -0.1;
+      leftSki.castShadow = true;
+
+      const rightSki = new THREE.Mesh(skiGeometry, skiMaterial);
+      rightSki.position.x = 0.1;
+      rightSki.castShadow = true;
+
+      skiMesh.add(leftSki, rightSki);
+      skiMesh.position.y = 0.1;
     });
-
-    // Create left ski
-    const leftSkiGeometry = new THREE.BoxGeometry(
-      skiWidth,
-      skiHeight,
-      skiLength
-    );
-    const leftSki = new THREE.Mesh(leftSkiGeometry, skiMaterial);
-    leftSki.position.x = -skiWidth; // Offset to the left
-    leftSki.castShadow = true;
-
-    // Create right ski
-    const rightSkiGeometry = new THREE.BoxGeometry(
-      skiWidth,
-      skiHeight,
-      skiLength
-    );
-    const rightSki = new THREE.Mesh(rightSkiGeometry, skiMaterial);
-    rightSki.position.x = skiWidth; // Offset to the right
-    rightSki.castShadow = true;
-
-    // Add both skis to the group
-    skiMesh.add(leftSki);
-    skiMesh.add(rightSki);
-
-    // Position the group in the scene
-    skiMesh.position.y = 0.1; // Slightly above the ground
-  };
-
-  /**
-   * Add lights to the scene
-   */
-  const addLights = () => {
-    if (!contextRaw) return;
-
-    const { scene } = contextRaw;
-
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-
-    // Directional light (sun-like)
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 10, 7.5);
-    directionalLight.castShadow = true;
-
-    // Configure shadow properties
-    directionalLight.shadow.mapSize.width = 1024;
-    directionalLight.shadow.mapSize.height = 1024;
-    directionalLight.shadow.camera.near = 0.5;
-    directionalLight.shadow.camera.far = 50;
-
-    scene.add(directionalLight);
-  };
-
-  /**
-   * Add ground plane
-   */
-  const addGround = () => {
-    if (!contextRaw) return;
-
-    const { scene } = contextRaw;
-
-    const groundGeometry = new THREE.PlaneGeometry(10, 10);
-    const groundMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.8,
-    });
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2; // Make it horizontal
-    ground.receiveShadow = true;
-    scene.add(ground);
   };
 
   /**
@@ -179,30 +139,24 @@ export function useThreeJsSetup(canvasRef: any) {
   ) => {
     if (!contextRaw) return;
 
-    const { renderer, scene, camera, controls } = contextRaw;
-
     const animate = () => {
       if (!contextRaw) return;
 
-      const animFrameId = requestAnimationFrame(animate);
-      if (contextRaw) {
-        contextRaw.animationFrameId = animFrameId;
-        // Update context.value only with the animationFrameId
-        if (context.value) {
-          context.value.animationFrameId = animFrameId;
-        }
+      contextRaw.animationFrameId = requestAnimationFrame(animate);
+
+      // Update reactive context
+      if (context.value) {
+        context.value.animationFrameId = contextRaw.animationFrameId;
       }
 
       // Execute custom animation callback if provided
-      if (animateCallback && contextRaw) {
+      if (animateCallback) {
         animateCallback(contextRaw);
       }
 
-      // Update controls
-      controls.update();
-
-      // Render
-      renderer.render(scene, camera);
+      // Update controls and render
+      contextRaw.controls.update();
+      contextRaw.renderer.render(contextRaw.scene, contextRaw.camera);
     };
 
     animate();
@@ -212,32 +166,28 @@ export function useThreeJsSetup(canvasRef: any) {
    * Handle window resize
    */
   const handleResize = () => {
-    if (!contextRaw || !canvasRef.value) return;
+    withContext((ctx) => {
+      if (!canvasRef.value) return;
 
-    const { camera, renderer } = contextRaw;
-    const canvas = canvasRef.value as HTMLCanvasElement;
+      const canvas = canvasRef.value as HTMLCanvasElement;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
 
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+      // Update camera
+      ctx.camera.aspect = width / height;
+      ctx.camera.updateProjectionMatrix();
 
-    // Update camera
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-
-    // Update renderer
-    renderer.setSize(width, height);
+      // Update renderer
+      ctx.renderer.setSize(width, height);
+    });
   };
 
   /**
    * Setup everything and start rendering
    */
   const setupAndRender = (animateCallback?: (ctx: ThreeJsContext) => void) => {
-    initialize();
-
-    if (contextRaw) {
-      createSkis();
-      addLights();
-      addGround();
+    if (initialize()) {
+      setupScene();
       startAnimationLoop(animateCallback);
     }
   };
@@ -246,44 +196,38 @@ export function useThreeJsSetup(canvasRef: any) {
    * Cleanup Three.js resources
    */
   const cleanup = () => {
-    if (!contextRaw) return;
+    withContext((ctx) => {
+      // Stop animation loop
+      if (ctx.animationFrameId) {
+        cancelAnimationFrame(ctx.animationFrameId);
+      }
 
-    const { animationFrameId, skiMesh, scene, renderer } = contextRaw;
-
-    // Stop animation loop
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId);
-    }
-
-    // Cleanup resources
-    if (skiMesh) {
-      skiMesh.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry.dispose();
-          if (child.material instanceof THREE.Material) {
-            child.material.dispose();
+      // Cleanup resources
+      if (ctx.skiMesh) {
+        ctx.skiMesh.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            if (child.material instanceof THREE.Material) {
+              child.material.dispose();
+            }
           }
-        }
-      });
-      scene.remove(skiMesh);
-    }
+        });
+        ctx.scene.remove(ctx.skiMesh);
+      }
 
-    // Dispose renderer
-    if (renderer) {
-      renderer.dispose();
-    }
+      // Dispose renderer
+      ctx.renderer.dispose();
 
-    context.value = null;
-    contextRaw = null;
-    isInitialized.value = false;
+      context.value = null;
+      contextRaw = null;
+      isInitialized.value = false;
+    });
   };
 
   return {
     context,
     initialize,
-    createSkis,
-    addLights,
-    addGround,
+    setupScene,
     startAnimationLoop,
     handleResize,
     setupAndRender,

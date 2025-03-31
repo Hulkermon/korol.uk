@@ -3,8 +3,17 @@
     <canvas ref="skiCanvas" class="ski-canvas"></canvas>
   </div>
   <div class="trick-controls">
-    <input type="text" v-model="trickName" placeholder="backflip" class="border
-    p-2 m-2" @keyup.enter="startRotation"
+    <input
+      type="text"
+      v-model="trickName"
+      placeholder="backflip"
+      class="border p-2 m-2"
+      @keyup.enter="startRotation" />
+    <button
+      @click="startRotation"
+      class="bg-gray-500 hover:bg-gray-600 text-white p-2 m-2">
+      flip it!
+    </button>
   </div>
 </template>
 
@@ -27,7 +36,7 @@
     useThreeJsSetup(skiCanvas);
 
   // Default rotation (360 yaw)
-  const trickName = ref('');
+  const trickName = ref('backflip');
   let trickRotation: TrickRotation;
 
   // Rotation control variables
