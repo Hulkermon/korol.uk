@@ -19,11 +19,7 @@ export function useRotationController() {
    * @param rotation - The rotation values in degrees for each axis
    * @param progress - Interpolation factor between 0 and 1 (0 = start, 1 = complete rotation)
    */
-  const spin = (
-    object3D: Object3D,
-    rotation: TrickRotation,
-    progress: number
-  ): void => {
+  const spin = (object3D: Object3D, rotation: TrickRotation, progress: number): void => {
     // Clamp progress between 0 and 1
     const t = MathUtils.clamp(progress, 0, 1);
 

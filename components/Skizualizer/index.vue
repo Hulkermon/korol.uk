@@ -9,9 +9,7 @@
       placeholder="backflip"
       class="border p-2 m-2"
       @keyup.enter="startRotation" />
-    <button
-      @click="startRotation"
-      class="bg-gray-500 hover:bg-gray-600 text-white p-2 m-2">
+    <button @click="startRotation" class="bg-gray-500 hover:bg-gray-600 text-white p-2 m-2">
       flip it!
     </button>
   </div>
@@ -19,11 +17,8 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted } from 'vue';
-  // prettier-ignore
   import { useTrickParser, type TrickRotation } from '~/composables/skizualizer/useTrickParser';
-  // prettier-ignore
   import { useRotationController } from '~/composables/skizualizer/useRotationController';
-  // prettier-ignore
   import { useThreeJsSetup, type ThreeJsContext } from '~/composables/skizualizer/useThreeJsSetup';
 
   // Canvas reference
@@ -31,9 +26,8 @@
 
   // Get composables
   const { parseTrick } = useTrickParser();
-  const { spin, resetRotation: resetObjectRotation } = useRotationController();
-  const { setupAndRender, handleResize, cleanup, context } =
-    useThreeJsSetup(skiCanvas);
+  const { spin } = useRotationController();
+  const { setupAndRender, handleResize, cleanup } = useThreeJsSetup(skiCanvas);
 
   // Default rotation (360 yaw)
   const trickName = ref('backflip');
@@ -47,8 +41,8 @@
   // Start a 360-degree rotation
   const startRotation = () => {
     if (isRotating.value) return;
-    trickRotation = parseTrick(trickName.value);
 
+    trickRotation = parseTrick(trickName.value);
     isRotating.value = true;
     rotationProgress.value = 0;
   };

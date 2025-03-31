@@ -134,9 +134,7 @@ export function useThreeJsSetup(canvasRef: any) {
   /**
    * Animate the scene
    */
-  const startAnimationLoop = (
-    animateCallback?: (ctx: ThreeJsContext) => void
-  ) => {
+  const startAnimationLoop = (animateCallback?: (ctx: ThreeJsContext) => void) => {
     if (!contextRaw) return;
 
     const animate = () => {
