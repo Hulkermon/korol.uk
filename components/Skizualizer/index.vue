@@ -13,6 +13,7 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   import { useTrickParser } from '~/composables/skizualizer/useTrickParser';
+  import { useRotationController } from '~/composables/skizualizer/useRotationController';
 
   // Canvas reference
   const skiCanvas = ref<HTMLCanvasElement | null>(null);
@@ -25,13 +26,18 @@
   let skiMesh: THREE.Group;
   let animationFrameId: number;
 
+  // Get trick parser and rotation controller
+  const { parseTrick } = useTrickParser();
+  const { spin, resetRotation: resetObjectRotation } = useRotationController();
+
+  // Default rotation (360 yaw)
+  const trickRotation = parseTrick('270');
+
   // Rotation control variables
   const isRotating = ref(false);
-  /** radians per frame */
-  const rotationSpeed = 0.05;
-  const targetRotation = ref(0);
-  const currentRotation = ref(0);
-
+  const rotationProgress = ref(0);
+  const rotationSpeed = 0.01; // Progress increment per frame
+  
   // Initialize Three.js scene
   const initThree = () => {
     if (!skiCanvas.value) return;
@@ -121,15 +127,16 @@
   // Start a 360-degree rotation
   const startRotation = () => {
     if (isRotating.value) return;
-
+    
     isRotating.value = true;
-    targetRotation.value = currentRotation.value + Math.PI * 2; // 360 degrees in radians
+    rotationProgress.value = 0;
   };
 
   // Reset the rotation to original position
   const resetRotation = () => {
-    isRotating.value = true;
-    targetRotation.value = 0;
+    isRotating.value = false;
+    rotationProgress.value = 0;
+    resetObjectRotation(skiMesh);
   };
 
   // Add lights to the scene
@@ -170,21 +177,16 @@
 
     // Handle rotation animation
     if (isRotating.value) {
-      // Determine rotation direction
-      const rotationDirection =
-        targetRotation.value > currentRotation.value ? 1 : -1;
-
-      // Apply rotation around Y axis (vertical axis)
-      skiMesh.rotation.y += rotationSpeed * rotationDirection;
-      currentRotation.value = skiMesh.rotation.y;
-
-      // Check if we've reached the target rotation
-      if (
-        Math.abs(currentRotation.value - targetRotation.value) < rotationSpeed
-      ) {
-        skiMesh.rotation.y = targetRotation.value;
-        currentRotation.value = targetRotation.value;
+      // Update progress
+      rotationProgress.value += rotationSpeed;
+      
+      // Apply rotation using the controller
+      spin(skiMesh, trickRotation, rotationProgress.value);
+      
+      // Check if rotation is complete
+      if (rotationProgress.value >= 1) {
         isRotating.value = false;
+        rotationProgress.value = 1;
       }
     }
 

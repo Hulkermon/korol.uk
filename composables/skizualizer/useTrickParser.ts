@@ -5,7 +5,7 @@
 /**
  * Represents rotation in degrees for each axis
  */
-interface TrickRotation {
+export interface TrickRotation {
   yaw: number;   // Horizontal rotation (left/right)
   pitch: number; // Vertical forward/backward flip
   roll: number;  // Barrel roll / spin along forward axis
