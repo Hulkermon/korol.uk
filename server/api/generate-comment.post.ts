@@ -1,7 +1,15 @@
-import { defineEventHandler, readBody } from 'h3'
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
-import dotenv from 'dotenv'
-import path from 'path'
+import { defineEventHandler, readBody } from 'h3';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Define a simple type for comments for validation within this file
+interface SimpleComment {
+  text: string;
+  author: string; // Expecting 'Anonymous' or 'User'
+  // Add other relevant fields if needed for context, e.g., timestamp
+}
+// Removed duplicate: import path from 'path'
 
 // Load environment variables from .env file at the project root
 dotenv.config({ path: path.resolve(process.cwd(), '.env') })
@@ -9,15 +17,16 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 // Safety settings to configure what content is blocked.
 // Adjust these based on your application's needs.
 const safetySettings = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
 ];
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
-  const { postContent, apiKey: apiKeyFromRequest } = body
+  const body = await readBody(event);
+  // Add existingComments to the destructured body
+  const { postContent, apiKey: apiKeyFromRequest, existingComments } = body;
 
   // Determine the API key to use: prioritize request, fallback to env
   const apiKeyToUse = apiKeyFromRequest || process.env.GEMINI_API_KEY;
@@ -29,7 +38,25 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!postContent || typeof postContent !== 'string') {
-    return { error: 'Invalid post content provided.' }
+    return { error: 'Invalid post content provided.' };
+  }
+
+  // Validate existingComments (optional, but good practice)
+  const isValidCommentArray = (comments: any): comments is SimpleComment[] =>
+    Array.isArray(comments) &&
+    comments.every(
+      (comment) =>
+        typeof comment === 'object' &&
+        comment !== null &&
+        typeof comment.text === 'string' &&
+        typeof comment.author === 'string'
+    );
+
+  let existingCommentsString = '';
+  if (existingComments && isValidCommentArray(existingComments) && existingComments.length > 0) {
+    existingCommentsString = `Here are the comments already posted on this thread:\n\n${existingComments
+      .map((c) => `${c.author}: ${c.text}`)
+      .join('\n')}\n`;
   }
 
   // Initialize the Google Generative AI client with the determined key
@@ -37,12 +64,25 @@ export default defineEventHandler(async (event) => {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Or choose another model
 
   // Construct the prompt for Gemini
-  const prompt = `You are simulating a Reddit user commenting on an "Ask Me Anything" (AMA) style post on a parody subreddit called r/AskMeNothing.
-The user shared the following:
----
-${postContent}
----
-Generate a single, concise comment (max 2-3 sentences) reacting to the user's post. The comment should sound like a typical Reddit comment - it could be funny, quirky, insightful, supportive, slightly off-topic, or ask a follow-up question. Do NOT include a username or signature. Just provide the comment text.`
+  const prompt = `
+    You are simulating a helpful and experienced Reddit user commenting on a post in a subreddit similar to r/AskReddit, where users ask for life advice. Your goal is to contribute a unique and thoughtful perspective to the ongoing discussion.
+    ---
+    The original user posted the following question/situation:
+
+    ${postContent}
+    ---
+    ${existingCommentsString}
+    ---
+    **Instructions:**
+    - Generate a *new*, thoughtful comment reacting to the original user's post, taking the existing comments into account.
+    - Your persona should be that of a regular person sharing wisdom or perspective based on simulated life experience.
+    - Your comment should be between 3 and 15 sentences long, but ensure your thought is complete (avoid getting cut off).
+    - Aim to be helpful and generally uplifting, but be honest and offer critical perspectives or alternative views if appropriate. Lighthearted humor is okay if it fits.
+    - **Crucially, read the existing comments (if any) and offer a distinct viewpoint or build upon them. Do NOT simply repeat advice already given.** You can reference the existing discussion (e.g., "Adding to what others said...", "I disagree with the focus on X...").
+    - Try to generate content that is not the same length as other comments, to avoid redundancy.
+    - Offer advice, share a relevant (simulated) anecdote, provide an alternative viewpoint, or ask a clarifying question if the original post is vague and hasn't been clarified yet.
+    - Do NOT include a username or signature. Just provide the comment text.
+  `
 
   try {
     const result = await model.generateContent({
@@ -50,7 +90,7 @@ Generate a single, concise comment (max 2-3 sentences) reacting to the user's po
       generationConfig: {
         // Configure generation parameters if needed (temperature, max output tokens, etc.)
         // temperature: 0.7,
-        maxOutputTokens: 100,
+        maxOutputTokens: 300,
       },
       safetySettings,
     });

@@ -68,9 +68,9 @@ const isLoadingSave = ref(false) // Add loading state for saving
 const isLoadingReply = ref<Record<string, boolean>>({})
 let commentIntervalId: ReturnType<typeof setInterval> | null = null;
 let generatedCommentCount = 0;
-const MAX_COMMENTS = 10;
-const COMMENT_INTERVAL_MS = 60 * 1000; // 60 seconds
-const REPLY_DELAY_MS = 30 * 1000; // 30 seconds
+const MAX_COMMENTS = 5;
+const COMMENT_INTERVAL_MS = 20 * 1000; // 20 seconds
+const REPLY_DELAY_MS = 10 * 1000; // 10 seconds
 
 // API Key State
 const apiKey = ref<string | null>(null) // Store the API key
@@ -107,7 +107,8 @@ const generateSingleComment = async () => {
       method: 'POST',
       body: {
         postContent: submittedPostContent.value,
-        apiKey: apiKey.value // Pass the API key
+        apiKey: apiKey.value, // Pass the API key
+        existingComments: comments.value // Pass the current comments
       }
     });
 
@@ -152,10 +153,7 @@ const startCommentGeneration = () => {
   comments.value = []; // Clear previous comments if any
   console.log('Starting AI comment generation...');
 
-  // Generate the first comment immediately
-  generateSingleComment();
-
-  // Then set interval for subsequent comments
+  // Start generating comments at intervals
   commentIntervalId = setInterval(generateSingleComment, COMMENT_INTERVAL_MS);
 };
 

@@ -7,10 +7,10 @@ import path from 'path'
 dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 
 const safetySettings = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
 ];
 
 export default defineEventHandler(async (event) => {
@@ -36,30 +36,32 @@ export default defineEventHandler(async (event) => {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   // Construct the prompt for Gemini to generate a reply
-  const prompt = `You are simulating a Reddit user replying to another user within a comment thread on an "Ask Me Anything" (AMA) style post on a parody subreddit called r/AskMeNothing.
+  const prompt = `You are simulating a helpful and experienced Reddit user replying to another user within a comment thread on a subreddit similar to r/AskReddit, where users ask for life advice.
 
-The original post was:
----
-${originalPost}
----
+  The original post (the life advice question) was:
+  ---
+  ${originalPost}
+  ---
 
-The comment being replied to is:
----
-${commentText}
----
+  The specific comment you originally made (as 'Anonymous') is:
+  ---
+  ${commentText}
+  ---
 
-The user's reply to that comment is:
----
-${userReplyText}
----
+  The user ('User') has now replied to your comment with:
+  ---
+  ${userReplyText}
+  ---
 
-Generate a single, concise reply (max 2-3 sentences) from the perspective of the original commenter (Anonymous) reacting to the user's reply. The reply should sound like a typical Reddit reply - it could be funny, quirky, insightful, defensive, agreeable, or ask another question. Do NOT include a username or signature. Just provide the reply text.`
+  Generate a single, thoughtful reply (up to 10 sentences) reacting to the 'User's reply, continuing the conversation from the perspective of 'Anonymous' (the original commenter). Maintain a helpful and generally uplifting tone, but remain honest. You can elaborate on your previous point, acknowledge the user's reply, offer further simulated experience/wisdom, gently present an alternative view, or use appropriate humor.
+  
+  Do NOT include a username or signature. Just provide the reply text.`
 
   try {
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 100,
+        maxOutputTokens: 200,
       },
       safetySettings,
     });
