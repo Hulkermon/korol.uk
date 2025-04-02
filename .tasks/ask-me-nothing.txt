@@ -1,0 +1,18 @@
+Help me make a plan to implement the following page 'pages/ask-me-nothing/' (see below for folder content) .
+It should be an interactive website that mimics the looks and feel of reddit.com. It should specifically mimic the r/AMA (ask me anything) subreddit. In this subreddit users will, often anonymously, share personal experiences, achievements or otherwise interesting things. The other users of reddit will then respond with questions regarding the shared thing. These questions range from funny comments to thought provoking and insightful. This page, parodically named "ask me nothing" (r/AMN) should only feature the following:
+- a "create new post" screen upon loading the site
+- once the user posts their story the post will be displayed like a regular reddit post would, when viewed in "fullscreen", so no posts overview page.
+- every post should by default be private and NOT saved to any database
+- after posting, an AI Language model should be used to generate comments as if they were written by reddit users responding to the post.
+- every 60 seconds one comment should be made, until 10 comments are generated, ranging from funny/quirky to serious/heartfelt, based on the user's post.
+- the user should have the ability to reply to a comment, after which a reply is generated and added. this reply should be made approximately 30 seconds after the user replied. this action is repeatable. replies can only be generated in response to a reply by the user. replies do not count towards the 10 comment-cap.
+- the user should have the option to "save and share" by clicking a button. only when the user decides to save and share should the post including all the comments and replies be added to the nuxt cms, along with a unique url to revisit the post.
+- revisiting the post should not trigger any more AI generated comments even if the 10 comment cap is not reached yet. It should however generate replies, if the visiting user adds another reply.
+- no username nor login is required, simply use "Anonymous" as the username.
+- In order to generate the AI content, a gemini API key will be requested upon loading the page. For development purposes, add a .env file in which the API key can be defined. This API key should be loaded automatically so long as we are on localhost (dev environment).
+
+First, write some tests to check if these conditions are met, and ask me to review the tests.
+
+Once I have reviewed and confirmed the tests, implement and iterate until the tests complete.
+
+any questions?
