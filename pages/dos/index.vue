@@ -23,9 +23,9 @@ const { processCommand, terminalColor, currentPathString, CLEAR_SCREEN_SIGNAL } 
 
 // Add initial welcome message or leave blank?
 // Maybe clear the grid initially instead of showing the default welcome screen?
-// onMounted(() => {
-//   // Example: could potentially call a clear method if exposed by Terminal component
-// });
+onMounted(() => {
+  // Example: could potentially call a clear method if exposed by Terminal component
+});
 
 </script>
 

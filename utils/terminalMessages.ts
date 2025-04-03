@@ -35,6 +35,9 @@ const systemInfo = [
   'SYSTEM INITIALIZATION COMPLETE',
   '',
   'ALL DEVICES FUNCTIONING WITHIN NORMAL PARAMETERS',
+  '',
+  '',
+  '',
 ];
 
 export const titleScreen = [...logo, ...systemInfo];

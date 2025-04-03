@@ -69,7 +69,7 @@ export interface HistoryEntry {
 export function useDosCommands() {
   const commandHistory = ref<HistoryEntry[]>([]);
   const currentPath = ref<string[]>(['C:']); // Start at root
-  const terminalColor = ref<string>('white'); // Default color
+  const terminalColor = ref<string>('green'); // Default color
   let historyIdCounter = 0;
 
   // --- VFS Helper Functions ---

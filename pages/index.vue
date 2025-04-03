@@ -28,7 +28,7 @@
           </div>
         </NuxtLink>
 
-        <NuxtLink to="/terminal" class="nav-card">
+        <NuxtLink to="/dos" class="nav-card">
           <div class="card-inner">
             <div class="card-title">TERMINAL</div>
             <div class="card-desc">

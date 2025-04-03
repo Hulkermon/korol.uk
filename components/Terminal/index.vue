@@ -40,7 +40,7 @@ const colorMap: Record<string, string> = {
 // Initial Grid Config (color will be updated by watch)
 const gridConfig: GridConfig = {
     cols: 80, // Standard DOS width
-    rows: 25, // Standard DOS height
+    rows: 36, // Standard DOS height
     cellWidth: 12,
     cellHeight: 20,
     charColor: colorMap[props.terminalColor] || colorMap['white'], // Initial color
