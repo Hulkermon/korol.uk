@@ -130,8 +130,8 @@ onMounted(() => {
 // Scroll to bottom when history updates
 watch(() => props.history, async () => {
   await nextTick(); // Wait for DOM update
-  if (outputAreaRef.value) {
-    outputAreaRef.value.scrollTop = outputAreaRef.value.scrollHeight;
+  if (inputRef.value) {
+    inputRef.value.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }
 }, { deep: true }); // Watch deeply for changes within the array
 
@@ -169,6 +169,7 @@ defineExpose({ focusInput });
   filter: url(#crt-warp); /* Apply the SVG filter */
   /* Ensure filter doesn't clip content */
   padding: 15px; /* Increase padding to prevent text hitting warped edges */
+  padding-bottom: 0;
   box-sizing: border-box;
   border-radius: inherit; /* Inherit wrapper's radius */
 }
@@ -190,18 +191,6 @@ defineExpose({ focusInput });
   @apply whitespace-pre-wrap break-words mb-2; /* Allow wrapping, preserve whitespace */
 }
 
-.history-entry {
-  /* No specific style needed for the entry container itself */
-}
-
-.history-input {
-  /* Input lines might not need special styling beyond the container's default */
-}
-
-.history-output {
-  /* Output lines might not need special styling beyond the container's default */
-}
-
 .history-error {
   color: var(--terminal-error-color); /* Use error color */
 }
@@ -213,6 +202,7 @@ defineExpose({ focusInput });
 
 .prompt {
   @apply mr-1.5 whitespace-pre; /* Tailwind equivalent */
+  padding-bottom: 15px;
 }
 
 .terminal-input {
@@ -222,6 +212,7 @@ defineExpose({ focusInput });
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  padding-bottom: 15px;
 }
 
 /* Blinking cursor using CSS animation */
