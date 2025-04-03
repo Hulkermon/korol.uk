@@ -20,7 +20,6 @@ const _config: CursorConfig = {
 export function useCursor(config: CursorConfig = _config) {
   const cursorPos = ref<CursorPosition>({ x: 0, y: 0 });
   const cursorVisible = ref(true);
-  const blinkIntervalMs = ref(config.blinkIntervalMs);
 
   // Move cursor in a specified direction
   const moveCursor = (direction: 'up' | 'down' | 'left' | 'right') => {
