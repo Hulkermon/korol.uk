@@ -179,19 +179,22 @@ export function useDosCommands() {
       }
   };
 
-  const processCommand = async (input: string) => {
-    const trimmedInput = input.trim();
-    if (!trimmedInput) return;
+  // Define a unique signal for clear screen action
+  const CLEAR_SCREEN_SIGNAL = Symbol('clear_screen');
 
-    addHistoryEntry('input', `${currentPathString.value} ${trimmedInput}`); // Use reactive prompt
+  const processCommand = async (input: string): Promise<string | string[] | symbol | null> => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return null; // Return null for no action
+
+    addHistoryEntry('input', `${currentPathString.value} ${trimmedInput}`); // Still log input to history
 
     const [commandName, ...args] = trimmedInput.split(/\s+/);
     const lowerCaseCommand = commandName.toLowerCase();
 
-    // Handle 'cls'/'clear' directly as it modifies history state
+    // Handle 'cls'/'clear' by returning the signal
     if (lowerCaseCommand === 'cls' || lowerCaseCommand === 'clear') {
-      commandHistory.value = [];
-      return;
+      // Don't modify history here, let the caller handle the clear action
+      return CLEAR_SCREEN_SIGNAL;
     }
 
     try {
@@ -208,22 +211,29 @@ export function useDosCommands() {
           loadCommand, // Pass loadCommand in context
         };
         const output = await command.execute(args, context);
-        if (output) { // Don't add empty output
-            addHistoryEntry('output', output);
+        if (output) {
+            addHistoryEntry('output', output); // Log output to history
+            return output; // Return output for display
         }
+        return null; // Return null if command had no output
       } else {
-        addHistoryEntry('error', `Bad command or file name: ${commandName}`);
+        const errorMsg = `Bad command or file name: ${commandName}`;
+        addHistoryEntry('error', errorMsg);
+        return errorMsg; // Return error message for display
       }
     } catch (error) {
-       console.error(`Error executing command ${commandName}:`, error);
-       addHistoryEntry('error', `Error executing command: ${commandName}`);
+       const errorMsg = `Error executing command: ${commandName}`;
+       console.error(errorMsg, error);
+       addHistoryEntry('error', errorMsg);
+       return errorMsg; // Return error message for display
     }
   };
 
   return {
-    commandHistory,
+    commandHistory, // Keep history for potential future use (e.g., up arrow)
     processCommand,
     terminalColor, // Expose color state
     currentPathString, // Expose formatted path for prompt
+    CLEAR_SCREEN_SIGNAL, // Expose the signal constant
   };
 }

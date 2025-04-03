@@ -1,28 +1,32 @@
 <template>
   <div class="dos-page-container">
-    <!-- Pass terminalColor and currentPathString as props -->
-    <DosTerminal
-      :history="commandHistory"
-      :terminal-color="terminalColor"
-      :prompt-string="currentPathString"
-      @submit-command="handleCommandSubmit"
+    <!-- Use the new Canvas Terminal -->
+    <Terminal
+      :process-command-function="processCommand"
+      :currentPathString="currentPathString"
+      :terminalColor="terminalColor"
+      :clear-screen-signal="CLEAR_SCREEN_SIGNAL"
     />
+     <!-- Old DosTerminal removed -->
   </div>
 </template>
 
 <script setup lang="ts">
-import DosTerminal from '@/components/dos/Terminal.vue';
+import Terminal from '@/components/Terminal/index.vue'; // Import the new canvas terminal
 import { useDosCommands } from '@/composables/dos/useDosCommands';
 
-// Get all reactive states from the composable
-const { commandHistory, processCommand, terminalColor, currentPathString } = useDosCommands();
+// Get all needed exports from the composable
+// Note: currentPathString and terminalColor are already refs returned by useDosCommands
+const { processCommand, terminalColor, currentPathString, CLEAR_SCREEN_SIGNAL } = useDosCommands();
 
-const handleCommandSubmit = (command: string) => {
-  processCommand(command);
-};
+// No handleCommandSubmit needed here anymore, as the function is passed directly
 
-// Add initial welcome message or leave blank
-// processCommand('help'); // Example: run help on load?
+// Add initial welcome message or leave blank?
+// Maybe clear the grid initially instead of showing the default welcome screen?
+// onMounted(() => {
+//   // Example: could potentially call a clear method if exposed by Terminal component
+// });
+
 </script>
 
 <style scoped>
@@ -31,7 +35,8 @@ const handleCommandSubmit = (command: string) => {
   justify-content: center;
   align-items: center;
   min-height: 100vh; /* Full viewport height */
-  background-color: #000080; /* Optional: DOS-like blue background */
-  padding: 2rem; /* Add some padding */
+  /* Match the canvas terminal background */
+  background-color: #0a0a0a;
+  padding: 0; /* Remove padding if container is just for centering */
 }
 </style>

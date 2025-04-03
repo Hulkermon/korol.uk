@@ -6,7 +6,7 @@ export function useCrtRenderer(
   canvas: Ref<HTMLCanvasElement | null>,
   grid: Ref<string[][]>,
   cursorPos: Ref<CursorPosition>,
-  config: GridConfig
+  config: Ref<GridConfig> // Accept reactive config
 ) {
   let ctx: CanvasRenderingContext2D | null = null;
   let animationFrameId: number | null = null;
@@ -16,8 +16,8 @@ export function useCrtRenderer(
   const setupCanvas = () => {
     if (!canvas.value) return;
 
-    const width = config.cols * config.cellWidth;
-    const height = config.rows * config.cellHeight;
+    const width = config.value.cols * config.value.cellWidth; // Use .value
+    const height = config.value.rows * config.value.cellHeight; // Use .value
 
     canvas.value.width = width;
     canvas.value.height = height;
@@ -25,16 +25,13 @@ export function useCrtRenderer(
     ctx = canvas.value.getContext('2d');
     if (ctx) {
       ctx.imageSmoothingEnabled = false;
-      
-      // Set up font configuration once
-      ctx.font = `${config.cellHeight * 0.8}px Courier New`;
+
+      // Font and glow might need to be reset if config changes, handle in render?
+      // Or assume they don't change often after initial setup. Let's keep setup here for now.
+      ctx.font = `${config.value.cellHeight * 0.8}px Courier New`; // Use .value
       ctx.textBaseline = 'middle';
-      
-      // Set up glow effect configuration once
-      ctx.shadowColor = config.charColor;
-      ctx.shadowBlur = config.glowStrength || 0;
-      
-      // Create the vignette gradient once
+
+      // Create the vignette gradient once (assuming size doesn't change)
       vignetteGradient = ctx.createRadialGradient(
         width / 2,
         height / 2,
@@ -52,23 +49,28 @@ export function useCrtRenderer(
   const render = () => {
     if (!ctx || !canvas.value || !grid.value) return;
 
-    const width = config.cols * config.cellWidth;
-    const height = config.rows * config.cellHeight;
+    const width = config.value.cols * config.value.cellWidth; // Use .value
+    const height = config.value.rows * config.value.cellHeight; // Use .value
 
     // Clear the canvas
-    ctx.fillStyle = config.backgroundColor || '#0a0a0a';
+    ctx.fillStyle = config.value.backgroundColor || '#0a0a0a'; // Use .value
     ctx.fillRect(0, 0, canvas.value.width, canvas.value.height);
+
+    // Set dynamic properties for each frame
+    ctx.shadowColor = config.value.charColor; // Use .value
+    ctx.shadowBlur = config.value.glowStrength || 0; // Use .value
+    ctx.fillStyle = config.value.charColor; // Use .value
 
     // Draw each character in the grid
     for (let y = 0; y < grid.value.length; y++) {
       for (let x = 0; x < grid.value[y].length; x++) {
         const char = grid.value[y][x];
         if (char !== ' ') {
-          ctx.fillStyle = config.charColor;
+          // Fill style is already set above
           ctx.fillText(
             char,
-            x * config.cellWidth + config.cellWidth * 0.15,
-            y * config.cellHeight + config.cellHeight / 2
+            x * config.value.cellWidth + config.value.cellWidth * 0.15, // Use .value
+            y * config.value.cellHeight + config.value.cellHeight / 2 // Use .value
           );
         }
       }
@@ -77,12 +79,12 @@ export function useCrtRenderer(
     // Draw cursor (blinking)
     const cursorVisible = Math.floor(Date.now() / 500) % 2 === 0;
     if (cursorVisible) {
-      ctx.fillStyle = config.charColor;
+      // Fill style is already set above
       ctx.fillRect(
-        cursorPos.value.x * config.cellWidth,
-        cursorPos.value.y * config.cellHeight + config.cellHeight * 0.8,
-        config.cellWidth * 0.8,
-        config.cellHeight * 0.2
+        cursorPos.value.x * config.value.cellWidth, // Use .value
+        cursorPos.value.y * config.value.cellHeight + config.value.cellHeight * 0.8, // Use .value
+        config.value.cellWidth * 0.8, // Use .value
+        config.value.cellHeight * 0.2 // Use .value
       );
     }
 
@@ -98,7 +100,7 @@ export function useCrtRenderer(
     if (!ctx) return;
 
     // Draw scan lines
-    ctx.fillStyle = `rgba(0, 0, 0, ${config.scanlineOpacity || 0.15})`;
+    ctx.fillStyle = `rgba(0, 0, 0, ${config.value.scanlineOpacity || 0.15})`; // Use .value
     for (let y = 0; y < height; y += 2) {
       ctx.fillRect(0, y, width, 1);
     }
