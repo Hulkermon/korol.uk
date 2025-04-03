@@ -12,6 +12,7 @@ import { useDosCommands, type DosCommandContext } from '@/composables/dos/useDos
 import { useCrtGrid, type GridConfig } from '@/composables/terminal/useCrtGrid';
 import { useCrtRenderer } from '@/composables/terminal/useCrtRenderer';
 import { useCrtKeyboard } from '@/composables/terminal/useCrtKeyboard';
+import { titleScreen } from '@/utils/terminalMessages'; // Import titleScreen
 
 // --- Props ---
 const props = defineProps<{
@@ -37,13 +38,19 @@ const colorMap: Record<string, string> = {
     pink: '#ff99cc',
 };
 
+const _cellWidth = 12;
+const _cellHeight = 20;
+const _cols = 120
+const _rows = 36;
+const _rows4by3 = _cols * _cellWidth * 3 / 4 / _cellHeight; // 4:3 aspect ratio
+
 // Initial Grid Config (color will be updated by watch)
 const gridConfig: GridConfig = {
-    cols: 80, // Standard DOS width
-    rows: 36, // Standard DOS height
-    cellWidth: 12,
-    cellHeight: 20,
-    charColor: colorMap[props.terminalColor] || colorMap['white'], // Initial color
+    cols: _cols,
+    rows: _rows,
+    cellWidth: _cellWidth,
+    cellHeight: _cellHeight,
+    charColor: colorMap[props.terminalColor] || colorMap['green'], // Initial color
     glowStrength: 1,
     backgroundColor: 'black',
     scanlineOpacity: 0.1,
@@ -107,11 +114,26 @@ const gridConfig: GridConfig = {
 
   // --- Lifecycle Hooks ---
   onMounted(() => {
-    // Optional: Clear welcome screen if not desired
-    // gridApi.clearGrid();
+    // Clear the grid first to ensure a blank slate
+    gridApi.clearGrid();
 
-    // Write initial prompt
-    gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y);
+    // Write the title screen centered, starting from row 1 (index 0)
+    titleScreen.forEach((line, index) => {
+        // Add a small top margin, e.g., start at row 1 or 2
+        const startRow = 1;
+        if (index + startRow < gridApi.config.value.rows) {
+             gridApi.writeTextCentered(line, index + startRow);
+        }
+    });
+
+    // Set cursor position after title screen (e.g., below the title)
+    // Find the last line of the title screen + some padding
+    const lastTitleLine = titleScreen.length + 1; // +1 for the startRow offset
+    const promptRow = Math.min(lastTitleLine + 2, gridApi.config.value.rows - 1); // Ensure it's within bounds
+    gridApi.cursorPos.value = { x: 0, y: promptRow };
+
+    // Write initial prompt at the new cursor position
+    gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y); // Use .value
 
     // Start the rendering loop
     rendererApi.startRendering();
