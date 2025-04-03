@@ -1,8 +1,4 @@
-export interface DosCommand {
-  name: string;
-  description: string;
-  execute: (args?: string[]) => Promise<string | string[]>; // Can return single line or multiple lines
-}
+import type { DosCommand } from "../useDosCommands";
 
 const pingCommand: DosCommand = {
   name: 'ping',

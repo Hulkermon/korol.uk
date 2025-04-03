@@ -54,7 +54,7 @@
 
     <!-- Input area -->
     <div class="input-line">
-      <span class="prompt">C:\></span>
+      <span class="prompt">{{ promptString }}</span> <!-- Use promptString prop -->
       <input
         ref="inputRef"
         v-model="currentInput"
@@ -70,15 +70,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'; // Import watch and nextTick
+import { ref, onMounted, watch, nextTick, computed } from 'vue'; // Import computed
 import type { HistoryEntry } from '@/composables/dos/useDosCommands'; // Import type
 
 // Props definition
 const props = withDefaults(defineProps<{
   history?: HistoryEntry[]; // Make history optional for standalone use/testing
+  terminalColor?: string; // Add prop for text color
+  promptString?: string; // Add prop for the prompt
 }>(), {
   history: () => [], // Default to empty array
+  terminalColor: 'white', // Default color if not provided
+  promptString: 'C:\\>', // Default prompt
 });
+
+// Map prop color names to actual CSS color values
+const colorMap: Record<string, string> = {
+    green: '#33ff33', // Bright green
+    yellow: '#ffff33', // Bright yellow
+    cyan: '#33ffff', // Bright cyan
+    white: '#c0c0c0', // Light gray (default)
+    red: '#ff6b6b', // Error color
+    pink: '#ff99cc', // Pink
+};
+
+// Computed property for v-bind in CSS
+const terminalColorCss = computed(() => {
+    return colorMap[props.terminalColor?.toLowerCase() ?? 'white'] || colorMap['white'];
+});
+
 
 const emit = defineEmits(['submit-command']);
 
@@ -137,9 +157,11 @@ defineExpose({ focusInput });
 
 /* Apply Tailwind classes directly where possible, use @apply for complex reuse */
 .dos-terminal-container {
-  @apply bg-black text-gray-300 font-mono p-3 h-full w-full overflow-y-auto relative; /* Ensure it fills wrapper, relative for overlay */
+  @apply bg-black font-mono p-3 h-full w-full overflow-y-auto relative; /* Ensure it fills wrapper, relative for overlay */
+  scrollbar-width: none; /* Hide scrollbar */
   /* Add custom properties for easier theming if needed */
-  --terminal-text-color: #c0c0c0; /* Light gray */
+  /* Use v-bind to link CSS var to the computed color value */
+  --terminal-text-color: v-bind(terminalColorCss);
   --terminal-bg-color: black;
   --terminal-error-color: #ff6b6b; /* Light red for errors */
   color: var(--terminal-text-color);

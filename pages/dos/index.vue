@@ -1,6 +1,12 @@
 <template>
   <div class="dos-page-container">
-    <DosTerminal :history="commandHistory" @submit-command="handleCommandSubmit" />
+    <!-- Pass terminalColor and currentPathString as props -->
+    <DosTerminal
+      :history="commandHistory"
+      :terminal-color="terminalColor"
+      :prompt-string="currentPathString"
+      @submit-command="handleCommandSubmit"
+    />
   </div>
 </template>
 
@@ -8,7 +14,8 @@
 import DosTerminal from '@/components/dos/Terminal.vue';
 import { useDosCommands } from '@/composables/dos/useDosCommands';
 
-const { commandHistory, processCommand } = useDosCommands();
+// Get all reactive states from the composable
+const { commandHistory, processCommand, terminalColor, currentPathString } = useDosCommands();
 
 const handleCommandSubmit = (command: string) => {
   processCommand(command);
