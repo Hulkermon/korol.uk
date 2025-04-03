@@ -83,15 +83,14 @@ export function useCrtGrid(initialConfig: GridConfig) {
   };
 
   // Delete a character at the current cursor position (backspace)
-  const deleteChar = () => {
-    if (cursorPos.value.x > 0) {
+  // Takes promptLength to prevent deleting the prompt itself
+  const deleteChar = (promptLength: number = 0) => {
+    // Only allow deletion if cursor is after the prompt
+    if (cursorPos.value.x > promptLength) {
       cursorPos.value.x--;
       grid.value[cursorPos.value.y][cursorPos.value.x] = ' ';
-    } else if (cursorPos.value.y > 0) {
-      cursorPos.value.y--;
-      cursorPos.value.x = config.value.cols - 1; // Use .value
-      grid.value[cursorPos.value.y][cursorPos.value.x] = ' ';
     }
+    // No action needed if cursor is at or before the prompt start
   };
 
   // Scroll the grid up by one line

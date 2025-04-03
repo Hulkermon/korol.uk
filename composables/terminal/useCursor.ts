@@ -22,14 +22,9 @@ export function useCursor(config: CursorConfig = _config) {
   const cursorVisible = ref(true);
 
   // Move cursor in a specified direction
-  const moveCursor = (direction: 'up' | 'down' | 'left' | 'right') => {
+  const moveCursor = (direction: 'left' | 'right') => { // Remove 'up' and 'down'
     switch (direction) {
-      case 'up':
-        if (cursorPos.value.y > 0) cursorPos.value.y--;
-        break;
-      case 'down':
-        if (cursorPos.value.y < config.rows - 1) cursorPos.value.y++;
-        break;
+      // Removed 'up' and 'down' cases
       case 'left':
         if (cursorPos.value.x > 0) cursorPos.value.x--;
         break;

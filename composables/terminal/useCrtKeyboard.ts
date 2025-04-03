@@ -5,7 +5,9 @@ interface KeyboardHandlers {
   onCharInput?: (char: string) => void;
   onBackspace?: () => void;
   onEnter?: () => void;
-  onArrow?: (direction: 'up' | 'down' | 'left' | 'right') => void;
+  onArrow?: (direction: 'left' | 'right') => void; // Only left/right now
+  onHistoryUp?: () => void; // Add history up handler
+  onHistoryDown?: () => void; // Add history down handler
 }
 
 export function useCrtKeyboard(handlers: KeyboardHandlers = {}) {
@@ -30,10 +32,10 @@ export function useCrtKeyboard(handlers: KeyboardHandlers = {}) {
       handlers.onArrow?.('right');
       break;
       case 'ArrowUp':
-      handlers.onArrow?.('up');
+      handlers.onHistoryUp?.(); // Call history up handler
       break;
       case 'ArrowDown':
-      handlers.onArrow?.('down');
+      handlers.onHistoryDown?.(); // Call history down handler
       break;
       default:
       if (e.key.length === 1) {

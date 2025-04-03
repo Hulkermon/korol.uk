@@ -6,6 +6,7 @@
       :currentPathString="currentPathString"
       :terminalColor="terminalColor"
       :clear-screen-signal="CLEAR_SCREEN_SIGNAL"
+      :command-history="commandHistory"
     />
      <!-- Old DosTerminal removed -->
   </div>
@@ -16,8 +17,7 @@ import Terminal from '@/components/Terminal/index.vue'; // Import the new canvas
 import { useDosCommands } from '@/composables/dos/useDosCommands';
 
 // Get all needed exports from the composable
-// Note: currentPathString and terminalColor are already refs returned by useDosCommands
-const { processCommand, terminalColor, currentPathString, CLEAR_SCREEN_SIGNAL } = useDosCommands();
+const { processCommand, terminalColor, currentPathString, CLEAR_SCREEN_SIGNAL, commandHistory } = useDosCommands();
 
 // No handleCommandSubmit needed here anymore, as the function is passed directly
 
