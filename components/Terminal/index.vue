@@ -109,15 +109,20 @@
     commandHistoryIndex.value = inputHistory.value.length; // Set to the end of the history
   };
 
+  // Define the options type expected by enterGameMode
+  interface SnakeGameOptions {
+    isTron: boolean;
+  }
+
   // --- Game Mode Control ---
-  const enterGameMode = () => {
+  const enterGameMode = (options: SnakeGameOptions) => { // Accept options
     // Save current terminal state
     savedGridState.value = JSON.parse(JSON.stringify(gridApi.grid.value)); // Deep copy
     savedCursorPos.value = { ...gridApi.cursorPos.value };
 
     isGameModeActive.value = true;
     gridApi.clearGrid(); // Clear screen for the game
-    snakeGame.startGame(gridApi); // Start the snake game logic
+    snakeGame.startGame(gridApi, options); // Pass options to snake game logic
   };
 
   const exitGameMode = () => {
