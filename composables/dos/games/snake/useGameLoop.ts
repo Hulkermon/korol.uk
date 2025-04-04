@@ -7,7 +7,8 @@ interface GameLoopOptions {
 }
 
 export function useGameLoop(options: GameLoopOptions) {
-  const { updateCallback, renderCallback, loopIntervalMs = 150 } = options;
+  const { updateCallback, renderCallback } = options;
+  const loopIntervalMs = ref(options.loopIntervalMs || 150); // Make interval reactive
   const gameLoopInterval = ref<ReturnType<typeof setInterval> | null>(null);
   const isRunning = ref(false);
 
@@ -24,7 +25,8 @@ export function useGameLoop(options: GameLoopOptions) {
     if (gameLoopInterval.value) {
       clearInterval(gameLoopInterval.value);
     }
-    gameLoopInterval.value = setInterval(gameTick, loopIntervalMs);
+    // Use the reactive interval ref
+    gameLoopInterval.value = setInterval(gameTick, loopIntervalMs.value);
     // Run first tick immediately
     gameTick();
   };
@@ -42,9 +44,25 @@ export function useGameLoop(options: GameLoopOptions) {
     stopGameLoop();
   });
 
+  // Function to change the loop interval
+  const setLoopInterval = (newMs: number) => {
+      if (newMs <= 0) {
+          console.warn("Loop interval must be positive.");
+          return;
+      }
+      loopIntervalMs.value = newMs;
+      // If the loop is currently running, restart it with the new interval
+      if (isRunning.value) {
+          stopGameLoop();
+          startGameLoop();
+      }
+  };
+
   return {
     startGameLoop,
     stopGameLoop,
+    setLoopInterval, // Expose the new function
     isRunning,
+    loopIntervalMs // Expose the reactive interval if needed elsewhere
   };
 }

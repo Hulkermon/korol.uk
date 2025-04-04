@@ -104,8 +104,10 @@
   };
 
   // Define the options type expected by enterGameMode
+  // (Should match SnakeGameOptions in ../games/snake/types)
   interface SnakeGameOptions {
     isTron: boolean;
+    enablePowerups: boolean;
   }
 
   // --- Game Mode Control ---

@@ -74,7 +74,18 @@ export function useSnakeRenderer(
         modeY += 1; // Move down for next line of info
       });
     }
-    // Add other sidebar elements (legend, etc.) later below modeY
+    // --- Draw Active Effect ---
+    modeY += 1; // Add a blank line after mode info
+    const effect = gameState.activeEffect.value;
+    if (effect) {
+        const remaining = Math.max(0, Math.ceil((effect.endTime - Date.now()) / 1000));
+        let effectName = effect.type.charAt(0) + effect.type.slice(1).toLowerCase();
+        if (effectName === 'Invincibility') effectName = 'Invincible'; // Nicer display name
+        gridApi.writeTextAt(`${effectName}: ${remaining}s`, sidebarX, modeY);
+        modeY += 1;
+    }
+
+    // Add legend later if needed below modeY
   };
 
   const drawGameOver = () => {

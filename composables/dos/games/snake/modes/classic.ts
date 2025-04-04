@@ -1,5 +1,4 @@
-import type { SnakeModeStrategy, GameState, Position } from '../types';
-import type { GridApi } from '~/composables/dos/useDosCommands';
+import type { SnakeModeStrategy, GameState, Position, GridApi } from '../types'; // Import GridApi from types
 
 // Classic mode doesn't add trails or special collisions/rendering
 export const classicMode: SnakeModeStrategy = {

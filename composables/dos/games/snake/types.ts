@@ -1,4 +1,28 @@
-import type { GridApi } from '~/composables/dos/useDosCommands';
+import { type Ref } from 'vue';
+import type { useCrtGrid } from '@/composables/terminal/useCrtGrid';
+import type { GridConfig } from '@/composables/terminal/useCrtGrid'; // Import GridConfig
+import type { CursorPosition } from '@/composables/terminal/useCursor'; // Import CursorPosition
+
+// Explicitly define GridApi based on the return type of useCrtGrid, ensuring refs are captured
+export type GridApi = {
+    grid: Ref<string[][]>;
+    cursorPos: Ref<CursorPosition>;
+    config: Ref<GridConfig>;
+    writeTextAt: (text: string, x: number, y: number) => void;
+    writeTextCentered: (text: string, y: number) => void;
+    writeChar: (char: string) => void;
+    deleteChar: (promptLength?: number) => void;
+    newLine: () => void;
+    scrollUp: () => void;
+    moveCursor: (direction: 'left' | 'right') => void; // Corrected signature
+    loadDemoContent: () => void;
+    loadWelcomeScreen: () => void;
+    resetGrid: () => void;
+    clearGrid: () => void;
+    updateConfig: (newConfig: Partial<GridConfig>) => void;
+    writeLines: (lines: string | string[]) => void;
+};
+
 
 // Basic types
 export interface Position {
@@ -18,13 +42,30 @@ export interface GameState {
   trails: Ref<Set<string>>; // For Tron mode
   gameWidth: Ref<number>;
   gameHeight: Ref<number>;
-  activeMode: Ref<SnakeModeStrategy | null>; // Added ref for the active mode strategy
-  // Add refs for powerups, gateways etc. later
+  activeMode: Ref<SnakeModeStrategy | null>;
+  // State for Powerups mode
+  powerups: Ref<Powerup[]>;
+  activeEffect: Ref<ActiveEffect | null>;
+  // Add refs for gateways etc. later
+}
+
+// --- Powerup Specific Types ---
+export interface Powerup {
+  pos: Position;
+  type: string; // Corresponds to keys in POWERUP_DEFS
+  symbol: string;
+}
+
+export interface ActiveEffect {
+  type: string; // e.g., 'SLOWDOWN', 'INVINCIBILITY'
+  endTime: number;
+  originalSpeed?: number; // Store original speed for effects like SLOWDOWN
 }
 
 // Options passed when starting the game
 export interface SnakeGameOptions {
   isTron: boolean;
+  enablePowerups: boolean; // Added powerups flag
   // Add future options here
 }
 

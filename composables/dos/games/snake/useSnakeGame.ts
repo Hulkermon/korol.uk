@@ -3,14 +3,18 @@ import { useGameLoop } from './useGameLoop';
 import { useSnakeRenderer } from './useSnakeRenderer';
 import { classicMode } from './modes/classic';
 import { tronMode } from './modes/tron';
+import { powerupsMode } from './modes/powerups'; // Import powerups mode
 import type {
+    GridApi, // Import GridApi from types
     GameState,
     Position,
     Direction,
     SnakeGameOptions,
-    SnakeModeStrategy
+    SnakeModeStrategy,
+    Powerup, // Import Powerup type
+    ActiveEffect // Import ActiveEffect type
 } from './types';
-import type { GridApi } from '~/composables/dos/useDosCommands';
+// Removed incorrect GridApi import
 
 // Helper function (could be moved to a shared utility)
 const posToString = (pos: Position): string => `${pos.x},${pos.y}`;
@@ -22,7 +26,11 @@ export function useSnakeGame() {
     const score = ref(0);
     const isGameOver = ref(false);
     const direction = ref<Direction>('right');
-    const trails = ref<Set<string>>(new Set()); // Still needed for Tron state
+    const trails = ref<Set<string>>(new Set());
+
+    // --- Powerup State ---
+    const powerups = ref<Powerup[]>([]);
+    const activeEffect = ref<ActiveEffect | null>(null);
 
     // --- Layout & Config ---
     const gridApi = ref<GridApi | null>(null);
@@ -53,7 +61,20 @@ export function useSnakeGame() {
             trails,
             gameWidth,
             gameHeight,
-            activeMode // Pass the active mode ref itself
+            activeMode,
+            powerups, // Add powerups state
+            activeEffect, // Add active effect state
+            // Add methods needed by modes (like getRandomPosition, setSpeed)
+            // Note: Exposing functions directly in computed state might be complex.
+            // Consider passing the main composable instance or specific methods
+            // to the mode strategy's functions if needed.
+            // For now, @ts-ignore will be used in powerupsMode where needed.
+             // @ts-ignore
+            getRandomPosition: getRandomPosition, // Expose helper
+             // @ts-ignore
+            getSpeed: () => gameLoop.loopIntervalMs, // Expose current speed getter
+             // @ts-ignore
+            setSpeed: (ms: number) => gameLoop.setLoopInterval(ms) // Expose speed setter
         };
     });
 
@@ -122,9 +143,16 @@ export function useSnakeGame() {
         const hitRightWall = head.x >= gameWidth.value - 1;
         const hitTopWall = head.y <= gameOffsetY.value;
         const hitBottomWall = head.y >= gameHeight.value - 1;
-        const modeCollision = activeMode.value?.checkCollision(head, currentState) || false; // Delegate mode collision
 
-        if (hitLeftWall || hitRightWall || hitTopWall || hitBottomWall || modeCollision) {
+        // Check mode-specific collisions (like trails or powerups)
+        // Note: Powerup collision check in powerupsMode returns false if powerup collected
+        const modeCollision = activeMode.value?.checkCollision(head, currentState) || false;
+
+        // Check if invincible
+        const isInvincible = currentState.activeEffect.value?.type === 'INVINCIBILITY';
+
+        // Only trigger game over if not invincible
+        if (!isInvincible && (hitLeftWall || hitRightWall || hitTopWall || hitBottomWall || modeCollision)) {
             isGameOver.value = true;
             gameLoop.stopGameLoop(); // Stop the loop
             // No need to redraw here, renderCallback will handle showing game over screen
@@ -161,6 +189,8 @@ export function useSnakeGame() {
         isGameOver.value = false;
         direction.value = 'right';
         inputBuffer = null;
+        powerups.value = []; // Clear powerups
+        activeEffect.value = null; // Clear active effect
 
         // Initial snake position
         const startX = gameOffsetX.value + 1 + Math.floor((gameWidth.value - 2) / 2);
@@ -183,9 +213,22 @@ export function useSnakeGame() {
         gameWidth.value = gridConfig.value.cols - sidebarWidth.value;
         gameHeight.value = gridConfig.value.rows;
 
-        // Select and reset active mode
-        activeMode.value = options.isTron ? tronMode : classicMode;
-        activeMode.value.reset(gameState.value!); // Reset mode state (e.g., clear trails)
+        // Select and reset active mode based on options
+        if (options.isTron) {
+            activeMode.value = tronMode;
+        } else if (options.enablePowerups) {
+            activeMode.value = powerupsMode;
+        } else {
+            activeMode.value = classicMode;
+        }
+        // Ensure gameState is available before resetting mode
+        if (gameState.value) {
+             activeMode.value.reset(gameState.value);
+        } else {
+             console.error("GameState not available during startGame reset");
+             // Handle error appropriately, maybe return or throw
+        }
+
 
         // Reset core game state
         resetGameInternals();
