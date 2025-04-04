@@ -14,7 +14,7 @@ export interface CursorConfig {
 const _config: CursorConfig = {
   blinkIntervalMs: 500,
   cols: 80,
-  rows: 25
+  rows: 25,
 };
 
 export function useCursor(config: CursorConfig = _config) {
@@ -22,9 +22,8 @@ export function useCursor(config: CursorConfig = _config) {
   const cursorVisible = ref(true);
 
   // Move cursor in a specified direction
-  const moveCursor = (direction: 'left' | 'right') => { // Remove 'up' and 'down'
+  const moveCursor = (direction: 'left' | 'right') => {
     switch (direction) {
-      // Removed 'up' and 'down' cases
       case 'left':
         if (cursorPos.value.x > 0) cursorPos.value.x--;
         break;
@@ -62,6 +61,6 @@ export function useCursor(config: CursorConfig = _config) {
     moveCursor,
     setCursorPosition,
     newLine,
-    resetCursor
+    resetCursor,
   };
 }

@@ -23,16 +23,16 @@ export function useCrtGrid(initialConfig: GridConfig) {
   // Initialize cursor controls - pass reactive config values
   const { cursorPos, moveCursor, newLine, resetCursor } = useCursor({
     blinkIntervalMs: 500,
-    cols: config.value.cols, // Use .value
-    rows: config.value.rows, // Use .value
+    cols: config.value.cols,
+    rows: config.value.rows,
   });
 
   // Initialize the grid with spaces
   const initializeGrid = () => {
     const newGrid: string[][] = [];
-    for (let y = 0; y < config.value.rows; y++) { // Use .value
+    for (let y = 0; y < config.value.rows; y++) {
       const row: string[] = [];
-      for (let x = 0; x < config.value.cols; x++) { // Use .value
+      for (let x = 0; x < config.value.cols; x++) {
         row.push(' ');
       }
       newGrid.push(row);
@@ -45,11 +45,11 @@ export function useCrtGrid(initialConfig: GridConfig) {
 
   // Write text at a specific position
   const writeTextAt = (text: string, x: number, y: number) => {
-    if (y < 0 || y >= config.value.rows) return; // Use .value
+    if (y < 0 || y >= config.value.rows) return;
 
     for (let i = 0; i < text.length; i++) {
       const posX = x + i;
-      if (posX >= 0 && posX < config.value.cols) { // Use .value
+      if (posX >= 0 && posX < config.value.cols) {
         grid.value[y][posX] = text[i];
       }
     }
@@ -57,9 +57,9 @@ export function useCrtGrid(initialConfig: GridConfig) {
 
   // Write text centered on a row
   const writeTextCentered = (text: string, y: number) => {
-    if (y < 0 || y >= config.value.rows) return; // Use .value
+    if (y < 0 || y >= config.value.rows) return;
 
-    const startX = Math.floor((config.value.cols - text.length) / 2); // Use .value
+    const startX = Math.floor((config.value.cols - text.length) / 2);
     writeTextAt(text, startX, y);
   };
 
@@ -70,9 +70,9 @@ export function useCrtGrid(initialConfig: GridConfig) {
     grid.value[cursorPos.value.y][cursorPos.value.x] = char;
 
     // Move cursor forward
-    if (cursorPos.value.x < config.value.cols - 1) { // Use .value
+    if (cursorPos.value.x < config.value.cols - 1) {
       cursorPos.value.x++;
-    } else if (cursorPos.value.y < config.value.rows - 1) { // Use .value
+    } else if (cursorPos.value.y < config.value.rows - 1) {
       cursorPos.value.x = 0;
       cursorPos.value.y++;
     } else {
@@ -96,7 +96,7 @@ export function useCrtGrid(initialConfig: GridConfig) {
   // Scroll the grid up by one line
   const scrollUp = () => {
     grid.value.shift();
-    grid.value.push(Array(config.value.cols).fill(' ')); // Use .value
+    grid.value.push(Array(config.value.cols).fill(' '));
   };
 
   // Generate 80s style welcome screen
@@ -104,7 +104,7 @@ export function useCrtGrid(initialConfig: GridConfig) {
     const demoGrid = initializeGrid();
 
     // Print title screen
-    for (let i = 0; i < titleScreen.length && i < config.value.rows; i++) { // Use .value
+    for (let i = 0; i < titleScreen.length && i < config.value.rows; i++) {
       setTimeout(() => {
         writeTextCentered(titleScreen[i], i + 7);
       }, i * 25);
@@ -113,17 +113,17 @@ export function useCrtGrid(initialConfig: GridConfig) {
     return demoGrid;
 
     function writeTextCentered(text: string, y: number) {
-      if (y < 0 || y >= config.value.rows) return; // Use .value
-      const startX = Math.floor((config.value.cols - text.length) / 2); // Use .value
+      if (y < 0 || y >= config.value.rows) return;
+      const startX = Math.floor((config.value.cols - text.length) / 2);
       for (let i = 0; i < text.length; i++) {
         demoGrid[y][startX + i] = text[i];
       }
     }
 
     function writeTextAt(text: string, x: number, y: number) {
-      if (y < 0 || y >= config.value.rows) return; // Use .value
+      if (y < 0 || y >= config.value.rows) return;
       for (let i = 0; i < text.length; i++) {
-        if (x + i >= 0 && x + i < config.value.cols) { // Use .value
+        if (x + i >= 0 && x + i < config.value.cols) {
           demoGrid[y][x + i] = text[i];
         }
       }
@@ -167,7 +167,7 @@ export function useCrtGrid(initialConfig: GridConfig) {
   const writeLines = (lines: string | string[]) => {
     const linesArray = Array.isArray(lines) ? lines : lines.split('\n');
 
-    linesArray.forEach(line => {
+    linesArray.forEach((line) => {
       let currentLine = line;
       while (currentLine.length > 0) {
         // Check if cursor is at the start of a line, otherwise use remaining space
@@ -188,12 +188,12 @@ export function useCrtGrid(initialConfig: GridConfig) {
         currentLine = currentLine.substring(availableSpace);
       }
       // After processing a full original line (or wrapped parts), move to next line
-      if (currentLine.length === 0) { // Ensure we only add newline if the line wasn't just wrapped
-          newLine(scrollUp);
+      if (currentLine.length === 0) {
+        // Ensure we only add newline if the line wasn't just wrapped
+        newLine(scrollUp);
       }
     });
   };
-
 
   return {
     grid,

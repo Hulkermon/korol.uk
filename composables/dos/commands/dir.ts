@@ -10,15 +10,15 @@ const dirCommand: DosCommand = {
 
     // Basic path resolution (doesn't handle complex relative paths like ..\..\folder)
     if (targetPathString && targetPathString !== '.') {
-        // Rudimentary check for absolute path
-        if (targetPathString.startsWith('C:\\') || targetPathString.startsWith('c:\\')) {
-             targetPath = ['C:', ...targetPathString.substring(3).split('\\').filter(Boolean)];
-        } else if (targetPathString === '..') {
-            if (targetPath.length > 1) targetPath.pop();
-        } else {
-            // Assume relative path from current directory
-            targetPath = [...context.currentPath, targetPathString];
-        }
+      // Rudimentary check for absolute path
+      if (targetPathString.startsWith('C:\\') || targetPathString.startsWith('c:\\')) {
+        targetPath = ['C:', ...targetPathString.substring(3).split('\\').filter(Boolean)];
+      } else if (targetPathString === '..') {
+        if (targetPath.length > 1) targetPath.pop();
+      } else {
+        // Assume relative path from current directory
+        targetPath = [...context.currentPath, targetPathString];
+      }
     }
 
     const contents = context.getDirContents(targetPath);
@@ -34,7 +34,7 @@ const dirCommand: DosCommand = {
     const output: string[] = [
       ` Volume in drive ${targetPath[0]} has no label.`, // Classic DOS fluff
       ` Directory of ${displayPath}`,
-      '', // Blank line
+      '',
     ];
 
     let fileCount = 0;
@@ -42,20 +42,24 @@ const dirCommand: DosCommand = {
     // Could add size/date later
 
     // List directories first
-    contents.filter(item => item.type === 'directory').forEach(item => {
-      output.push(`          <DIR>         ${item.name.toUpperCase()}`);
-      dirCount++;
-    });
+    contents
+      .filter((item) => item.type === 'directory')
+      .forEach((item) => {
+        output.push(`  <DIR>    ${item.name.toUpperCase()}`);
+        dirCount++;
+      });
 
     // List files next
-    contents.filter(item => item.type === 'file').forEach(item => {
-      output.push(`                     ${item.name.toUpperCase()}`); // Placeholder for size/date
-      fileCount++;
-    });
+    contents
+      .filter((item) => item.type === 'file')
+      .forEach((item) => {
+        output.push(`           ${item.name.toUpperCase()}`); // Placeholder for size/date
+        fileCount++;
+      });
 
-    output.push(''); // Blank line
-    output.push(`       ${fileCount} File(s)`);
-    output.push(`       ${dirCount} Dir(s)`);
+    output.push('');
+    output.push(`  ${fileCount} File(s)`);
+    output.push(`  ${dirCount} Dir(s)`);
 
     return output;
   },

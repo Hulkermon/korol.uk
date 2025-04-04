@@ -5,60 +5,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'; // Import PropType
-// Import the DOS command processor and types
-import { type HistoryEntry } from '@/composables/dos/useDosCommands'; // Import HistoryEntry
-// Import the CRT composables using alias
-import { useCrtGrid, type GridConfig } from '@/composables/terminal/useCrtGrid';
-import { useCrtRenderer } from '@/composables/terminal/useCrtRenderer';
-import { useCrtKeyboard } from '@/composables/terminal/useCrtKeyboard';
-import { titleScreen } from '@/utils/terminalMessages'; // Import titleScreen
+  import { ref, onMounted, onUnmounted, watch, computed } from 'vue'; // Import PropType
+  // Import the DOS command processor and types
+  import { type HistoryEntry } from '@/composables/dos/useDosCommands'; // Import HistoryEntry
+  // Import the CRT composables using alias
+  import { useCrtGrid, type GridConfig } from '@/composables/terminal/useCrtGrid';
+  import { useCrtRenderer } from '@/composables/terminal/useCrtRenderer';
+  import { useCrtKeyboard } from '@/composables/terminal/useCrtKeyboard';
+  import { titleScreen } from '@/utils/terminalMessages'; // Import titleScreen
 
-// --- Props ---
-const props = defineProps<{
-  // Function to process commands, passed from parent
-  processCommandFunction: (input: string) => Promise<string | string[] | symbol | null>;
-  currentPathString: string;
-  terminalColor: string;
-  clearScreenSignal: symbol;
-  /** includes input, output and errors */
-  terminalHistory: HistoryEntry[];
-}>();
+  // --- Props ---
+  const props = defineProps<{
+    // Function to process commands, passed from parent
+    processCommandFunction: (input: string) => Promise<string | string[] | symbol | null>;
+    currentPathString: string;
+    terminalColor: string;
+    clearScreenSignal: symbol;
+    /** includes input, output and errors */
+    terminalHistory: HistoryEntry[];
+  }>();
 
+  // --- Canvas and Grid Setup ---
+  const crtCanvas = ref<HTMLCanvasElement | null>(null);
+  const currentInputLine = ref(''); // Buffer for the current line being typed
+  const commandHistoryIndex = ref(-1); // Index for history navigation
 
-// --- Canvas and Grid Setup ---
-const crtCanvas = ref<HTMLCanvasElement | null>(null);
-const currentInputLine = ref(''); // Buffer for the current line being typed
-const commandHistoryIndex = ref(-1); // Index for history navigation
+  // --- Computed Properties ---
+  // Filter for input history only
+  const inputHistory = computed(() => [
+    ...props.terminalHistory.filter((entry) => entry.type === 'input'),
+  ]);
 
-// --- Computed Properties ---
-// Filter for input history only
-const inputHistory = computed(() =>
-  [...props.terminalHistory.filter(entry => entry.type === 'input')]
-);
+  const prefixLength = computed(() => {
+    return props.currentPathString.length + 1;
+  });
 
-const prefixLength = computed(() => {
-  return props.currentPathString.length + 1;
-})
-
-// Map color names to hex values for the grid config
-const colorMap: Record<string, string> = {
+  // Map color names to hex values for the grid config
+  const colorMap: Record<string, string> = {
     green: '#33ff33',
     yellow: '#ffff33',
     cyan: '#33ffff',
     white: '#c0c0c0',
     red: '#ff6b6b',
     pink: '#ff99cc',
-};
+  };
 
-const _cellWidth = 12;
-const _cellHeight = 20;
-const _cols = 120
-const _rows = 36;
-const _rows4by3 = _cols * _cellWidth * 3 / 4 / _cellHeight; // 4:3 aspect ratio
+  const _cellWidth = 12;
+  const _cellHeight = 20;
+  const _cols = 120;
+  const _rows = 36;
+  const _rows4by3 = (_cols * _cellWidth * 3) / 4 / _cellHeight; // 4:3 aspect ratio
 
-// Initial Grid Config (color will be updated by watch)
-const gridConfig: GridConfig = {
+  // Initial Grid Config (color will be updated by watch)
+  const gridConfig: GridConfig = {
     cols: _cols,
     rows: _rows,
     cellWidth: _cellWidth,
@@ -82,46 +81,45 @@ const gridConfig: GridConfig = {
 
   // --- Command Processing Logic ---
   const handleEnter = async () => {
-      const commandToProcess = currentInputLine.value;
-      currentInputLine.value = ''; // Clear input buffer
+    const commandToProcess = currentInputLine.value;
+    currentInputLine.value = ''; // Clear input buffer
 
-      gridApi.newLine(); // Move cursor to next line in canvas
+    gridApi.newLine(); // Move cursor to next line in canvas
 
-      const result = await props.processCommandFunction(commandToProcess);
+    const result = await props.processCommandFunction(commandToProcess);
 
-      if (result === props.clearScreenSignal) {
-          gridApi.clearGrid();
-      } else if (typeof result === 'string' || Array.isArray(result)) {
-          // Only write if it's string or string array
-          gridApi.writeLines(result);
-      }
-      // If result is null (e.g., command had no output), do nothing extra
+    if (result === props.clearScreenSignal) {
+      gridApi.clearGrid();
+    } else if (typeof result === 'string' || Array.isArray(result)) {
+      // Only write if it's string or string array
+      gridApi.writeLines(result);
+    }
+    // If result is null (e.g., command had no output), do nothing extra
 
-      // Write the new prompt after processing
-      gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y);
-      // Reset cursor position to be after the prompt
-      gridApi.cursorPos.value.x = prefixLength.value;
-      // Reset history index after submitting a command
-      commandHistoryIndex.value = inputHistory.value.length; // Set to the end of the history
+    // Write the new prompt after processing
+    gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y);
+    // Reset cursor position to be after the prompt
+    gridApi.cursorPos.value.x = prefixLength.value;
+    // Reset history index after submitting a command
+    commandHistoryIndex.value = inputHistory.value.length; // Set to the end of the history
   };
 
   // --- Helper Functions ---
   // Replaces the current input line visually and updates state
   const replaceCurrentInputLine = (newText: string) => {
-      const promptLen = prefixLength.value;
-      const currentLineY = gridApi.cursorPos.value.y;
+    const promptLen = prefixLength.value;
+    const currentLineY = gridApi.cursorPos.value.y;
 
-      // Clear existing input on the grid line
-      gridApi.writeTextAt(" ".repeat(gridApi.config.value.cols), promptLen, currentLineY);
+    // Clear existing input on the grid line
+    gridApi.writeTextAt(' '.repeat(gridApi.config.value.cols), promptLen, currentLineY);
 
-      // Update state and write new text
-      currentInputLine.value = newText;
-      gridApi.writeTextAt(newText, promptLen, currentLineY);
+    // Update state and write new text
+    currentInputLine.value = newText;
+    gridApi.writeTextAt(newText, promptLen, currentLineY);
 
-      // Set cursor position to the end of the new input
-      gridApi.cursorPos.value.x = promptLen + newText.length;
+    // Set cursor position to the end of the new input
+    gridApi.cursorPos.value.x = promptLen + newText.length;
   };
-
 
   // --- Keyboard Input Handling ---
   useCrtKeyboard({
@@ -134,41 +132,48 @@ const gridConfig: GridConfig = {
       gridApi.deleteChar(prefixLength.value); // Pass prompt length
     },
     onEnter: handleEnter, // Call our command processing logic
-    onArrow: (direction) => { // Handle arrows selectively
-        if (direction === 'left') {
-            // Prevent moving left of the prompt
-            if (gridApi.cursorPos.value.x > prefixLength.value) {
-                gridApi.moveCursor('left');
-            }
-        } else if (direction === 'right') {
-            // Prevent moving past the end of the current input + prompt
-            if (gridApi.cursorPos.value.x < prefixLength.value + currentInputLine.value.length) {
-                 gridApi.moveCursor('right');
-            }
+    onArrow: (direction) => {
+      // Handle arrows selectively
+      if (direction === 'left') {
+        // Prevent moving left of the prompt
+        if (gridApi.cursorPos.value.x > prefixLength.value) {
+          gridApi.moveCursor('left');
         }
+      } else if (direction === 'right') {
+        // Prevent moving past the end of the current input + prompt
+        if (gridApi.cursorPos.value.x < prefixLength.value + currentInputLine.value.length) {
+          gridApi.moveCursor('right');
+        }
+      }
     },
     onHistoryUp: () => {
-        if (inputHistory.value.length === 0) return;
-        commandHistoryIndex.value = Math.max(0, commandHistoryIndex.value - 1);
-        const historyEntry = inputHistory.value[commandHistoryIndex.value];
-        const commandText = (historyEntry?.text as string)?.substring(prefixLength.value) || '';
-        replaceCurrentInputLine(commandText);
+      if (inputHistory.value.length === 0) return;
+      commandHistoryIndex.value = Math.max(0, commandHistoryIndex.value - 1);
+      const historyEntry = inputHistory.value[commandHistoryIndex.value];
+      const commandText = (historyEntry?.text as string)?.substring(prefixLength.value) || '';
+      replaceCurrentInputLine(commandText);
     },
     onHistoryDown: () => {
-        if (inputHistory.value.length === 0) return;
-        commandHistoryIndex.value = Math.min(inputHistory.value.length, commandHistoryIndex.value + 1);
-        const historyEntry = inputHistory.value[commandHistoryIndex.value];
-        const commandText = (historyEntry?.text as string)?.substring(prefixLength.value) || '';
-        replaceCurrentInputLine(commandText);
+      if (inputHistory.value.length === 0) return;
+      commandHistoryIndex.value = Math.min(
+        inputHistory.value.length,
+        commandHistoryIndex.value + 1
+      );
+      const historyEntry = inputHistory.value[commandHistoryIndex.value];
+      const commandText = (historyEntry?.text as string)?.substring(prefixLength.value) || '';
+      replaceCurrentInputLine(commandText);
     },
   });
 
   // --- Watchers ---
   // Update grid color when prop changes
-  watch(() => props.terminalColor, (newColorName) => {
+  watch(
+    () => props.terminalColor,
+    (newColorName) => {
       const newHexColor = colorMap[newColorName.toLowerCase()] || colorMap['white'];
       gridApi.updateConfig({ charColor: newHexColor });
-  });
+    }
+  );
 
   // --- Lifecycle Hooks ---
   onMounted(() => {
@@ -177,11 +182,11 @@ const gridConfig: GridConfig = {
 
     // Write the title screen centered, starting from row 1 (index 0)
     titleScreen.forEach((line, index) => {
-        // Add a small top margin, e.g., start at row 1 or 2
-        const startRow = 1;
-        if (index + startRow < gridApi.config.value.rows) {
-             gridApi.writeTextCentered(line, index + startRow);
-        }
+      // Add a small top margin, e.g., start at row 1 or 2
+      const startRow = 1;
+      if (index + startRow < gridApi.config.value.rows) {
+        gridApi.writeTextCentered(line, index + startRow);
+      }
     });
 
     // Set cursor position after title screen (e.g., below the title)

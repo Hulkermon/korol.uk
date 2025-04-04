@@ -37,25 +37,25 @@ const virtualFileSystem: VfsDirectory = {
   type: 'directory',
   name: 'C:',
   children: {
-    'DOS': {
+    DOS: {
       type: 'directory',
       name: 'DOS',
       children: {
         'COMMAND.COM': { type: 'file', name: 'COMMAND.COM' },
         'EDIT.COM': { type: 'file', name: 'EDIT.COM' },
-      }
+      },
     },
-    'GAMES': {
+    GAMES: {
       type: 'directory',
       name: 'GAMES',
       children: {
-         'DOOM': { type: 'directory', name: 'DOOM', children: {} },
-      }
+        DOOM: { type: 'directory', name: 'DOOM', children: {} },
+      },
     },
     'CONFIG.SYS': { type: 'file', name: 'CONFIG.SYS' },
     'AUTOEXEC.BAT': { type: 'file', name: 'AUTOEXEC.BAT' },
     'README.TXT': { type: 'file', name: 'README.TXT' },
-  }
+  },
 };
 
 // --- History Entry ---
@@ -76,7 +76,8 @@ export function useDosCommands() {
   // --- VFS Helper Functions ---
   const navigateVfs = (path: string[]): VfsDirectory | null => {
     let currentLevel: VfsDirectory = virtualFileSystem;
-    for (let i = 1; i < path.length; i++) { // Start from 1 to skip 'C:'
+    for (let i = 1; i < path.length; i++) {
+      // Start from 1 to skip 'C:'
       const segment = path[i];
       const nextLevel = currentLevel.children[segment.toUpperCase()];
       if (!nextLevel || nextLevel.type !== 'directory') {
@@ -108,14 +109,14 @@ export function useDosCommands() {
 
     // Handle absolute paths (basic)
     if (target.startsWith('C:\\') || target.startsWith('c:\\')) {
-       const newPath = ['C:', ...target.substring(3).split('\\').filter(Boolean)];
-       const targetDir = navigateVfs(newPath);
-       if (targetDir) {
-           currentPath.value = newPath;
-           return null;
-       } else {
-           return `Directory not found: ${target}`;
-       }
+      const newPath = ['C:', ...target.substring(3).split('\\').filter(Boolean)];
+      const targetDir = navigateVfs(newPath);
+      if (targetDir) {
+        currentPath.value = newPath;
+        return null;
+      } else {
+        return `Directory not found: ${target}`;
+      }
     }
 
     // Handle relative paths
@@ -132,38 +133,39 @@ export function useDosCommands() {
   };
 
   // --- Command Loading & Execution ---
+  // prettier-ignore
   const availableCommandsList: string[] = ['ping', 'help', 'cls', 'echo', 'ver', 'color', 'dir', 'cd']; // Keep updated
   const commandAliases: { [key: string]: string } = {
-    'dir': 'ls',
-    'ver': 'version',
-    'cls': 'clear',
+    dir: 'ls',
+    ver: 'version',
+    cls: 'clear',
   };
 
   const loadCommand = async (commandName: string): Promise<DosCommand | null> => {
-     const lowerCaseCommand = commandName.toLowerCase();
-     // Check if it's one of the known commands or aliases
-     if (!availableCommandsList.includes(lowerCaseCommand)) {
-         // Check aliases (simple implementation)
-         if (lowerCaseCommand === 'ls') commandName = 'dir';
-         else if (lowerCaseCommand === 'version') commandName = 'ver';
-         else if (lowerCaseCommand === 'clear') commandName = 'cls';
-         else return null; // Truly unknown
-     }
+    const lowerCaseCommand = commandName.toLowerCase();
+    // Check if it's one of the known commands or aliases
+    if (!availableCommandsList.includes(lowerCaseCommand)) {
+      // Check aliases (simple implementation)
+      if (lowerCaseCommand === 'ls') commandName = 'dir';
+      else if (lowerCaseCommand === 'version') commandName = 'ver';
+      else if (lowerCaseCommand === 'clear') commandName = 'cls';
+      else return null; // Truly unknown
+    }
 
-     try {
-       // Use dynamic import
-       const module = await import(`@/composables/dos/commands/${commandName.toLowerCase()}.ts`);
-       return module.default as DosCommand;
-     } catch (error) {
-       console.error(`Error loading command module ${commandName}:`, error);
-       return null;
-     }
+    try {
+      // Use dynamic import
+      const module = await import(`@/composables/dos/commands/${commandName.toLowerCase()}.ts`);
+      return module.default as DosCommand;
+    } catch (error) {
+      console.error(`Error loading command module ${commandName}:`, error);
+      return null;
+    }
   };
 
   const addHistoryEntry = (type: HistoryEntry['type'], text: string | string[]) => {
     // Simple mechanism to prevent too much history (optional)
     if (commandHistory.value.length > 200) {
-        commandHistory.value.shift(); // Remove oldest entry
+      commandHistory.value.shift(); // Remove oldest entry
     }
     commandHistory.value.push({
       id: historyIdCounter++,
@@ -176,14 +178,14 @@ export function useDosCommands() {
   const currentPathString = computed(() => currentPath.value.join('\\') + '>'); // Reactive prompt
 
   const setTerminalColor = (color: string) => {
-      // Basic validation, could be stricter
-      const allowedColors = ['green', 'yellow', 'cyan', 'white', 'red', 'pink'];
-      if (allowedColors.includes(color.toLowerCase())) {
-          terminalColor.value = color.toLowerCase();
-      } else {
-          // Optionally return an error message to be handled by the color command
-          console.warn(`Invalid color: ${color}`);
-      }
+    // Basic validation, could be stricter
+    const allowedColors = ['green', 'yellow', 'cyan', 'white', 'red', 'pink'];
+    if (allowedColors.includes(color.toLowerCase())) {
+      terminalColor.value = color.toLowerCase();
+    } else {
+      // Optionally return an error message to be handled by the color command
+      console.warn(`Invalid color: ${color}`);
+    }
   };
 
   // Define a unique signal for clear screen action
@@ -220,8 +222,8 @@ export function useDosCommands() {
         };
         const output = await command.execute(args, context);
         if (output) {
-            addHistoryEntry('output', output); // Log output to history
-            return output; // Return output for display
+          addHistoryEntry('output', output); // Log output to history
+          return output; // Return output for display
         }
         return null; // Return null if command had no output
       } else {
@@ -230,10 +232,10 @@ export function useDosCommands() {
         return errorMsg; // Return error message for display
       }
     } catch (error) {
-       const errorMsg = `Error executing command: ${commandName}`;
-       console.error(errorMsg, error);
-       addHistoryEntry('error', errorMsg);
-       return errorMsg; // Return error message for display
+      const errorMsg = `Error executing command: ${commandName}`;
+      console.error(errorMsg, error);
+      addHistoryEntry('error', errorMsg);
+      return errorMsg; // Return error message for display
     }
   };
 
