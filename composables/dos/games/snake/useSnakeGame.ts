@@ -3,9 +3,8 @@ import { useGameLoop } from './useGameLoop';
 import { useSnakeRenderer } from './useSnakeRenderer';
 import { classicMode } from './modes/classic';
 import { tronMode } from './modes/tron';
-import { powerupsMode } from './modes/powerups'; // Import powerups mode
+import { powerupsMode } from './modes/powerups';
 import type {
-    GridApi, // Import GridApi from types
     GameState,
     Position,
     Direction,
@@ -14,7 +13,7 @@ import type {
     Powerup, // Import Powerup type
     ActiveEffect // Import ActiveEffect type
 } from './types';
-// Removed incorrect GridApi import
+import type { GridApi } from '~/composables/dos/useDosCommands'; // Correct import path for GridApi
 
 // Helper function (could be moved to a shared utility)
 const posToString = (pos: Position): string => `${pos.x},${pos.y}`;
@@ -31,6 +30,7 @@ export function useSnakeGame() {
     // --- Powerup State ---
     const powerups = ref<Powerup[]>([]);
     const activeEffect = ref<ActiveEffect | null>(null);
+    const popupMessage = ref<{ text: string; endTime: number } | null>(null); // Added popup state
 
     // --- Layout & Config ---
     const gridApi = ref<GridApi | null>(null);
@@ -63,17 +63,10 @@ export function useSnakeGame() {
             gameHeight,
             activeMode,
             powerups, // Add powerups state
-            activeEffect, // Add active effect state
-            // Add methods needed by modes (like getRandomPosition, setSpeed)
-            // Note: Exposing functions directly in computed state might be complex.
-            // Consider passing the main composable instance or specific methods
-            // to the mode strategy's functions if needed.
-            // For now, @ts-ignore will be used in powerupsMode where needed.
-             // @ts-ignore
+            activeEffect,
+            popupMessage, // Add popup state to computed gameState
             getRandomPosition: getRandomPosition, // Expose helper
-             // @ts-ignore
             getSpeed: () => gameLoop.loopIntervalMs, // Expose current speed getter
-             // @ts-ignore
             setSpeed: (ms: number) => gameLoop.setLoopInterval(ms) // Expose speed setter
         };
     });
@@ -181,6 +174,11 @@ export function useSnakeGame() {
                  snakeBody.value.pop();
              }
         }
+
+        // 8. Handle Popup Message Expiration
+        if (popupMessage.value && Date.now() >= popupMessage.value.endTime) {
+            popupMessage.value = null;
+        }
     }
 
     // --- Game Lifecycle Functions ---
@@ -189,8 +187,9 @@ export function useSnakeGame() {
         isGameOver.value = false;
         direction.value = 'right';
         inputBuffer = null;
-        powerups.value = []; // Clear powerups
-        activeEffect.value = null; // Clear active effect
+        powerups.value = [];
+        activeEffect.value = null;
+        popupMessage.value = null; // Clear popup on reset
 
         // Initial snake position
         const startX = gameOffsetX.value + 1 + Math.floor((gameWidth.value - 2) / 2);

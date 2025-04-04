@@ -1,6 +1,6 @@
 import { type Ref } from 'vue';
-// Import GridApi correctly from types
-import type { SnakeModeStrategy, GameState, Position, Powerup, ActiveEffect, GridApi } from '../types'; // GridApi is correctly imported here now
+import type { SnakeModeStrategy, GameState, Position, Powerup, ActiveEffect } from '../types';
+import type { GridApi } from '~/composables/dos/useDosCommands'; // Correct import path for GridApi
 import { POWERUP_DEFS, POWERUP_TYPES_ARRAY, type PowerupType } from '../powerups';
 import { classicMode } from './classic'; // Use classic for base collision
 
@@ -35,7 +35,7 @@ export const powerupsMode: SnakeModeStrategy = {
                     const MAX_ATTEMPTS = 10; // Prevent infinite loop
                     do {
                         // Need access to getRandomPosition - assuming it's added to GameState
-                        // @ts-ignore - Assuming getRandomPosition exists on gameState for now
+                        // @ts-ignore - TODO: Assuming getRandomPosition exists on gameState for now
                         newPos = gameState.getRandomPosition();
                         attempts++;
                     } while (
@@ -57,7 +57,7 @@ export const powerupsMode: SnakeModeStrategy = {
             // Restore original state if needed (e.g., speed)
             if (effect.type === 'SLOWDOWN' && effect.originalSpeed) {
                  // Need access to set game speed - requires adding setSpeed to GameState/GameLoop
-                 // @ts-ignore - Assuming setSpeed exists for now
+                 // @ts-ignore - TODO: Assuming setSpeed exists for now
                  gameState.setSpeed(effect.originalSpeed);
             }
             gameState.activeEffect.value = null; // Clear effect
@@ -74,36 +74,47 @@ export const powerupsMode: SnakeModeStrategy = {
             const powerup = gameState.powerups.value[collidedPowerupIndex];
             const def = POWERUP_DEFS[powerup.type as PowerupType];
 
-            // Apply effect
+            // Apply effect & Set Popup for Instant Effects
+            let popupText: string | null = null;
+            const POPUP_DURATION = 5000; // 5 seconds
+
             if (def.type === 'BONUS_POINTS' && def.points) {
                 gameState.score.value += def.points;
+                popupText = `+${def.points} Points!`;
             } else if (def.type === 'SHRINK' && def.shrinkAmount) {
                 // Ensure snake doesn't disappear
                 const amount = Math.min(def.shrinkAmount, gameState.snakeBody.value.length - 1);
+                popupText = `Shrunk! (-${amount})`; // Show how much it shrunk
                 for (let i = 0; i < amount; i++) {
                     gameState.snakeBody.value.pop();
                 }
             } else if (def.durationMs > 0) { // Timed effects
                  // Clear previous timed effect if any
                  if (gameState.activeEffect.value?.type === 'SLOWDOWN' && gameState.activeEffect.value.originalSpeed) {
-                     // @ts-ignore - Assuming setSpeed exists
+                     // @ts-ignore - TODO: Assuming setSpeed exists
                      gameState.setSpeed(gameState.activeEffect.value.originalSpeed);
                  }
 
                  let originalSpeed: number | undefined = undefined;
                  if (def.type === 'SLOWDOWN') {
                      // Need access to current speed and setSpeed
-                     // @ts-ignore - Assuming getSpeed/setSpeed exist
+                     // @ts-ignore - TODO: Assuming getSpeed/setSpeed exist
                      originalSpeed = gameState.getSpeed();
-                     // @ts-ignore
+                     // @ts-ignore - TODO: Assuming setSpeed exists
                      gameState.setSpeed(originalSpeed * (def.speedMultiplier || 1));
                  }
 
                  gameState.activeEffect.value = {
                      type: def.type,
+                     startTime: Date.now(), // Record start time
                      endTime: Date.now() + def.durationMs,
                      originalSpeed: originalSpeed
                  };
+            }
+
+            // Set popup message if applicable
+            if (popupText) {
+                gameState.popupMessage.value = { text: popupText, endTime: Date.now() + POPUP_DURATION };
             }
 
             // Remove collected powerup

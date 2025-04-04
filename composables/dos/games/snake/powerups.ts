@@ -32,8 +32,8 @@ export const POWERUP_DEFS: Record<PowerupType, PowerupDefinition> = {
     INVINCIBILITY: {
         symbol: '!',
         type: 'INVINCIBILITY',
-        durationMs: 5000, // 5 seconds
-        spawnChance: 0.002
+        durationMs: 10000, // 10 seconds
+        spawnChance: 0.02 //
     },
     SHRINK: {
         symbol: '-',

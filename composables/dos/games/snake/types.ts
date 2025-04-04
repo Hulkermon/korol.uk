@@ -1,28 +1,5 @@
 import { type Ref } from 'vue';
-import type { useCrtGrid } from '@/composables/terminal/useCrtGrid';
-import type { GridConfig } from '@/composables/terminal/useCrtGrid'; // Import GridConfig
-import type { CursorPosition } from '@/composables/terminal/useCursor'; // Import CursorPosition
-
-// Explicitly define GridApi based on the return type of useCrtGrid, ensuring refs are captured
-export type GridApi = {
-    grid: Ref<string[][]>;
-    cursorPos: Ref<CursorPosition>;
-    config: Ref<GridConfig>;
-    writeTextAt: (text: string, x: number, y: number) => void;
-    writeTextCentered: (text: string, y: number) => void;
-    writeChar: (char: string) => void;
-    deleteChar: (promptLength?: number) => void;
-    newLine: () => void;
-    scrollUp: () => void;
-    moveCursor: (direction: 'left' | 'right') => void; // Corrected signature
-    loadDemoContent: () => void;
-    loadWelcomeScreen: () => void;
-    resetGrid: () => void;
-    clearGrid: () => void;
-    updateConfig: (newConfig: Partial<GridConfig>) => void;
-    writeLines: (lines: string | string[]) => void;
-};
-
+import type { GridApi } from '~/composables/dos/useDosCommands'; // Import GridApi from the correct source
 
 // Basic types
 export interface Position {
@@ -46,6 +23,7 @@ export interface GameState {
   // State for Powerups mode
   powerups: Ref<Powerup[]>;
   activeEffect: Ref<ActiveEffect | null>;
+  popupMessage: Ref<{ text: string; endTime: number } | null>; // Added for popup messages
   // Add refs for gateways etc. later
 }
 
@@ -58,6 +36,7 @@ export interface Powerup {
 
 export interface ActiveEffect {
   type: string; // e.g., 'SLOWDOWN', 'INVINCIBILITY'
+  startTime: number; // Added start time
   endTime: number;
   originalSpeed?: number; // Store original speed for effects like SLOWDOWN
 }
