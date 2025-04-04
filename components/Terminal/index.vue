@@ -76,13 +76,7 @@
   const gridApi = useCrtGrid(gridConfig);
 
   // Initialize the renderer API
-  const rendererApi = useCrtRenderer(
-    crtCanvas,
-    gridApi.grid,
-    gridApi.cursorPos,
-    gridApi.config // Pass the reactive config ref
-    // Removed isGameModeActive argument
-  );
+  const rendererApi = useCrtRenderer(crtCanvas, gridApi.grid, gridApi.cursorPos, gridApi.config);
 
   // --- Command Processing Logic ---
   const handleEnter = async () => {
@@ -115,7 +109,8 @@
   }
 
   // --- Game Mode Control ---
-  const enterGameMode = (options: SnakeGameOptions) => { // Accept options
+  const enterGameMode = (options: SnakeGameOptions) => {
+    // Accept options
     // Save current terminal state
     savedGridState.value = JSON.parse(JSON.stringify(gridApi.grid.value)); // Deep copy
     savedCursorPos.value = { ...gridApi.cursorPos.value };
@@ -137,30 +132,26 @@
       gridApi.cursorPos.value = savedCursorPos.value;
     } else {
       // Fallback if somehow savedCursorPos is null
-      gridApi.cursorPos.value = { x: prefixLength.value, y: gridApi.grid.value.length -1 };
+      gridApi.cursorPos.value = { x: prefixLength.value, y: gridApi.grid.value.length - 1 };
     }
 
     // Clear saved state
     savedGridState.value = null;
     savedCursorPos.value = null;
 
-    // Optional: Redraw the prompt at the restored cursor position if needed
-    // gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y);
-    // gridApi.cursorPos.value.x = prefixLength.value;
+    // Redraw the prompt at the restored cursor position
+    if (gridApi.cursorPos.value.y >= 0 && gridApi.cursorPos.value.y < gridApi.config.value.rows) {
+      gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y);
+      gridApi.cursorPos.value.x = prefixLength.value;
+    }
   };
 
-  // Provide APIs for commands/composables
   provide('gridApi', gridApi);
-  // Provide APIs for commands/composables - REMOVED provide
-  // provide('gridApi', gridApi);
-  // provide('enterGameMode', enterGameMode);
-  // provide('exitGameMode', exitGameMode);
-
   // Expose functions and refs for parent component access
   defineExpose({
     enterGameMode,
     exitGameMode,
-    gridApi // Expose gridApi so the command context can access it
+    gridApi,
   });
 
   // --- Helper Functions ---
@@ -231,7 +222,7 @@
           commandHistoryIndex.value + 1
         );
         if (commandHistoryIndex.value === inputHistory.value.length) {
-           replaceCurrentInputLine('');
+          replaceCurrentInputLine('');
         } else {
           const historyEntry = inputHistory.value[commandHistoryIndex.value];
           const commandText = (historyEntry?.text as string)?.substring(prefixLength.value) || '';
@@ -239,7 +230,6 @@
         }
       }
     },
-    // Removed onEscape and game-specific logic from here
   });
 
   // --- Game Mode Keyboard Handling ---

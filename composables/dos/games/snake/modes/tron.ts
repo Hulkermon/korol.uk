@@ -46,6 +46,6 @@ export const tronMode: SnakeModeStrategy = {
     },
 
     getSidebarInfo(): string[] {
-        return ["[TRON]"]; // Indicate Tron mode is active
+        return ["[ TRON ]"]; // Indicate Tron mode is active
     }
 };
