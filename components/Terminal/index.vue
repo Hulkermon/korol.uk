@@ -5,17 +5,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch, computed, defineExpose } from 'vue'; // Import defineExpose, remove provide
-  // Import the DOS command processor and types
-  import { type HistoryEntry } from '@/composables/dos/useDosCommands'; // Import HistoryEntry
-  // Import the CRT composables using alias
+  import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
+  import { type HistoryEntry } from '@/composables/dos/useDosCommands';
   import { useCrtGrid, type GridConfig } from '@/composables/terminal/useCrtGrid';
   import { useCrtRenderer } from '@/composables/terminal/useCrtRenderer';
   import { useCrtKeyboard } from '@/composables/terminal/useCrtKeyboard';
-  import { titleScreen } from '@/utils/terminalMessages'; // Import titleScreen
-  import { useSnakeGame } from '@/composables/dos/games/useSnakeGame'; // Import Snake Game
+  import { titleScreen } from '@/utils/terminalMessages';
+  import { useSnakeGame } from '@/composables/dos/games/useSnakeGame';
 
-  // --- Props ---
   const props = defineProps<{
     // Function to process commands, passed from parent
     processCommandFunction: (input: string) => Promise<string | string[] | symbol | null>;

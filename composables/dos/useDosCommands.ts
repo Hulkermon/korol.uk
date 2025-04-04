@@ -1,14 +1,10 @@
-import { ref, computed } from 'vue'; // Import computed
-import type { useCrtGrid } from '@/composables/terminal/useCrtGrid'; // Import type for GridApi inference
+import type { useCrtGrid } from '@/composables/terminal/useCrtGrid';
+import type { TerminalExposed } from '@/pages/dos/index.vue';
 
-// Infer the type from the return value of useCrtGrid
-type GridApi = ReturnType<typeof useCrtGrid>;
+export type GridApi = ReturnType<typeof useCrtGrid>;
 
-// Options passed to the composable
 export interface DosCommandOptions {
-  getEnterGameMode: () => (() => void) | undefined;
-  getExitGameMode: () => (() => void) | undefined;
-  getGridApi: () => GridApi | undefined;
+  terminalRef: Ref<TerminalExposed>;
 }
 
 // --- Interfaces ---
@@ -229,10 +225,10 @@ export function useDosCommands(options: DosCommandOptions) { // Accept options
 
       if (command) {
         // Prepare context for the command
-        // Retrieve functions/refs via getters passed in options
-        const enterGameModeFunc = options.getEnterGameMode();
-        const exitGameModeFunc = options.getExitGameMode();
-        const gridApiRef = options.getGridApi();
+        const terminal = options.terminalRef.value;
+        const enterGameModeFunc = terminal?.enterGameMode;
+        const exitGameModeFunc = terminal?.exitGameMode;
+        const gridApiRef = terminal?.gridApi;
 
         const context: DosCommandContext = {
           currentPath: currentPath.value,

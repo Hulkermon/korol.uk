@@ -14,31 +14,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'; // Import ref and onMounted
 import Terminal from '@/components/Terminal/index.vue'; // Import the new canvas terminal
-import { useDosCommands } from '@/composables/dos/useDosCommands';
-import type { useCrtGrid } from '@/composables/terminal/useCrtGrid'; // Import type for GridApi inference
+import { useDosCommands, type GridApi, type DosCommandOptions } from '@/composables/dos/useDosCommands';
 
-// Type for the exposed methods/refs from Terminal component
-type TerminalExposed = {
+export type TerminalExposed = {
   enterGameMode: () => void;
   exitGameMode: () => void;
-  gridApi: ReturnType<typeof useCrtGrid>; // Infer GridApi type
+  gridApi: GridApi;
 } | null;
 
 const terminalRef = ref<TerminalExposed>(null);
 
-// Placeholder functions for context, will be updated onMounted
-const getEnterGameMode = () => terminalRef.value?.enterGameMode;
-const getExitGameMode = () => terminalRef.value?.exitGameMode;
-const getGridApi = () => terminalRef.value?.gridApi;
 
-// Initialize useDosCommands, passing the getter functions
 const { processCommand, terminalColor, currentPathString, CLEAR_SCREEN_SIGNAL, commandHistory } = useDosCommands({
-  getEnterGameMode,
-  getExitGameMode,
-  getGridApi,
-});
+  terminalRef,
+} as DosCommandOptions);
 
 </script>
 
