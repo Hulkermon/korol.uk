@@ -2,8 +2,11 @@
 export default {
   content: [],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        comic: ['"Comic Sans MS"', 'cursive', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 }
-
