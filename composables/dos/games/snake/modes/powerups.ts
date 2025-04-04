@@ -34,8 +34,7 @@ export const powerupsMode: SnakeModeStrategy = {
                     let attempts = 0;
                     const MAX_ATTEMPTS = 10; // Prevent infinite loop
                     do {
-                        // Need access to getRandomPosition - assuming it's added to GameState
-                        // @ts-ignore - TODO: Assuming getRandomPosition exists on gameState for now
+                        // Need access to getRandomPosition - Now provided via GameState
                         newPos = gameState.getRandomPosition();
                         attempts++;
                     } while (
@@ -56,8 +55,7 @@ export const powerupsMode: SnakeModeStrategy = {
         if (effect && Date.now() >= effect.endTime) {
             // Restore original state if needed (e.g., speed)
             if (effect.type === 'SLOWDOWN' && effect.originalSpeed) {
-                 // Need access to set game speed - requires adding setSpeed to GameState/GameLoop
-                 // @ts-ignore - TODO: Assuming setSpeed exists for now
+                 // Need access to set game speed - Now provided via GameState
                  gameState.setSpeed(effect.originalSpeed);
             }
             gameState.activeEffect.value = null; // Clear effect
@@ -91,16 +89,14 @@ export const powerupsMode: SnakeModeStrategy = {
             } else if (def.durationMs > 0) { // Timed effects
                  // Clear previous timed effect if any
                  if (gameState.activeEffect.value?.type === 'SLOWDOWN' && gameState.activeEffect.value.originalSpeed) {
-                     // @ts-ignore - TODO: Assuming setSpeed exists
+                     // Restore original speed before applying new effect (if applicable)
                      gameState.setSpeed(gameState.activeEffect.value.originalSpeed);
                  }
 
                  let originalSpeed: number | undefined = undefined;
                  if (def.type === 'SLOWDOWN') {
-                     // Need access to current speed and setSpeed
-                     // @ts-ignore - TODO: Assuming getSpeed/setSpeed exist
+                     // Need access to current speed and setSpeed - Now provided via GameState
                      originalSpeed = gameState.getSpeed();
-                     // @ts-ignore - TODO: Assuming setSpeed exists
                      gameState.setSpeed(originalSpeed * (def.speedMultiplier || 1));
                  }
 

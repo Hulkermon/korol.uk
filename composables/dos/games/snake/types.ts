@@ -23,7 +23,11 @@ export interface GameState {
   // State for Powerups mode
   powerups: Ref<Powerup[]>;
   activeEffect: Ref<ActiveEffect | null>;
-  popupMessage: Ref<{ text: string; endTime: number } | null>; // Added for popup messages
+  popupMessage: Ref<{ text: string; endTime: number } | null>;
+  // Add methods needed by modes
+  getRandomPosition: () => Position;
+  getSpeed: () => number;
+  setSpeed: (ms: number) => void;
   // Add refs for gateways etc. later
 }
 

@@ -50,10 +50,13 @@ export function useGameLoop(options: GameLoopOptions) {
           console.warn("Loop interval must be positive.");
           return;
       }
-      loopIntervalMs.value = newMs;
-      // If the loop is currently running, restart it with the new interval
-      if (isRunning.value) {
-          stopGameLoop();
+      const currentlyRunning = isRunning.value;
+      if (currentlyRunning) {
+          stopGameLoop(); // Clear the existing interval
+      }
+      loopIntervalMs.value = newMs; // Update the interval duration ref
+      // If it was running before, start it again with the new interval
+      if (currentlyRunning) {
           startGameLoop();
       }
   };
