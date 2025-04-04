@@ -260,7 +260,12 @@
         if (snakeGame.isGameOver.value) {
           snakeGame.resetGame();
         } else {
-          handled = false; // Don't prevent default if not game over
+          handled = false;
+        }
+        break;
+      case 'x':
+        if (!snakeGame.isGameOver.value) {
+          snakeGame.isGameOver.value = true; // Set game over state
         }
         break;
       case 'escape':
