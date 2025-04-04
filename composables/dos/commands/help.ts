@@ -9,7 +9,9 @@ const helpCommand: DosCommand = {
       const output: string[] = [
         'For more information on a specific command, type HELP command-name',
         '',
-        ...context.availableCommands.sort().map(cmd => cmd.toUpperCase()),
+        ...context.availableCommands.sort().map(cmd =>
+            `${cmd} ${context.commandAliases[cmd] ? '(alias: ' + context.commandAliases[cmd] + ')' : ''}`.toUpperCase()
+          ),
         '',
       ];
       return output;

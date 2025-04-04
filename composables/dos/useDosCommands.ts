@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'; // Import computed
 export interface DosCommandContext {
   currentPath: string[];
   availableCommands: string[];
+  commandAliases: { [key: string]: string };
   setTerminalColor: (color: string) => void;
   getDirContents: (path: string[]) => VfsEntry[] | null;
   changeDir: (target: string) => string | null; // Returns error message or null
@@ -131,7 +132,12 @@ export function useDosCommands() {
   };
 
   // --- Command Loading & Execution ---
-  const availableCommandsList: string[] = ['ping', 'help', 'cls (alias: clear)', 'echo', 'ver', 'color', 'dir (alias: ls)', 'cd']; // Keep updated
+  const availableCommandsList: string[] = ['ping', 'help', 'cls', 'echo', 'ver', 'color', 'dir', 'cd']; // Keep updated
+  const commandAliases: { [key: string]: string } = {
+    'dir': 'ls',
+    'ver': 'version',
+    'cls': 'clear',
+  };
 
   const loadCommand = async (commandName: string): Promise<DosCommand | null> => {
      const lowerCaseCommand = commandName.toLowerCase();
@@ -139,6 +145,7 @@ export function useDosCommands() {
      if (!availableCommandsList.includes(lowerCaseCommand)) {
          // Check aliases (simple implementation)
          if (lowerCaseCommand === 'ls') commandName = 'dir';
+         else if (lowerCaseCommand === 'version') commandName = 'ver';
          else if (lowerCaseCommand === 'clear') commandName = 'cls';
          else return null; // Truly unknown
      }
@@ -205,6 +212,7 @@ export function useDosCommands() {
         const context: DosCommandContext = {
           currentPath: currentPath.value,
           availableCommands: availableCommandsList, // Pass the list
+          commandAliases,
           setTerminalColor,
           getDirContents,
           changeDir,
