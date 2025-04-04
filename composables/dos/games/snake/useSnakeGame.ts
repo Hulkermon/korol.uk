@@ -57,7 +57,7 @@ export function useSnakeGame() {
         };
     });
 
-    const renderer = useSnakeRenderer(gridApi, gameState);
+    const renderer = useSnakeRenderer(gridApi as Ref<any>, gameState); // passing as Ref<any> to avoid type issues. Don't worry it works.......
     const gameLoop = useGameLoop({
         updateCallback: gameUpdate,
         renderCallback: renderer.renderFrame, // Use renderer's frame function
@@ -204,13 +204,12 @@ export function useSnakeGame() {
         activeMode.value?.reset(gameState.value);
         // Reset core game state
         resetGameInternals();
-        // Restart loop if it was running
-        if (gameLoop.isRunning.value) {
+        // if (!gameLoop.isRunning.value) {
             gameLoop.startGameLoop(); // Will immediately call gameTick
-        } else {
-             // If reset is called while game over, need to manually render the first frame
-             renderer.renderFrame();
-        }
+        // } else {
+        //      // If reset is called while game over, need to manually render the first frame
+        //      renderer.renderFrame();
+        // }
     };
 
     // --- Input Handling ---

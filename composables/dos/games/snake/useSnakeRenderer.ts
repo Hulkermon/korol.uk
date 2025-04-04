@@ -22,8 +22,9 @@ export function useSnakeRenderer(
     const drawBorderAndSidebar = () => {
         const gridApi = gridApiRef.value;
         const gameState = gameStateRef.value;
-        if (!gridApi || !gameState || !gridApi.config.value) return;
-        const { rows } = gridApi.config.value;
+        if (!gridApi || !gameState || !gridApi.config) return;
+        // @ts-ignore
+        const { rows } = gridApi.config;
         const gw = gameState.gameWidth.value;
 
         // Top border
@@ -50,9 +51,10 @@ export function useSnakeRenderer(
     const drawSidebarContent = () => {
         const gridApi = gridApiRef.value;
         const gameState = gameStateRef.value;
-        if (!gridApi || !gameState || !gridApi.config.value) return;
+        if (!gridApi || !gameState || !gridApi.config) return;
 
-        const { rows, cols } = gridApi.config.value;
+        // @ts-ignore
+        const { rows, cols } = gridApi.config;
         const gw = gameState.gameWidth.value;
         const sidebarX = gw + 2;
         const availableSidebarWidth = cols - gw - 1;
@@ -81,9 +83,10 @@ export function useSnakeRenderer(
     const drawGameOver = () => {
         const gridApi = gridApiRef.value;
         const gameState = gameStateRef.value;
-        if (!gridApi || !gameState || !gridApi.config.value) return;
+        if (!gridApi || !gameState || !gridApi.config) return;
 
-        const { rows } = gridApi.config.value;
+        // @ts-ignore
+        const { rows } = gridApi.config;
         const centerX = Math.floor(gameState.gameWidth.value / 2);
         const centerY = Math.floor(rows / 2);
 
