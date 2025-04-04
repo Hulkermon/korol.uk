@@ -2,6 +2,7 @@
   <div class="dos-page-container">
     <!-- Use the new Canvas Terminal -->
     <Terminal
+      ref="terminalRef"
       :process-command-function="processCommand"
       :currentPathString="currentPathString"
       :terminalColor="terminalColor"
@@ -13,18 +14,30 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'; // Import ref and onMounted
 import Terminal from '@/components/Terminal/index.vue'; // Import the new canvas terminal
 import { useDosCommands } from '@/composables/dos/useDosCommands';
+import type { useCrtGrid } from '@/composables/terminal/useCrtGrid'; // Import type for GridApi inference
 
-// Get all needed exports from the composable
-const { processCommand, terminalColor, currentPathString, CLEAR_SCREEN_SIGNAL, commandHistory } = useDosCommands();
+// Type for the exposed methods/refs from Terminal component
+type TerminalExposed = {
+  enterGameMode: () => void;
+  exitGameMode: () => void;
+  gridApi: ReturnType<typeof useCrtGrid>; // Infer GridApi type
+} | null;
 
-// No handleCommandSubmit needed here anymore, as the function is passed directly
+const terminalRef = ref<TerminalExposed>(null);
 
-// Add initial welcome message or leave blank?
-// Maybe clear the grid initially instead of showing the default welcome screen?
-onMounted(() => {
-  // Example: could potentially call a clear method if exposed by Terminal component
+// Placeholder functions for context, will be updated onMounted
+const getEnterGameMode = () => terminalRef.value?.enterGameMode;
+const getExitGameMode = () => terminalRef.value?.exitGameMode;
+const getGridApi = () => terminalRef.value?.gridApi;
+
+// Initialize useDosCommands, passing the getter functions
+const { processCommand, terminalColor, currentPathString, CLEAR_SCREEN_SIGNAL, commandHistory } = useDosCommands({
+  getEnterGameMode,
+  getExitGameMode,
+  getGridApi,
 });
 
 </script>

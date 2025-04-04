@@ -1,7 +1,19 @@
 import { ref, computed } from 'vue'; // Import computed
+import type { useCrtGrid } from '@/composables/terminal/useCrtGrid'; // Import type for GridApi inference
+
+// Infer the type from the return value of useCrtGrid
+type GridApi = ReturnType<typeof useCrtGrid>;
+
+// Options passed to the composable
+export interface DosCommandOptions {
+  getEnterGameMode: () => (() => void) | undefined;
+  getExitGameMode: () => (() => void) | undefined;
+  getGridApi: () => GridApi | undefined;
+}
 
 // --- Interfaces ---
 export interface DosCommandContext {
+  // Existing properties
   currentPath: string[];
   availableCommands: string[];
   commandAliases: { [key: string]: string };
@@ -9,8 +21,14 @@ export interface DosCommandContext {
   getDirContents: (path: string[]) => VfsEntry[] | null;
   changeDir: (target: string) => string | null; // Returns error message or null
   loadCommand: (commandName: string) => Promise<DosCommand | null>; // Add loadCommand to context
+
+  // Added properties for game mode
+  enterGameMode?: () => void;
+  exitGameMode?: () => void;
+  gridApi?: GridApi;
 }
 
+// This is the correct DosCommand interface
 export interface DosCommand {
   name: string;
   aliases?: string[]; // Optional aliases like 'ls' for 'dir'
@@ -67,7 +85,7 @@ export interface HistoryEntry {
 }
 
 // --- Composable Logic ---
-export function useDosCommands() {
+export function useDosCommands(options: DosCommandOptions) { // Accept options
   const commandHistory = ref<HistoryEntry[]>([]);
   const currentPath = ref<string[]>(['C:']); // Start at root
   const terminalColor = ref<string>('green'); // Default color
@@ -134,7 +152,7 @@ export function useDosCommands() {
 
   // --- Command Loading & Execution ---
   // prettier-ignore
-  const availableCommandsList: string[] = ['ping', 'help', 'cls', 'echo', 'ver', 'color', 'dir', 'cd']; // Keep updated
+  const availableCommandsList: string[] = ['ping', 'help', 'cls', 'echo', 'ver', 'color', 'dir', 'cd', 'snake']; // Added snake
   const commandAliases: { [key: string]: string } = {
     dir: 'ls',
     ver: 'version',
@@ -211,6 +229,11 @@ export function useDosCommands() {
 
       if (command) {
         // Prepare context for the command
+        // Retrieve functions/refs via getters passed in options
+        const enterGameModeFunc = options.getEnterGameMode();
+        const exitGameModeFunc = options.getExitGameMode();
+        const gridApiRef = options.getGridApi();
+
         const context: DosCommandContext = {
           currentPath: currentPath.value,
           availableCommands: availableCommandsList, // Pass the list
@@ -219,9 +242,13 @@ export function useDosCommands() {
           getDirContents,
           changeDir,
           loadCommand, // Pass loadCommand in context
+          // Add game mode functions/refs if they exist
+          enterGameMode: enterGameModeFunc,
+          exitGameMode: exitGameModeFunc,
+          gridApi: gridApiRef,
         };
         const output = await command.execute(args, context);
-        if (output) {
+        if (output !== undefined && output !== null && output !== '') { // Check if command returned something displayable
           addHistoryEntry('output', output); // Log output to history
           return output; // Return output for display
         }
