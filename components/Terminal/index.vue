@@ -11,7 +11,7 @@
   import { useCrtRenderer } from '@/composables/terminal/useCrtRenderer';
   import { useCrtKeyboard } from '@/composables/terminal/useCrtKeyboard';
   import { titleScreen } from '@/utils/terminalMessages';
-  import { useSnakeGame } from '@/composables/dos/games/useSnakeGame';
+  import { useSnakeGame } from '@/composables/dos/games/snake/useSnakeGame'; // Updated import path
 
   const props = defineProps<{
     // Function to process commands, passed from parent
