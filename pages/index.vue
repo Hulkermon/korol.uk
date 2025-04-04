@@ -133,23 +133,23 @@
     /** currently hard coded to 3 frames */
     framesUrl?: string;
   }[] = [
-    // {
-    //   name: 'Flame',
-    //   url: '/cursors/flame/Arrow.cur',
-    // },
-    // {
-    //   name: 'Hello Kitty',
-    //   url: '/cursors/hello-kitty/default.gif',
-    // },
-    // {
-    //   name: 'Rainbow',
-    //   url: '/cursors/rainbow/default.gif',
-    // },
-    // {
-    //   name: 'Pink Mustache',
-    //   url: '/cursors/pink-mustache/default.gif',
-    //   framesUrl: '/cursors/pink-mustache/frames/default/',
-    // },
+    {
+      name: 'Flame',
+      url: '/cursors/flame/Arrow.cur',
+    },
+    {
+      name: 'Hello Kitty',
+      url: '/cursors/hello-kitty/default.gif',
+    },
+    {
+      name: 'Rainbow',
+      url: '/cursors/rainbow/default.gif',
+    },
+    {
+      name: 'Pink Mustache',
+      url: '/cursors/pink-mustache/default.gif',
+      framesUrl: '/cursors/pink-mustache/frames/default/',
+    },
     {
       name: 'Dragon',
       url: '/cursors/dragon/default.png',
