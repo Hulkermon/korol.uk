@@ -3,5 +3,6 @@
   "useTabs": false,
   "singleQuote": true,
   "vueIndentScriptAndStyle": true,
-  "bracketSameLine": true
+  "bracketSameLine": true,
+  "printWidth": 100
 }
