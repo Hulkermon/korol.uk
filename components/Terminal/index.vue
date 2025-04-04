@@ -5,9 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed, type Ref, type PropType } from 'vue'; // Import PropType
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'; // Import PropType
 // Import the DOS command processor and types
-import { useDosCommands, type DosCommandContext, type HistoryEntry } from '@/composables/dos/useDosCommands'; // Import HistoryEntry
+import { type HistoryEntry } from '@/composables/dos/useDosCommands'; // Import HistoryEntry
 // Import the CRT composables using alias
 import { useCrtGrid, type GridConfig } from '@/composables/terminal/useCrtGrid';
 import { useCrtRenderer } from '@/composables/terminal/useCrtRenderer';
@@ -21,7 +21,8 @@ const props = defineProps<{
   currentPathString: string;
   terminalColor: string;
   clearScreenSignal: symbol;
-  commandHistory: HistoryEntry[]; // Add commandHistory prop type
+  /** includes input, output and errors */
+  terminalHistory: HistoryEntry[];
 }>();
 
 
@@ -33,8 +34,12 @@ const commandHistoryIndex = ref(-1); // Index for history navigation
 // --- Computed Properties ---
 // Filter for input history only
 const inputHistory = computed(() =>
-  props.commandHistory.filter(entry => entry.type === 'input')
+  [...props.terminalHistory.filter(entry => entry.type === 'input')]
 );
+
+const prefixLength = computed(() => {
+  return props.currentPathString.length + 1;
+})
 
 // Map color names to hex values for the grid config
 const colorMap: Record<string, string> = {
@@ -95,21 +100,19 @@ const gridConfig: GridConfig = {
       // Write the new prompt after processing
       gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y);
       // Reset cursor position to be after the prompt
-      gridApi.cursorPos.value.x = props.currentPathString.length;
+      gridApi.cursorPos.value.x = prefixLength.value;
       // Reset history index after submitting a command
-      commandHistoryIndex.value = -1;
+      commandHistoryIndex.value = inputHistory.value.length; // Set to the end of the history
   };
 
   // --- Helper Functions ---
   // Replaces the current input line visually and updates state
   const replaceCurrentInputLine = (newText: string) => {
-      const promptLen = props.currentPathString.length;
+      const promptLen = prefixLength.value;
       const currentLineY = gridApi.cursorPos.value.y;
 
       // Clear existing input on the grid line
-      for (let x = promptLen; x < gridApi.config.value.cols; x++) {
-          gridApi.grid.value[currentLineY][x] = ' ';
-      }
+      gridApi.writeTextAt(" ".repeat(gridApi.config.value.cols), promptLen, currentLineY);
 
       // Update state and write new text
       currentInputLine.value = newText;
@@ -124,29 +127,22 @@ const gridConfig: GridConfig = {
   useCrtKeyboard({
     onCharInput: (char) => {
       currentInputLine.value += char;
-      // Prevent typing over the grid width
-      if (gridApi.cursorPos.value.x < gridApi.config.value.cols) {
-          currentInputLine.value += char;
-          gridApi.writeChar(char); // Display char on canvas
-      }
+      gridApi.writeChar(char); // Display char on canvas
     },
     onBackspace: () => {
-      // Check if cursor is after the prompt before deleting
-      if (gridApi.cursorPos.value.x > props.currentPathString.length) {
-        currentInputLine.value = currentInputLine.value.slice(0, -1);
-        gridApi.deleteChar(props.currentPathString.length); // Pass prompt length
-      }
+      currentInputLine.value = currentInputLine.value.slice(0, -1);
+      gridApi.deleteChar(prefixLength.value); // Pass prompt length
     },
     onEnter: handleEnter, // Call our command processing logic
     onArrow: (direction) => { // Handle arrows selectively
         if (direction === 'left') {
             // Prevent moving left of the prompt
-            if (gridApi.cursorPos.value.x > props.currentPathString.length) {
+            if (gridApi.cursorPos.value.x > prefixLength.value) {
                 gridApi.moveCursor('left');
             }
         } else if (direction === 'right') {
             // Prevent moving past the end of the current input + prompt
-            if (gridApi.cursorPos.value.x < props.currentPathString.length + currentInputLine.value.length) {
+            if (gridApi.cursorPos.value.x < prefixLength.value + currentInputLine.value.length) {
                  gridApi.moveCursor('right');
             }
         }
@@ -155,18 +151,16 @@ const gridConfig: GridConfig = {
         if (inputHistory.value.length === 0) return;
         commandHistoryIndex.value = Math.max(0, commandHistoryIndex.value - 1);
         const historyEntry = inputHistory.value[commandHistoryIndex.value];
-        // Strip the original prompt part (e.g., "C:\> ") before replacing
-        const commandText = (historyEntry?.text as string)?.substring(props.currentPathString.length) || '';
+        const commandText = (historyEntry?.text as string)?.substring(prefixLength.value) || '';
         replaceCurrentInputLine(commandText);
     },
     onHistoryDown: () => {
         if (inputHistory.value.length === 0) return;
-        commandHistoryIndex.value = Math.min(inputHistory.value.length - 1, commandHistoryIndex.value + 1);
+        commandHistoryIndex.value = Math.min(inputHistory.value.length, commandHistoryIndex.value + 1);
         const historyEntry = inputHistory.value[commandHistoryIndex.value];
-        const commandText = (historyEntry?.text as string)?.substring(props.currentPathString.length) || '';
+        const commandText = (historyEntry?.text as string)?.substring(prefixLength.value) || '';
         replaceCurrentInputLine(commandText);
-        // TODO: Optionally handle going past the end (index > length-1) to clear the line
-    }, // <-- Add missing comma here
+    },
   });
 
   // --- Watchers ---
@@ -199,7 +193,7 @@ const gridConfig: GridConfig = {
     // Write initial prompt at the new cursor position
     gridApi.writeTextAt(props.currentPathString, 0, gridApi.cursorPos.value.y);
     // Set cursor x position after the prompt
-    gridApi.cursorPos.value.x = props.currentPathString.length;
+    gridApi.cursorPos.value.x = prefixLength.value;
 
     // Start the rendering loop
     rendererApi.startRendering();

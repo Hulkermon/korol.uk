@@ -6,7 +6,7 @@
       :currentPathString="currentPathString"
       :terminalColor="terminalColor"
       :clear-screen-signal="CLEAR_SCREEN_SIGNAL"
-      :command-history="commandHistory"
+      :terminalHistory="commandHistory"
     />
      <!-- Old DosTerminal removed -->
   </div>

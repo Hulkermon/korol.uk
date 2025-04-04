@@ -131,7 +131,7 @@ export function useDosCommands() {
   };
 
   // --- Command Loading & Execution ---
-  const availableCommandsList: string[] = ['ping', 'help', 'cls', 'clear', 'echo', 'ver', 'color', 'dir', 'ls', 'cd']; // Keep updated
+  const availableCommandsList: string[] = ['ping', 'help', 'cls (alias: clear)', 'echo', 'ver', 'color', 'dir (alias: ls)', 'cd']; // Keep updated
 
   const loadCommand = async (commandName: string): Promise<DosCommand | null> => {
      const lowerCaseCommand = commandName.toLowerCase();
