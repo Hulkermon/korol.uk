@@ -54,7 +54,7 @@
       <h3 class="text-2xl font-semibold text-center mb-4 text-purple-800">
         ~*~ Previous Entries ~*~
       </h3>
-      <div v-if="pending" class="text-center text-gray-600">
+      <div v-if="!entries && !error" class="text-center text-gray-600">
         Loading entries... <span class="animate-spin">⏳</span>
       </div>
       <div v-else-if="error" class="text-center text-red-600 font-bold">
@@ -184,7 +184,6 @@
   // Fetch guestbook entries
   const {
     data: entries,
-    pending,
     error,
     refresh,
   } = await useAsyncData(
