@@ -68,9 +68,14 @@
           :class="['gb-entry-window', getRandomStyleClass(index)]"
           >
           <!-- Title Bar -->
-          <div class="gb-title-bar">
+          <div class="gb-title-bar" v-if="getRandomStyleClass(index) !== 'gb-style-clippy'"> <!-- Hide title for clippy -->
             <span class="font-bold text-sm pl-1">Guestbook Entry #{{ entries.length - index }}</span>
             <!-- Maybe add fake buttons based on style later if needed -->
+          </div>
+
+          <!-- XP Luna Menu Bar -->
+          <div v-if="getRandomStyleClass(index) === 'gb-style-xp-luna'" class="gb-menu-bar">
+             File Edit View Favorites Tools Help
           </div>
 
           <!-- Content Area - Conditional structure for icon styles -->
@@ -94,6 +99,13 @@
             <p class="mt-1">{{ entry.message }}</p>
           </div>
 
+          <!-- Clippy Image - Positioned absolutely relative to the entry window -->
+          <img
+            v-if="getRandomStyleClass(index) === 'gb-style-clippy'"
+            src="/assets/images/clippy_on_paper.png"
+            alt="Clippy"
+            class="gb-clippy-image"
+          />
         </div>
       </div>
       <div v-else class="text-center text-gray-500 italic">Be the first to sign!</div>
@@ -184,10 +196,16 @@
     'gb-style-pastel-success', // ✔
     'gb-style-win95-info', // i
     'gb-style-aqua-info', // i
-    'gb-style-vaporwave-alt'
+    'gb-style-vaporwave-alt',
+    'gb-style-xp-luna',
+    'gb-style-xp-glitch',
+    'gb-style-cursed-skull',
+    'gb-style-clippy',
+    'gb-style-nextstep'
   ];
 
   // Cache results per index to avoid recalculating style class multiple times per entry
+  // Also ensures conditional rendering (v-if) uses the same class as the main :class binding
   const styleCache = new Map<number, string>();
 
   function getRandomStyleClass(index: number): string {
@@ -238,6 +256,11 @@
 <style scoped>
   /* Import the styles from the dedicated CSS file */
   @import '~/assets/css/guestbook.css';
+
+  /* Ensure Clippy container has relative positioning */
+  .gb-style-clippy {
+    position: relative;
+  }
 
   /* Add shake animation */
   @keyframes shake {

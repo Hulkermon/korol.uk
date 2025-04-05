@@ -433,3 +433,177 @@
 .gb-style-vaporwave-alt .gb-content p:first-child span {
      color: #c060c0; /* Lighter purple */
 }
+
+/* --- Style 13: Windows XP Luna --- */
+.gb-style-xp-luna {
+    background-color: #ECE9D8; /* XP off-white/grey */
+    border: 1px solid #003C74; /* XP blue border */
+    border-radius: 6px 6px 0 0; /* Rounded top corners */
+    box-shadow: 1px 1px 5px rgba(0,0,0,0.2);
+    font-family: 'Tahoma', 'Verdana', sans-serif; /* XP fonts */
+}
+.gb-style-xp-luna .gb-title-bar {
+    background: linear-gradient(to bottom, #3B76EA, #0058DA); /* XP blue gradient */
+    color: white;
+    border-radius: 5px 5px 0 0; /* Match container */
+    padding: 3px 5px;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+}
+.gb-style-xp-luna .gb-menu-bar { /* Fake menu bar */
+    background-color: #EFEBDC;
+    padding: 2px 5px;
+    font-size: 0.75rem;
+    color: black;
+    border-bottom: 1px solid #ACA899;
+}
+.gb-style-xp-luna .gb-content {
+    color: black;
+    background-color: #FFFFFF; /* White content area typical for XP */
+    padding: 1rem; /* More padding */
+}
+.gb-style-xp-luna .gb-content p:first-child span {
+     color: #555;
+}
+
+/* --- Style 14: Windows XP Glitch --- */
+.gb-style-xp-glitch {
+    background-color: #ECE9D8;
+    border: 1px solid #003C74;
+    border-radius: 6px 6px 0 0;
+    font-family: 'Tahoma', 'Verdana', sans-serif;
+    position: relative; /* Needed for pseudo-elements */
+    overflow: visible !important; /* Allow glitch to overflow */
+}
+.gb-style-xp-glitch .gb-title-bar {
+    background: linear-gradient(to bottom, #3B76EA, #0058DA);
+    color: white;
+    border-radius: 5px 5px 0 0;
+    padding: 3px 5px;
+    position: relative; /* Ensure title bar content is above pseudo-elements */
+    z-index: 1;
+}
+.gb-style-xp-glitch .gb-content {
+    color: black;
+    background-color: #FFFFFF;
+    padding: 1rem;
+    position: relative; /* Ensure content is above pseudo-elements */
+    z-index: 1;
+}
+.gb-style-xp-glitch .gb-content p:first-child span {
+     color: #555;
+}
+/* The Glitch Effect using pseudo-elements */
+.gb-style-xp-glitch::before,
+.gb-style-xp-glitch::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 24px; /* Approx height of title bar */
+    background: linear-gradient(to bottom, #3B76EA, #0058DA);
+    border-radius: 5px 5px 0 0;
+    z-index: 0; /* Behind the actual title bar */
+}
+.gb-style-xp-glitch::before {
+    transform: translate(15px, -8px); /* Offset 1 */
+}
+.gb-style-xp-glitch::after {
+    transform: translate(30px, -16px); /* Offset 2 */
+}
+/* Add more pseudo-elements or use box-shadow for more trails if desired */
+
+
+/* --- Style 15: Cursed Skull Box --- */
+.gb-style-cursed-skull {
+    background-color: #000000;
+    border: 1px solid #FF0000; /* Red border */
+    font-family: 'Courier New', monospace;
+    color: #FFFFFF;
+    padding-top: 1rem; /* Extra padding for skull */
+    background-image: url('/assets/images/8bit-skull.png');
+    background-repeat: no-repeat;
+    background-position: center 20px; /* Position skull below title */
+    background-size: 64px 64px; /* Adjust size as needed */
+}
+.gb-style-cursed-skull .gb-title-bar {
+    background-color: #330000; /* Dark red */
+    color: #FF8080; /* Light red text */
+    border-bottom: 1px solid #FF0000;
+}
+.gb-style-cursed-skull .gb-content {
+    color: #FFFFFF;
+    padding-top: 60px; /* Ensure text is below skull */
+    text-shadow: 1px 1px 2px #FF0000; /* Red glow */
+}
+.gb-style-cursed-skull .gb-content p:first-child span {
+     color: #CCCCCC;
+}
+
+/* --- Style 16: Clippy Speech Bubble --- */
+.gb-style-clippy {
+    background-color: #FFFFE1; /* Light yellow */
+    border: 1px solid #A0A0A0;
+    border-radius: 10px;
+    font-family: 'Arial', sans-serif;
+    position: relative; /* Needed for pointer and image */
+    padding-bottom: 15px; /* Space for pointer */
+    margin-right: 60px; /* Make space for Clippy image */
+}
+.gb-style-clippy .gb-title-bar {
+   display: none; /* No title bar for speech bubble */
+}
+.gb-style-clippy .gb-content {
+    color: black;
+}
+.gb-style-clippy .gb-content p:first-child span {
+     color: #555;
+}
+/* Speech bubble pointer */
+.gb-style-clippy::after {
+    content: '';
+    position: absolute;
+    bottom: -10px; /* Position below the box */
+    right: 30px; /* Adjust horizontal position */
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 0px solid transparent; /* Pointing left-ish */
+    border-top: 15px solid #FFFFE1; /* Same as background */
+    filter: drop-shadow(0 1px 0 #A0A0A0); /* Match border */
+}
+/* Clippy image styling */
+.gb-clippy-image {
+    position: absolute;
+    bottom: -130px;
+    right: -65px;
+    width: 140px;
+    height: auto;
+    z-index: 10;
+    transform: rotate(15deg);
+}
+
+
+/* --- Style 17: NeXTSTEP --- */
+.gb-style-nextstep {
+    background-color: #D8D8D8; /* NeXT light grey */
+    border: 1px solid #777;
+    box-shadow: inset 1px 1px 0px #FFF, inset -1px -1px 0px #777; /* Subtle bevel */
+    font-family: 'Lucida Grande', 'Helvetica', sans-serif;
+}
+.gb-style-nextstep .gb-title-bar {
+    background: linear-gradient(to bottom, #B0B0B0, #909090); /* Grey gradient */
+    color: black;
+    border-bottom: 1px solid #555;
+    padding: 1px 5px; /* Tighter padding */
+    /* Pinstripes - subtle */
+    background-image: linear-gradient(to bottom, #B0B0B0, #909090),
+                      repeating-linear-gradient(to right, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px);
+}
+.gb-style-nextstep .gb-content {
+    color: black;
+    font-size: 0.8rem; /* Slightly smaller font */
+}
+.gb-style-nextstep .gb-content p:first-child span {
+     color: #444;
+}
