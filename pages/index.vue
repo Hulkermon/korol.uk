@@ -60,6 +60,17 @@
       </div>
     </div>
 
+    <div style="text-align: center; margin-top: 20px;">
+      <button 
+        @click="alertski()" 
+        style="padding: 10px 20px; font-size: 16px; background-color: #ff6600; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        Click Me!
+      </button>
+    </div>
+
+    <!-- Guestbook Section -->
+    <Guestbook />
+
     <div class="footer">
       <p>Best viewed in Netscape Navigator 4.0 or Internet Explorer 5.5</p>
       <p>© 2025 KOROL.UK - Last updated: March 30, 2025</p>
@@ -68,6 +79,8 @@
 </template>
 
 <script lang="ts" setup>
+  import Guestbook from '~/components/Guestbook.vue'; // Import the Guestbook component
+  const alertski = () => window.alert();
   import {
     fairyDustCursor,
     snowflakeCursor,
