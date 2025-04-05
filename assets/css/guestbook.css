@@ -1,0 +1,435 @@
+/* --- Base Entry Structure (Apply to the v-for div) --- */
+.gb-entry-window {
+    margin-bottom: 1rem; /* space-y-4 equivalent */
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    min-width: 280px; /* Ensure a minimum size */
+    max-width: 500px; /* Prevent excessive width */
+    margin-left: auto; /* Center the boxes a bit */
+    margin-right: auto;
+    font-family: 'Tahoma', 'Geneva', sans-serif; /* Default retro font */
+}
+
+.gb-title-bar {
+    padding: 2px 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.gb-content {
+    padding: 0.75rem; /* p-3 */
+    font-size: 0.85rem;
+}
+
+.gb-content p:first-child {
+    margin-bottom: 0.25rem; /* mb-1 */
+    font-weight: bold;
+}
+.gb-content p:first-child span {
+    font-weight: normal;
+    font-size: 0.75rem; /* text-xs */
+    color: #555;
+}
+
+/* --- Style 1: Windows 95 --- */
+.gb-style-win95 {
+    background-color: #C0C0C0; /* Classic grey */
+    border: 2px outset #dfdfdf; /* Bevel effect */
+    font-family: 'Tahoma', sans-serif; /* Win95 font */
+}
+.gb-style-win95 .gb-title-bar {
+    background-color: #000080; /* Dark blue */
+    color: white;
+}
+.gb-style-win95 .gb-content {
+    color: black;
+}
+.gb-style-win95 .gb-content p:first-child span {
+     color: #333;
+}
+
+/* --- Style 2: Windows 95 Error --- */
+.gb-style-win95-error {
+    background-color: #C0C0C0;
+    border: 2px outset #dfdfdf;
+    font-family: 'Tahoma', sans-serif;
+    display: flex; /* For icon layout */
+    flex-direction: column;
+}
+.gb-style-win95-error .gb-title-bar {
+    background-color: #000080;
+    color: white;
+}
+.gb-style-win95-error .gb-content-wrapper { /* New wrapper for icon+text */
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+.gb-style-win95-error .gb-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    background-color: yellow; /* Placeholder for icon */
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.gb-style-win95-error .gb-content {
+    padding: 0; /* Remove padding from inner content */
+    color: black;
+}
+.gb-style-win95-error .gb-content p:first-child span {
+     color: #333;
+}
+
+
+/* --- Style 3: Mac Classic (Simplified) --- */
+.gb-style-mac-classic {
+    background-color: #f0f0f0;
+    border: 1px solid #888;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    font-family: 'Charcoal', 'Geneva', sans-serif; /* Mac fonts */
+}
+.gb-style-mac-classic .gb-title-bar {
+    background-color: #d0d0d0;
+    color: black;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    /* Add subtle lines - tricky without images, maybe border */
+    border-bottom: 1px solid #bbb;
+    background-image: linear-gradient(to bottom, #e0e0e0 0%, #d0d0d0 10%, #c0c0c0 100%);
+}
+.gb-style-mac-classic .gb-content {
+    color: #333;
+}
+.gb-style-mac-classic .gb-content p:first-child span {
+     color: #666;
+}
+
+/* --- Style 4: Vaporwave/Pastel --- */
+.gb-style-vaporwave {
+    background-color: #ffe4f1; /* Light pink */
+    border: 2px solid #ff80c0; /* Hot pink border */
+    border-radius: 5px;
+    font-family: 'Courier New', monospace; /* Monospace vibe */
+    box-shadow: 3px 3px 0px #ff80c0;
+}
+.gb-style-vaporwave .gb-title-bar {
+    background: linear-gradient(to right, #80ffc0, #80c0ff); /* Teal to blue gradient */
+    color: #400080; /* Dark purple text */
+    border-bottom: 1px solid #ff80c0;
+    border-radius: 3px 3px 0 0;
+}
+.gb-style-vaporwave .gb-content {
+    color: #6020a0; /* Medium purple */
+}
+.gb-style-vaporwave .gb-content p:first-child span {
+     color: #a060e0; /* Lighter purple */
+}
+
+/* --- Style 5: Generic Web 1.0 --- */
+.gb-style-generic-web1 {
+    background-color: #FFFFE1; /* Light beige */
+    border: 1px solid black;
+    font-family: 'Times New Roman', serif;
+}
+.gb-style-generic-web1 .gb-title-bar {
+    background-color: #D4D0C8; /* Another grey */
+    color: black;
+    border-bottom: 1px solid black;
+}
+.gb-style-generic-web1 .gb-content {
+    color: black;
+}
+.gb-style-generic-web1 .gb-content p:first-child span {
+     color: #444;
+}
+
+/* --- Style 6: Windows 95 Error Alt (Red X) --- */
+.gb-style-win95-error-alt {
+    background-color: #C0C0C0;
+    border: 2px outset #dfdfdf;
+    font-family: 'Tahoma', sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+.gb-style-win95-error-alt .gb-title-bar {
+    background-color: #800000; /* Dark Red */
+    color: white;
+}
+.gb-style-win95-error-alt .gb-content-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+.gb-style-win95-error-alt .gb-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    background-color: #ffcccc; /* Light red */
+    border: 1px solid #800000;
+    color: #800000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+    border-radius: 50%; /* Make it round */
+}
+.gb-style-win95-error-alt .gb-content {
+    padding: 0;
+    color: black;
+}
+.gb-style-win95-error-alt .gb-content p:first-child span {
+     color: #333;
+}
+
+/* --- Style 7: Mac Classic Warning --- */
+.gb-style-mac-warning {
+    background-color: #f0f0f0;
+    border: 1px solid #888;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    font-family: 'Charcoal', 'Geneva', sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+.gb-style-mac-warning .gb-title-bar {
+    background-image: repeating-linear-gradient(
+        -45deg,
+        #f0c000,
+        #f0c000 10px,
+        #333 10px,
+        #333 20px /* Yellow/Black stripes */
+    );
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    border-bottom: 1px solid #555;
+}
+.gb-style-mac-warning .gb-content-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+.gb-style-mac-warning .gb-icon {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent; /* Triangle shape */
+    border-right: 20px solid transparent;
+    border-bottom: 35px solid #f0c000; /* Yellow */
+    margin-right: 10px;
+    position: relative; /* For the exclamation mark */
+    flex-shrink: 0;
+}
+.gb-style-mac-warning .gb-icon::after { /* Exclamation mark inside triangle */
+    content: '!';
+    position: absolute;
+    top: 8px;
+    left: -5px;
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+}
+.gb-style-mac-warning .gb-content {
+    padding: 0;
+    color: #333;
+}
+.gb-style-mac-warning .gb-content p:first-child span {
+     color: #666;
+}
+
+/* --- Style 8: Windows 95 Success --- */
+.gb-style-win95-success {
+    background-color: #C0C0C0;
+    border: 2px outset #dfdfdf;
+    font-family: 'Tahoma', sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+.gb-style-win95-success .gb-title-bar {
+    background-color: #008000; /* Dark Green */
+    color: white;
+}
+.gb-style-win95-success .gb-content-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+.gb-style-win95-success .gb-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    background-color: #ccffcc; /* Light green */
+    border: 1px solid #008000;
+    color: #008000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+.gb-style-win95-success .gb-content {
+    padding: 0;
+    color: black;
+}
+.gb-style-win95-success .gb-content p:first-child span {
+     color: #333;
+}
+
+/* --- Style 9: Pastel Success --- */
+.gb-style-pastel-success {
+    background-color: #e4fff1; /* Light green/teal */
+    border: 2px solid #80ffc0; /* Teal border */
+    border-radius: 5px;
+    font-family: 'Verdana', sans-serif;
+    box-shadow: 3px 3px 0px #80ffc0;
+    display: flex;
+    flex-direction: column;
+}
+.gb-style-pastel-success .gb-title-bar {
+    background: linear-gradient(to right, #a0ffc0, #c0ffd0); /* Light green gradient */
+    color: #006040; /* Darker green text */
+    border-bottom: 1px solid #80ffc0;
+    border-radius: 3px 3px 0 0;
+}
+.gb-style-pastel-success .gb-content-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+.gb-style-pastel-success .gb-icon {
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    background-color: #50e090; /* Medium green */
+    border: 1px solid #008040;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+.gb-style-pastel-success .gb-content {
+    padding: 0;
+    color: #006040;
+}
+.gb-style-pastel-success .gb-content p:first-child span {
+     color: #309060;
+}
+
+/* --- Style 10: Windows 95 Info --- */
+.gb-style-win95-info {
+    background-color: #C0C0C0;
+    border: 2px outset #dfdfdf;
+    font-family: 'Tahoma', sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+.gb-style-win95-info .gb-title-bar {
+    background-color: #000080; /* Dark blue */
+    color: white;
+}
+.gb-style-win95-info .gb-content-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+.gb-style-win95-info .gb-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    background-color: #ccccff; /* Light blue */
+    border: 1px solid #000080;
+    color: #000080;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-style: italic;
+    font-weight: bold;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+.gb-style-win95-info .gb-content {
+    padding: 0;
+    color: black;
+}
+.gb-style-win95-info .gb-content p:first-child span {
+     color: #333;
+}
+
+/* --- Style 11: Aqua Info (Simplified) --- */
+.gb-style-aqua-info {
+    background-color: #e8f4ff; /* Very light blue */
+    border: 1px solid #a0c8ff;
+    border-radius: 6px;
+    box-shadow: 0px 2px 5px rgba(0, 100, 200, 0.2);
+    font-family: 'Lucida Grande', 'Verdana', sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+.gb-style-aqua-info .gb-title-bar {
+    background: linear-gradient(to bottom, #d0e8ff, #a0c8ff); /* Blue gradient */
+    color: #333;
+    border-bottom: 1px solid #80b0e0;
+    border-radius: 5px 5px 0 0;
+    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+}
+.gb-style-aqua-info .gb-content-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+.gb-style-aqua-info .gb-icon {
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    background-color: #60a0ff; /* Medium blue */
+    border: 1px solid #3070c0;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    flex-shrink: 0;
+    border-radius: 50%;
+    text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.3);
+}
+.gb-style-aqua-info .gb-content {
+    padding: 0;
+    color: #444;
+}
+.gb-style-aqua-info .gb-content p:first-child span {
+     color: #777;
+}
+
+/* --- Style 12: Vaporwave Alt --- */
+.gb-style-vaporwave-alt {
+    background-color: #e4f1ff; /* Light blue */
+    border: 2px dotted #8080ff; /* Purple dotted border */
+    font-family: 'Consolas', 'Monaco', monospace;
+    box-shadow: 3px 3px 0px rgba(128, 128, 255, 0.5);
+}
+.gb-style-vaporwave-alt .gb-title-bar {
+    background: linear-gradient(to right, #ffc080, #ff80ff); /* Orange to Pink gradient */
+    color: #600060; /* Dark magenta text */
+    border-bottom: 1px dashed #ff80ff;
+}
+.gb-style-vaporwave-alt .gb-content {
+    color: #800080; /* Purple */
+}
+.gb-style-vaporwave-alt .gb-content p:first-child span {
+     color: #c060c0; /* Lighter purple */
+}

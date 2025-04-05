@@ -65,27 +65,35 @@
         <div
           v-for="(entry, index) in entries"
           :key="entry._path"
-          class="win95-window !static bg-gray-300 border-t-white border-l-white border-r-gray-500 border-b-gray-500 border-2 border-outset"
-          :style="getDistortionStyle(index, entries.length)">
+          :class="['gb-entry-window', getRandomStyleClass(index)]"
+          >
           <!-- Title Bar -->
-          <div class="win95-title-bar bg-blue-700 text-white p-1 flex justify-between items-center">
-            <span class="font-bold text-sm pl-1">Guestbook Entry</span>
-            <!-- Fake buttons -->
-            <div class="flex space-x-1">
-              <button class="w-4 h-4 bg-gray-300 border-t-white border-l-white border-r-gray-500 border-b-gray-500 border-2 border-outset text-black font-bold text-xs leading-none">_</button>
-              <button class="w-4 h-4 bg-gray-300 border-t-white border-l-white border-r-gray-500 border-b-gray-500 border-2 border-outset text-black font-bold text-xs leading-none">X</button>
-            </div>
+          <div class="gb-title-bar">
+            <span class="font-bold text-sm pl-1">Guestbook Entry #{{ entries.length - index }}</span>
+            <!-- Maybe add fake buttons based on style later if needed -->
           </div>
-          <!-- Content Area -->
-          <div class="entry-content p-3">
-            <p class="font-bold text-black text-sm mb-1">
+
+          <!-- Content Area - Conditional structure for icon styles -->
+          <div v-if="styleRequiresIcon(getRandomStyleClass(index))" class="gb-content-wrapper">
+             <div class="gb-icon">{{ getIconForStyle(getRandomStyleClass(index)) }}</div>
+             <div class="gb-content">
+                <p>
+                  {{ entry.name }}
+                  <span class="text-xs text-gray-600 font-normal"
+                    >wrote on {{ formatDate(entry.timestamp) }}:</span
+                  >
+                </p>
+                <p class="mt-1">{{ entry.message }}</p>
+             </div>
+          </div>
+          <div v-else class="gb-content">
+            <p>
               {{ entry.name }}
-              <span class="text-xs text-gray-600 font-normal"
-                >wrote on {{ formatDate(entry.timestamp) }}:</span
-              >
+              <span>wrote on {{ formatDate(entry.timestamp) }}:</span>
             </p>
-            <p class="mt-1 text-black text-sm">{{ entry.message }}</p>
+            <p class="mt-1">{{ entry.message }}</p>
           </div>
+
         </div>
       </div>
       <div v-else class="text-center text-gray-500 italic">Be the first to sign!</div>
@@ -163,87 +171,74 @@
     }
   }
 
-  // --- Chaos Engine ---
-  function getDistortionStyle(index: number, totalEntries: number): Record<string, string> {
-    // --- ADJUSTMENT: No distortion for first 5 entries ---
-    if (index < 5) {
-      return {}; // Return empty style object
+  // --- Random Style Selector ---
+  const availableStyles = [
+    'gb-style-win95',
+    'gb-style-win95-error', // !
+    'gb-style-mac-classic',
+    'gb-style-vaporwave',
+    'gb-style-generic-web1',
+    'gb-style-win95-error-alt', // X
+    'gb-style-mac-warning', // ! (triangle)
+    'gb-style-win95-success', // ✔
+    'gb-style-pastel-success', // ✔
+    'gb-style-win95-info', // i
+    'gb-style-aqua-info', // i
+    'gb-style-vaporwave-alt'
+  ];
+
+  // Cache results per index to avoid recalculating style class multiple times per entry
+  const styleCache = new Map<number, string>();
+
+  function getRandomStyleClass(index: number): string {
+    if (styleCache.has(index)) {
+      return styleCache.get(index)!;
     }
-
-    // --- ADJUSTMENT: Recalculate distortion factor to start from index 5 ---
-    const safeTotalEntries = Math.max(1, totalEntries); // Avoid division by zero if only 1 entry
-    const distortionStartIndex = 5;
-    // Calculate factor based on position *after* the initial clean entries
-    // Maps index 5 to 0, index (totalEntries - 1) to 1
-    const adjustedIndex = index - distortionStartIndex;
-    const adjustedRange = Math.max(1, safeTotalEntries - distortionStartIndex); // Avoid division by zero or negative range
-    const distortionFactor = adjustedIndex / Math.max(1, adjustedRange -1); // Normalize from 0 to 1 for the distorted range
-
-    const styles: Record<string, string> = {};
-
-    // 1. Positioning Jitter (more intense further down)
-    // --- ADJUSTMENT: Reduced max jitter ---
-    const jitterAmount = distortionFactor * 10; // Max 10px jitter
-    const jitterX = (Math.sin(index * 1.5) * jitterAmount).toFixed(2);
-    const jitterY = (Math.cos(index * 0.8) * jitterAmount).toFixed(2);
-
-    // 2. Rotation/Skew (subtle, increases slightly)
-    // --- ADJUSTMENT: Reduced max rotation ---
-    const maxRotation = distortionFactor * 3; // Max 3 degrees rotation
-    const rotation = ((Math.random() - 0.5) * 2 * maxRotation).toFixed(2); // Random rotation within max range
-    const skewX = (distortionFactor > 0.2 && index % 5 === 0) ? ((Math.random() - 0.5) * distortionFactor * 3).toFixed(2) : '0'; // Occasional skew, starts earlier, slightly less intense
-
-    // Apply transform only if needed
-    if (jitterAmount > 0 || maxRotation > 0 || parseFloat(skewX) !== 0) {
-       styles.transform = `translateX(${jitterX}px) translateY(${jitterY}px) rotate(${rotation}deg) skewX(${skewX}deg)`;
-    }
-
-
-    // 3. Color Glitching (hue rotate, desaturate older) - Apply every few entries
-    // --- ADJUSTMENT: Start glitching later relative to distortion start ---
-    if (distortionFactor > 0.1 && index % 3 === 0) { // Start glitching after the first ~10% of distorted entries
-      const hueShift = (index * 10) % 360;
-      const saturation = Math.max(0.4, 1 - distortionFactor * 0.6).toFixed(2); // Min 40% saturation
-      styles.filter = `hue-rotate(${hueShift}deg) saturate(${saturation})`;
-    }
-
-    // 4. Border Breakdown (change style occasionally)
-    if (distortionFactor > 0.6 && index % 7 === 0) {
-      styles.borderStyle = 'dashed';
-      styles.borderColor = `rgb(${Math.random()*150}, ${Math.random()*150}, ${Math.random()*150})`;
-    } else if (distortionFactor > 0.8 && index % 5 === 0) {
-       styles.borderStyle = 'dotted';
-       styles.borderWidth = `${2 + Math.random() * 2}px`; // Slightly thicker border
-    }
-
-    // --- ADJUSTMENT: Removed Z-Index Shuffle ---
-    // // 5. Z-Index Shuffle (make older ones potentially overlap newer ones)
-    // if (distortionFactor > 0.2) {
-    //    // Use reverse index for stacking chaos, modulo for range
-    //    styles.zIndex = `${(totalEntries - index) % 10}`;
-    //    styles.position = 'relative'; // Ensure z-index works
-    // }
-
-     // 6. Shake Animation (apply later, slightly reduced intensity)
-     // --- ADJUSTMENT: Start shake later, reduced max intensity ---
-    if (distortionFactor > 0.4) { // Start shake after first 40% of distorted entries
-        const shakeIntensity = (0.1 + distortionFactor * 0.3).toFixed(2); // Duration from 0.1s to 0.4s max
-        styles.animation = `shake ${shakeIntensity}s infinite ${ index % 2 === 0 ? 'linear' : 'ease-in-out' }`;
-    }
-
-    // 7. Opacity fade for very old entries
-    // --- ADJUSTMENT: Start fade later, less aggressive fade ---
-    if (distortionFactor > 0.9) { // Start fade only for last 10% of distorted entries
-        styles.opacity = `${Math.max(0.6, 1 - (distortionFactor - 0.9) * 4).toFixed(2)}`; // Fade out last 10%, min opacity 0.6
-    }
-
-
-    return styles;
+    // Use modulo to cycle through the available styles based on index
+    const styleClass = availableStyles[index % availableStyles.length];
+    styleCache.set(index, styleClass);
+    return styleClass;
   }
+
+  // Helper to determine if a style needs the icon wrapper structure
+  const iconStyles = new Set([
+    'gb-style-win95-error',
+    'gb-style-win95-error-alt',
+    'gb-style-mac-warning',
+    'gb-style-win95-success',
+    'gb-style-pastel-success',
+    'gb-style-win95-info',
+    'gb-style-aqua-info'
+  ]);
+  function styleRequiresIcon(styleClass: string): boolean {
+    return iconStyles.has(styleClass);
+  }
+
+  // Helper to get the correct icon character for a style
+  function getIconForStyle(styleClass: string): string {
+    switch (styleClass) {
+      case 'gb-style-win95-error': return '!';
+      case 'gb-style-win95-error-alt': return 'X';
+      case 'gb-style-mac-warning': return ''; // Icon is CSS pseudo-element
+      case 'gb-style-win95-success': return '✔';
+      case 'gb-style-pastel-success': return '✔';
+      case 'gb-style-win95-info': return 'i';
+      case 'gb-style-aqua-info': return 'i';
+      default: return '';
+    }
+  }
+
+  // Clear cache when entries refresh to ensure styles recalculate if needed
+  watch(entries, () => {
+    styleCache.clear();
+  });
 
 </script>
 
 <style scoped>
+  /* Import the styles from the dedicated CSS file */
+  @import '~/assets/css/guestbook.css';
+
   /* Add shake animation */
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
