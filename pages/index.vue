@@ -1,4 +1,5 @@
 <template>
+  <div class="sticky inset-0 bg-pink-300/50"></div>
   <div class="homepage-container">
     <!-- Early 2000s fancy header -->
     <div class="header">
@@ -21,9 +22,7 @@
         <NuxtLink to="/charts" class="nav-card">
           <div class="card-inner">
             <div class="card-title">CHARTS</div>
-            <div class="card-desc">
-              View awesome charts and data visualizations!
-            </div>
+            <div class="card-desc">View awesome charts and data visualizations!</div>
             <div class="card-cta">CLICK HERE!</div>
           </div>
         </NuxtLink>
@@ -31,9 +30,7 @@
         <NuxtLink to="/dos" class="nav-card">
           <div class="card-inner">
             <div class="card-title">TERMINAL</div>
-            <div class="card-desc">
-              Experience the retro terminal interface!
-            </div>
+            <div class="card-desc">Experience the retro terminal interface!</div>
             <div class="card-cta">ENTER NOW!</div>
           </div>
         </NuxtLink>
@@ -41,9 +38,7 @@
         <NuxtLink to="/3D" class="nav-card">
           <div class="card-inner">
             <div class="card-title">Three Dimensions</div>
-            <div class="card-desc">
-              Access top secret 3D visualization system!
-            </div>
+            <div class="card-desc">Access top secret 3D visualization system!</div>
             <div class="card-cta">CLASSIFIED!</div>
           </div>
         </NuxtLink>
@@ -51,21 +46,11 @@
         <NuxtLink to="/skizualizer" class="nav-card">
           <div class="card-inner">
             <div class="card-title">SKIZUALIZER</div>
-            <div class="card-desc">
-              Visualize your gnarbunctuos ski tricks with Skizualizer!
-            </div>
+            <div class="card-desc">Visualize your gnarbunctuos ski tricks with Skizualizer!</div>
             <div class="card-cta">ENVISION!</div>
           </div>
         </NuxtLink>
       </div>
-    </div>
-
-    <div style="text-align: center; margin-top: 20px;">
-      <button 
-        @click="alertski()" 
-        style="padding: 10px 20px; font-size: 16px; background-color: #ff6600; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Click Me!
-      </button>
     </div>
 
     <!-- Guestbook Section -->
@@ -80,7 +65,6 @@
 
 <script lang="ts" setup>
   import Guestbook from '~/components/Guestbook.vue'; // Import the Guestbook component
-  const alertski = () => window.alert();
   import {
     fairyDustCursor,
     snowflakeCursor,
@@ -170,17 +154,16 @@
     // },
   ];
 
-  const customCursor =
-    cusomCursors[Math.floor(Math.random() * cusomCursors.length)];
+  const customCursor = cusomCursors[Math.floor(Math.random() * cusomCursors.length)];
 </script>
 
 <style>
   .cursor-effect-container {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    bottom: 0;
     right: 0;
+    bottom: 0;
   }
 
   @keyframes cursor {
@@ -207,6 +190,8 @@
     margin: 0 auto;
     font-family: 'Comic Sans MS', cursive, sans-serif;
     background-color: #ccccff;
+    margin-top: 42px;
+    margin-bottom: 50vh;
     border: 5px solid #9999ff;
     padding: 20px;
     box-shadow: 10px 10px 5px #888888;
@@ -258,9 +243,14 @@
     font-family: 'Courier New', monospace;
   }
 
+  .nav-section {
+    margin-top: 64px;
+    margin-bottom: 128px;
+  }
+
   .nav-intro {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 32px;
   }
 
   .nav-intro h2 {
@@ -341,11 +331,11 @@
   }
 
   .footer {
-    margin-top: 30px;
+    margin-top: 64px;
+    margin-bottom: 32px;
     text-align: center;
     font-size: 12px;
     color: #666666;
     border-top: 1px dotted #9999ff;
-    padding-top: 10px;
   }
 </style>

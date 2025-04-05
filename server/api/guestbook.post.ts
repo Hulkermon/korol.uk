@@ -7,7 +7,13 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event);
 
     // Basic validation
-    if (!body || typeof body.name !== 'string' || typeof body.message !== 'string' || body.name.trim() === '' || body.message.trim() === '') {
+    if (
+      !body ||
+      typeof body.name !== 'string' ||
+      typeof body.message !== 'string' ||
+      body.name.trim() === '' ||
+      body.message.trim() === ''
+    ) {
       setResponseStatus(event, 400); // Bad Request
       return { success: false, error: 'Name and message are required.' };
     }
@@ -23,21 +29,20 @@ export default defineEventHandler(async (event) => {
     await mkdir(directoryPath, { recursive: true });
 
     // Prepare Markdown content with frontmatter
+    // prettier-ignore no like really.. format matter here big time
     const fileContent = `---
 name: ${JSON.stringify(name)}
 message: ${JSON.stringify(message)}
 timestamp: ${timestamp}
 ---
-
 ${message}
-`; // Add message body below frontmatter as well, though not strictly needed by schema
+    `; // Add message body below frontmatter as well, though not strictly needed by schema
 
     // Write the file
     await writeFile(filePath, fileContent, 'utf-8');
 
     setResponseStatus(event, 201); // Created
     return { success: true };
-
   } catch (error) {
     console.error('Error saving guestbook entry:', error);
     setResponseStatus(event, 500); // Internal Server Error
