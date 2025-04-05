@@ -97,13 +97,10 @@
     });
     
     if (customCursor.framesUrl) {
-      console.log("Animating", customCursor.framesUrl);
       document.body.style.animation = 'cursor 0.5s linear infinite';
     } else {
-      console.log("Static", customCursor.url);
       document.body.style.cursor = `url(${customCursor.url}), ${customCursor.type || 'auto'}`;
     }
-    console.log("body style => ", document.body.style);
   });
 
   onUnmounted(() => {
