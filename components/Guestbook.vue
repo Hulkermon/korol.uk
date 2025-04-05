@@ -64,32 +64,35 @@
         <!-- Add relative positioning for z-index chaos -->
         <div
           v-for="(entry, index) in entries"
-          :key="entry._path"
+          :key="entry.path"
           :class="['gb-entry-window', getRandomStyleClass(index)]"
-          >
+          class="relative z-[2]">
           <!-- Title Bar -->
-          <div class="gb-title-bar" v-if="getRandomStyleClass(index) !== 'gb-style-clippy'"> <!-- Hide title for clippy -->
-            <span class="font-bold text-sm pl-1">Guestbook Entry #{{ entries.length - index }}</span>
+          <div class="gb-title-bar" v-if="getRandomStyleClass(index) !== 'gb-style-clippy'">
+            <!-- Hide title for clippy -->
+            <span class="font-bold text-sm pl-1"
+              >Guestbook Entry #{{ entries.length - index }}</span
+            >
             <!-- Maybe add fake buttons based on style later if needed -->
           </div>
 
           <!-- XP Luna Menu Bar -->
           <div v-if="getRandomStyleClass(index) === 'gb-style-xp-luna'" class="gb-menu-bar">
-             File Edit View Favorites Tools Help
+            File | Edit | View | Favorites | Tools | Help
           </div>
 
           <!-- Content Area - Conditional structure for icon styles -->
           <div v-if="styleRequiresIcon(getRandomStyleClass(index))" class="gb-content-wrapper">
-             <div class="gb-icon">{{ getIconForStyle(getRandomStyleClass(index)) }}</div>
-             <div class="gb-content">
-                <p>
-                  {{ entry.name }}
-                  <span class="text-xs text-gray-600 font-normal"
-                    >wrote on {{ formatDate(entry.timestamp) }}:</span
-                  >
-                </p>
-                <p class="mt-1">{{ entry.message }}</p>
-             </div>
+            <div class="gb-icon">{{ getIconForStyle(getRandomStyleClass(index)) }}</div>
+            <div class="gb-content">
+              <p>
+                {{ entry.name }}
+                <span class="text-xs text-gray-600 font-normal"
+                  >wrote on {{ formatDate(entry.timestamp) }}:</span
+                >
+              </p>
+              <p class="mt-1">{{ entry.message }}</p>
+            </div>
           </div>
           <div v-else class="gb-content">
             <p>
@@ -99,13 +102,35 @@
             <p class="mt-1">{{ entry.message }}</p>
           </div>
 
+          <!-- XP Glitch Trail Elements -->
+          <template v-if="getRandomStyleClass(index) === 'gb-style-xp-glitch'">
+            <div
+              v-for="(trailStyle, trailIndex) in trailStyles"
+              :key="`trail-${trailIndex}`"
+              class="gb-entry-window gb-glitch-trail gb-style-xp-glitch"
+              :style="trailStyle">
+              <div class="gb-title-bar">
+                <span class="font-bold text-sm pl-1"
+                  >Guestbook Entry #{{ entries.length - index }}</span
+                >
+              </div>
+              <div class="gb-content">
+                <p>
+                  {{ entry.name }}
+                  <span>wrote on {{ formatDate(entry.timestamp) }}:</span>
+                </p>
+                <p class="mt-1">{{ entry.message }}</p>
+              </div>
+            </div>
+          </template>
+
           <!-- Clippy Image - Positioned absolutely relative to the entry window -->
           <img
             v-if="getRandomStyleClass(index) === 'gb-style-clippy'"
             src="/assets/images/clippy_on_paper.png"
             alt="Clippy"
             class="gb-clippy-image"
-          />
+            @click="glitchOut" />
         </div>
       </div>
       <div v-else class="text-center text-gray-500 italic">Be the first to sign!</div>
@@ -114,8 +139,39 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive } from 'vue';
+  import { ref, reactive, onMounted } from 'vue';
   import '~/assets/css/guestbook.css';
+
+  onMounted(() => {
+    window.addEventListener('keypress', (event) => {
+      if (event.key === 'f') {
+        trailStyles.value.push(getTrailStyle(trailStyles.value.length + 1));
+      }
+    });
+  });
+
+  const isGlitching = ref(0); // Counter for the number of bounces
+
+  function glitchOut() {
+    if (isGlitching.value > 0) return; // Prevent multiple glitches at once
+    v0 = 50 + Math.random() * 150; // Initial velocity (p/s)
+    angle = 180// Math.random() > 0.5 ? 20 + Math.random() * 20 : 140 + Math.random() * 20; // Random angle between 0 and 360 degrees
+    deltaT = 0.3 + Math.random() * 0.7; // Time delta (in seconds) for each step
+    dragCoefficient = Math.random() * 1; // Drag coefficient (0 = no drag, 1 = full 🐉)
+
+    const loop = setInterval(() => {
+      trailStyles.value.push(getTrailStyle(trailStyles.value.length + 1));
+      setTimeout(() => {
+        clearInterval(loop);
+        if (trailStyles.value.length > 0) {
+          trailStyles.value.splice(0, 1);
+          if (trailStyles.value.length === 0) {
+            isGlitching.value = 0; // Reset glitch counter
+          }
+        }
+      }, 2000);
+    }, 20 + isGlitching.value++ * 5);
+  }
 
   // Form state
   const form = reactive({
@@ -133,7 +189,7 @@
     refresh,
   } = await useAsyncData(
     'guestbookEntries',
-    () => queryCollection('guestbook').order('timestamp', 'desc').all(), // Use .order('field', 'desc') for sorting in Nuxt Content v3.
+    () => queryCollection('guestbook').order('timestamp', 'DESC').all(), // Use .order('field', 'desc') for sorting in Nuxt Content v3.
     { server: false } // Re-added: Fetch on client-side only to avoid server-side query error
   );
 
@@ -160,7 +216,7 @@
         await refresh(); // Refresh the entries list
         setTimeout(() => (submitStatus.message = ''), 3000); // Clear message after 3s
       } else {
-        throw new Error(response.error || 'Unknown error');
+        throw new Error('Oh noes :( Something went wrong!');
       }
     } catch (err: any) {
       console.error('Submission error:', err);
@@ -201,7 +257,7 @@
     'gb-style-xp-glitch',
     'gb-style-cursed-skull',
     'gb-style-clippy',
-    'gb-style-nextstep'
+    'gb-style-nextstep',
   ];
 
   // Cache results per index to avoid recalculating style class multiple times per entry
@@ -226,7 +282,7 @@
     'gb-style-win95-success',
     'gb-style-pastel-success',
     'gb-style-win95-info',
-    'gb-style-aqua-info'
+    'gb-style-aqua-info',
   ]);
   function styleRequiresIcon(styleClass: string): boolean {
     return iconStyles.has(styleClass);
@@ -235,22 +291,88 @@
   // Helper to get the correct icon character for a style
   function getIconForStyle(styleClass: string): string {
     switch (styleClass) {
-      case 'gb-style-win95-error': return '!';
-      case 'gb-style-win95-error-alt': return 'X';
-      case 'gb-style-mac-warning': return ''; // Icon is CSS pseudo-element
-      case 'gb-style-win95-success': return '✔';
-      case 'gb-style-pastel-success': return '✔';
-      case 'gb-style-win95-info': return 'i';
-      case 'gb-style-aqua-info': return 'i';
-      default: return '';
+      case 'gb-style-win95-error':
+        return '!';
+      case 'gb-style-win95-error-alt':
+        return 'X';
+      case 'gb-style-mac-warning':
+        return ''; // Icon is CSS pseudo-element
+      case 'gb-style-win95-success':
+        return '✔';
+      case 'gb-style-pastel-success':
+        return '✔';
+      case 'gb-style-win95-info':
+        return 'i';
+      case 'gb-style-aqua-info':
+        return 'i';
+      default:
+        return '';
     }
   }
 
-  // Clear cache when entries refresh to ensure styles recalculate if needed
-  watch(entries, () => {
-    styleCache.clear();
-  });
+  let angle = 80; // Launch angle in degrees (90 = straight up)
+  const angleRad = angle * (Math.PI / 180); // Convert degrees to radians
 
+  let v0 = 100; // Initial velocity (p/s)
+  const v0x = v0 * Math.cos(angleRad); // Initial horizontal velocity
+  const v0y = v0 * Math.sin(angleRad); // Initial vertical velocity
+
+  const g = 9.81; // Gravitussy (m/s²)
+  const fall = (vy: number, t: number) => vy * t - (g / 2) * t ** 2; // applied gravitussy
+
+  let deltaT = 1; // Time delta (in seconds) for each step
+  let dragCoefficient = 0.8; // Drag coefficient (0 = no drag, 1 = full 🐉)
+
+  const yBounces = [v0y]; // List of all upward bounces (including the first one)
+  let lastBounceTime = 0;
+  const floorHeight = 0; // How much the bounce should be shifted down (in px)
+  const bounciness = 1;
+
+  const trailStyles: Ref<Record<string, string | number>[]> = ref([]);
+  function getTrailStyle(trailIndex: number): Record<string, string | number> {
+    const pos = calculateGlitchBounce(trailIndex);
+    return {
+      transform: `translate(${pos.x.toFixed()}px, ${-pos.y.toFixed()}px)`,
+      zIndex: -trailIndex,
+    };
+  }
+
+  /**
+   * Calculates the position of a projectile with air resistance.
+   * @param step Number of the step to calculate (1-indexed)
+   * @returns x and y positions for each step
+   */
+  function calculateGlitchBounce(step: number): { x: number; y: number } {
+    const t = step * deltaT; // calculate total time elapsed
+    const tSinceLastBounce = t - lastBounceTime; // calculate time since last bounce
+
+    // Calculate new x position
+    let x = 0;
+    x = v0x * t * (1 - dragCoefficient);
+
+    // most recent upward velocity / bounce
+    const v0y = yBounces.at(-1);
+    if (v0y === undefined) return { x, y: 0 };
+
+    // Calculate new y position
+    let y = fall(v0y, tSinceLastBounce);
+
+    // Caluclate current vertical velocity
+    let vTy = v0y - g * tSinceLastBounce; // current (T) vertical velocity
+
+    // bounce if new y below floor and is falling down (shiftY might be higher than 0)
+    const floor = floorHeight * yBounces.length;
+    if (y < floor && vTy < 0) {
+      const distanceToFloor = y - floor; // distance below the floor
+      const timeFragment = distanceToFloor / vTy; // = distance below bounceShiftY / current vertical velocity (total distance this timeframe)
+      lastBounceTime = t - timeFragment;
+      vTy = -vTy * bounciness; // bounce vertically and set as current velocity
+      y = fall(vTy, timeFragment); // recalculate y with new velocity and time since bounce
+      yBounces.push(vTy); // add new upward velocity to the list of bounces
+    }
+
+    return { x, y };
+  }
 </script>
 
 <style scoped>
@@ -264,9 +386,23 @@
 
   /* Add shake animation */
   @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px) rotate(-0.5deg); }
-    20%, 40%, 60%, 80% { transform: translateX(2px) rotate(0.5deg); }
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translateX(-2px) rotate(-0.5deg);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(2px) rotate(0.5deg);
+    }
   }
 
   /* Add blink animation if not globally defined */

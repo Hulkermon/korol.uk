@@ -473,6 +473,7 @@
     font-family: 'Tahoma', 'Verdana', sans-serif;
     position: relative; /* Needed for pseudo-elements */
     overflow: visible !important; /* Allow glitch to overflow */
+    z-index: 1;
 }
 .gb-style-xp-glitch .gb-title-bar {
     background: linear-gradient(to bottom, #3B76EA, #0058DA);
@@ -481,6 +482,7 @@
     padding: 3px 5px;
     position: relative; /* Ensure title bar content is above pseudo-elements */
     z-index: 1;
+    cursor: pointer;
 }
 .gb-style-xp-glitch .gb-content {
     color: black;
@@ -492,26 +494,19 @@
 .gb-style-xp-glitch .gb-content p:first-child span {
      color: #555;
 }
-/* The Glitch Effect using pseudo-elements */
-.gb-style-xp-glitch::before,
-.gb-style-xp-glitch::after {
-    content: '';
+/* Remove pseudo-element glitch */
+
+/* Class for the trail elements */
+.gb-glitch-trail {
     position: absolute;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
-    height: 24px; /* Approx height of title bar */
-    background: linear-gradient(to bottom, #3B76EA, #0058DA);
-    border-radius: 5px 5px 0 0;
-    z-index: 0; /* Behind the actual title bar */
+    height: 100%; /* Duplicate full height */
+    pointer-events: none; /* Ignore mouse events */
+    /* Inherits border, background etc. from .gb-style-xp-glitch via duplicated structure */
+    /* Opacity will be handled by inline style if needed, but removed for now */
 }
-.gb-style-xp-glitch::before {
-    transform: translate(15px, -8px); /* Offset 1 */
-}
-.gb-style-xp-glitch::after {
-    transform: translate(30px, -16px); /* Offset 2 */
-}
-/* Add more pseudo-elements or use box-shadow for more trails if desired */
 
 
 /* --- Style 15: Cursed Skull Box --- */
