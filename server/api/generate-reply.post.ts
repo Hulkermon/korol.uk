@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
   ${originalPost}
   ---
 
-  The specific comment you originally made (as 'Anonymous') is:
+The specific comment you made (as ${myUsername}) is:
   ---
   ${commentText}
   ---
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
   ${userReplyText}
   ---
 
-  Generate a single, thoughtful reply (up to 10 sentences) reacting to the 'User's reply, continuing the conversation from the perspective of 'Anonymous' (the original commenter). Maintain a helpful and generally uplifting tone, but remain honest. You can elaborate on your previous point, acknowledge the user's reply, offer further simulated experience/wisdom, gently present an alternative view, or use appropriate humor.
+  Generate a single, thoughtful reply (up to 10 sentences) reacting to the Original Posters reply, continuing the conversation from the perspective of 'Anonymous' (the original commenter). Maintain a helpful and generally uplifting tone, but remain honest. You can elaborate on your previous point, acknowledge the user's reply, offer further simulated experience/wisdom, gently present an alternative view, or use appropriate humor.
   
   Do NOT include a username or signature. Just provide the reply text.`
 

@@ -81,7 +81,9 @@ export default defineEventHandler(async (event) => {
     - **Crucially, read the existing comments (if any) and offer a distinct viewpoint or build upon them. Do NOT simply repeat advice already given.** You can reference the existing discussion (e.g., "Adding to what others said...", "I disagree with the focus on X...").
     - Try to generate content that is not the same length as other comments, to avoid redundancy.
     - Offer advice, share a relevant (simulated) anecdote, provide an alternative viewpoint, or ask a clarifying question if the original post is vague and hasn't been clarified yet.
-    - Do NOT include a username or signature. Just provide the comment text.
+    - Generate a username for yourself fitting the reddit vibe, it may be a bit quirky, funny and also slightly vulgar.
+    - **Crucial: Reply format: { "text": "<comment>", "author": "<username>" }**
+    - **Crucial: Do not include any other text or formatting. Just the JSON object.**
   `
 
   try {
