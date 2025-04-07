@@ -91,7 +91,7 @@
                   >wrote on {{ formatDate(entry.timestamp) }}:</span
                 >
               </p>
-              <p class="mt-1">{{ entry.message }}</p>
+              <p class="mt-1 whitespace-pre-wrap">wrapped: {{ entry.message.replaceAll("\\n", "\n") }}</p>
             </div>
           </div>
           <div v-else class="gb-content">
@@ -99,7 +99,7 @@
               {{ entry.name }}
               <span>wrote on {{ formatDate(entry.timestamp) }}:</span>
             </p>
-            <p class="mt-1">{{ entry.message }}</p>
+            <p class="mt-1 whitespace-pre-wrap">wrapped: {{ entry.message.replaceAll("\\n", "\n") }}</p>
           </div>
 
           <!-- XP Glitch Trail Elements -->
@@ -155,7 +155,7 @@
   function glitchOut() {
     if (isGlitching.value > 0) return; // Prevent multiple glitches at once
     v0 = 50 + Math.random() * 150; // Initial velocity (p/s)
-    angle = 180// Math.random() > 0.5 ? 20 + Math.random() * 20 : 140 + Math.random() * 20; // Random angle between 0 and 360 degrees
+    angle = 180; // Math.random() > 0.5 ? 20 + Math.random() * 20 : 140 + Math.random() * 20; // Random angle between 0 and 360 degrees
     deltaT = 0.3 + Math.random() * 0.7; // Time delta (in seconds) for each step
     dragCoefficient = Math.random() * 1; // Drag coefficient (0 = no drag, 1 = full 🐉)
 
@@ -189,8 +189,8 @@
     refresh,
   } = await useAsyncData(
     'guestbookEntries',
-    () => queryCollection('guestbook').order('timestamp', 'DESC').all(), // Use .order('field', 'desc') for sorting in Nuxt Content v3.
-    { server: false } // Re-added: Fetch on client-side only to avoid server-side query error
+    () => queryCollection('guestbook').order('timestamp', 'DESC').all()
+    // { server: false }
   );
 
   // Form submission handler
