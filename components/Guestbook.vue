@@ -91,7 +91,7 @@
                   >wrote on {{ formatDate(entry.timestamp) }}:</span
                 >
               </p>
-              <p class="mt-1 whitespace-pre-wrap">wrapped: {{ entry.message.replaceAll("\\n", "\n") }}</p>
+              <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll("\\n", "\n") }}</p>
             </div>
           </div>
           <div v-else class="gb-content">
@@ -99,7 +99,7 @@
               {{ entry.name }}
               <span>wrote on {{ formatDate(entry.timestamp) }}:</span>
             </p>
-            <p class="mt-1 whitespace-pre-wrap">wrapped: {{ entry.message.replaceAll("\\n", "\n") }}</p>
+            <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll("\\n", "\n") }}</p>
           </div>
 
           <!-- XP Glitch Trail Elements -->
@@ -190,7 +190,6 @@
   } = await useAsyncData(
     'guestbookEntries',
     () => queryCollection('guestbook').order('timestamp', 'DESC').all()
-    // { server: false }
   );
 
   // Form submission handler

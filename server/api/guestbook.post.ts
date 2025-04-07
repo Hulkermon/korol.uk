@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     const message = body.message.trim();
     const timestamp = new Date().toISOString();
     const filename = `entry-${Date.now()}.md`;
-    const directoryPath = resolve(process.cwd(), 'content/guestbook'); // Use process.cwd() for root
+    const directoryPath = resolve('./content/guestbook'); // Use process.cwd() for root
     const filePath = resolve(directoryPath, filename);
 
     // Ensure the directory exists
