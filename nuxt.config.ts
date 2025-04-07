@@ -5,7 +5,8 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', '@nuxt/content'],
   vue: {
     compilerOptions: {
-      isCustomElement: (tag) => ['marquee'].includes(tag)
-    }
-  }
-})
+      isCustomElement: (tag) => ['marquee'].includes(tag),
+    },
+  },
+  ssr: false,
+});
