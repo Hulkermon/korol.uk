@@ -22,7 +22,7 @@
             class="mt-1 block w-full h-10 p-1 hover:cursor-pointer" />
         </div>
         <button @click="addRectangle" class="mt-4 w-full p-2" :disabled="!newRectLabel">
-          Add Rectangle
+          Add Node
         </button>
       </div>
     </div>
@@ -40,8 +40,7 @@
   const paper = ref<dia.Paper | null>(null);
 
   const newRectLabel = ref<string>('New Element');
-  const newRectColor = ref<string>('#dedede'); // A lighter blue for dark mode
-  let rectCounter = 1; // To position new rectangles
+  const newRectColor = ref<string>('#dedede');
 
   onMounted(() => {
     if (paperContainer.value) {
@@ -51,35 +50,22 @@
       const localPaper = new dia.Paper({
         el: paperContainer.value,
         model: localGraph,
-        width: 600,
-        height: 400,
+        width: '100%',
+        height: '100%',
         gridSize: 10,
         drawGrid: { name: 'dot', args: { color: '#555' } }, // Darker grid
         cellViewNamespace: shapes,
       });
       paper.value = localPaper;
-
-      const rect = new shapes.standard.Rectangle();
-      rect.position(100, 30);
-      rect.resize(100, 40);
-      rect.attr({
-        body: {
-          fill: '#2980b9', // A medium blue, stands out on dark paper
-        },
-        label: {
-          text: 'Hola Mundo',
-          fill: '#ecf0f1', // Light text color
-        },
-      });
-      rect.addTo(localGraph);
     }
   });
 
   const addRectangle = () => {
     if (graph.value && newRectLabel.value) {
       const newRect = new shapes.standard.Rectangle();
-      const yPos = 30 + rectCounter * 50; // Increment y position for each new rect
-      newRect.position(100, yPos);
+      const xPos = 50 + Math.floor(Math.random() * 20) * 10;
+      const yPos = 50 + Math.floor(Math.random() * 20) * 10;
+      newRect.position(xPos, yPos);
       newRect.resize(120, 40);
       newRect.attr({
         body: {
@@ -90,13 +76,8 @@
           fill: '#1a1a1a',
         },
       });
-      // A simple check for color brightness to decide label color, can be improved
-      // For simplicity, we'll assume newRectColor is generally light enough for dark text.
-      // If newRectColor can be very dark, this logic would need to be more robust.
-      // Example: if (isColorDark(newRectColor.value)) { newRect.attr('label/fill', '#ecf0f1'); }
 
       newRect.addTo(graph.value as dia.Graph);
-      rectCounter++;
     }
   };
 </script>
