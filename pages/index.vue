@@ -50,6 +50,14 @@
             <div class="card-cta">ENVISION!</div>
           </div>
         </NuxtLink>
+
+        <NuxtLink to="/sudoker" class="nav-card">
+          <div class="card-inner">
+            <div class="card-title">SUDOKER</div>
+            <div class="card-desc">Sudoku, I think?</div>
+            <div class="card-cta">DOKER</div>
+          </div>
+        </NuxtLink>
       </div>
     </div>
 
