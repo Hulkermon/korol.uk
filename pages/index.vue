@@ -50,6 +50,14 @@
             <div class="card-cta">ENVISION!</div>
           </div>
         </NuxtLink>
+
+        <NuxtLink to="/recipe-tree" class="nav-card">
+          <div class="card-inner">
+            <div class="card-title">RECIPE TREE</div>
+            <div class="card-desc">Diagram based Schedule one mixing thingy.</div>
+            <div class="card-cta">MIX IT! SNORT IT!</div>
+          </div>
+        </NuxtLink>
       </div>
     </div>
 
