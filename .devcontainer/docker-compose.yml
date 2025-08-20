@@ -1,0 +1,24 @@
+services:
+    nuxt-app:
+        container_name: koroluk-nuxt-app
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - ../:/workspaces/app:cached
+        env_file: ../.env
+        command: sleep infinity # chill out a bit
+
+    db:
+        image: postgres:latest
+        environment:
+            POSTGRES_USER: koroluk
+            POSTGRES_PASSWORD: koroluk_secret
+            POSTGRES_DB: koroluk_db
+        volumes:
+            - db_data:/var/lib/postgresql/data
+        restart: unless-stopped
+
+volumes:
+    db_data:
+        driver: local
