@@ -10,13 +10,10 @@ services:
         command: sleep infinity # chill out a bit
 
     db:
-        image: postgres:latest
-        environment:
-            POSTGRES_USER: koroluk
-            POSTGRES_PASSWORD: koroluk_secret
-            POSTGRES_DB: koroluk_db
+        image: mysql:8.0
+        env_file: ../.env
         volumes:
-            - db_data:/var/lib/postgresql/data
+            - db_data:/var/lib/mysql
         restart: unless-stopped
 
 volumes:

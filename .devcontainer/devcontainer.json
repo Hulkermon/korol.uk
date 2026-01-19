@@ -5,7 +5,7 @@
   "dockerComposeFile": "./docker-compose.yml",
   "service": "nuxt-app",
   "workspaceFolder": "/workspaces/app",
-  "forwardPorts": [3000, "db:5432"],
+  "forwardPorts": [3000, "db:3306"],
   "features": {},
   "mounts": [
     // {
