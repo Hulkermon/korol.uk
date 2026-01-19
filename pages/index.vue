@@ -19,13 +19,6 @@
       </div>
 
       <div class="nav-cards">
-        <NuxtLink to="/charts" class="nav-card">
-          <div class="card-inner">
-            <div class="card-title">CHARTS</div>
-            <div class="card-desc">View awesome charts and data visualizations!</div>
-            <div class="card-cta">CLICK HERE!</div>
-          </div>
-        </NuxtLink>
 
         <NuxtLink to="/dos" class="nav-card">
           <div class="card-inner">
@@ -42,14 +35,7 @@
             <div class="card-cta">CLASSIFIED!</div>
           </div>
         </NuxtLink>
-
-        <NuxtLink to="/skizualizer" class="nav-card">
-          <div class="card-inner">
-            <div class="card-title">SKIZUALIZER</div>
-            <div class="card-desc">Visualize your gnarbunctuos ski tricks with Skizualizer!</div>
-            <div class="card-cta">ENVISION!</div>
-          </div>
-        </NuxtLink>
+        
       </div>
     </div>
 
