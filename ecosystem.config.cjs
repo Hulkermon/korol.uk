@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'guestbook-app',
+      name: 'koroluk-app',
       port: '3000',
       exec_mode: 'cluster',
       instances: 'max',

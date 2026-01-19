@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    container_name: guestbook-app
+    container_name: koroluk-app
     build: .
     restart: always
 
@@ -17,16 +17,17 @@ services:
       - "traefik.http.services.koroluk.loadbalancer.server.port=3000"
 
     environment:
-      - MYSQL_HOST=db
+      - MYSQL_HOST=${MYSQL_HOST}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
 
   db:
     image: mysql:8.0
+    container_name: koroluk-db
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: guestbook
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
