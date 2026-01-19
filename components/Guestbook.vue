@@ -88,7 +88,7 @@
               <p>
                 {{ entry.name }}
                 <span class="text-xs text-gray-600 font-normal"
-                  >wrote on {{ formatDate(entry.timestamp) }}:</span
+                  > | {{ formatDate(entry.timestamp) }}:</span
                 >
               </p>
               <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll("\\n", "\n") }}</p>
@@ -97,7 +97,7 @@
           <div v-else class="gb-content">
             <p>
               {{ entry.name }}
-              <span>wrote on {{ formatDate(entry.timestamp) }}:</span>
+              <span> | {{ formatDate(entry.timestamp) }}:</span>
             </p>
             <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll("\\n", "\n") }}</p>
           </div>
@@ -117,7 +117,7 @@
               <div class="gb-content">
                 <p>
                   {{ entry.name }}
-                  <span>wrote on {{ formatDate(entry.timestamp) }}:</span>
+                  <span> | {{ formatDate(entry.timestamp) }}:</span>
                 </p>
                 <p class="mt-1">{{ entry.message }}</p>
               </div>
