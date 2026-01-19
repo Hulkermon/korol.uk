@@ -4,32 +4,21 @@ services:
   app:
     container_name: koroluk-app
     build: .
+    env_file: ".env"
     restart: always
-
     networks:
       - coolify
       - default
-
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.koroluk.rule=Host(`korol.uk`)"
       - "traefik.http.routers.koroluk.entrypoints=web" 
       - "traefik.http.services.koroluk.loadbalancer.server.port=3000"
 
-    environment:
-      - MYSQL_HOST=${MYSQL_HOST}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-
   db:
     image: mysql:8.0
     container_name: koroluk-db
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    env_file: ".env"
     volumes:
       - db_data:/var/lib/mysql
 
