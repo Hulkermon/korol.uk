@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: guestbook-app
+    build: .
+    restart: always
+
+    networks:
+      - coolify
+      - default
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.koroluk.rule=Host(`korol.uk`)"
+      - "traefik.http.routers.koroluk.entrypoints=web" 
+      - "traefik.http.services.koroluk.loadbalancer.server.port=3000"
+
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: guestbook
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+
+networks:
+  coolify:
+    external: true

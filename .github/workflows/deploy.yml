@@ -1,0 +1,75 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # - name: Build (Skipped - Example building in Docker on Server)
+      #   run: pnpm build
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          # Copy source code (files needed for build)
+          source: "."
+          target: "/var/www/guestbook"
+          # Exclude heavy folders to speed up transfer
+          rm: true
+
+      - name: Build and Start Docker
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/guestbook
+            
+            # 1. Stop any existing containers using port 80 to avoid conflicts
+            # (Optional: brute force cleanup if you are sure)
+            # docker stop $(docker ps -q --filter "publish=80") || true
+            
+            # 2. Build and start using Docker Compose
+            # This handles pulling/building the image and restarting the container
+            docker compose down --remove-orphans || true
+            docker compose up -d --build --remove-orphans
+            
+            # Prune unused images to save space
+            docker image prune -f
