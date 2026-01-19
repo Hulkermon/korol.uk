@@ -64,11 +64,11 @@
         <!-- Add relative positioning for z-index chaos -->
         <div
           v-for="(entry, index) in entries"
-          :key="entry.path"
-          :class="['gb-entry-window', getRandomStyleClass(index)]"
+          :key="entry.id"
+          :class="['gb-entry-window', getEntryStyle(entry, index)]"
           class="relative z-[2]">
           <!-- Title Bar -->
-          <div class="gb-title-bar" v-if="getRandomStyleClass(index) !== 'gb-style-clippy'">
+          <div class="gb-title-bar" v-if="getEntryStyle(entry, index) !== 'gb-style-clippy'">
             <!-- Hide title for clippy -->
             <span class="font-bold text-sm pl-1"
               >Guestbook Entry #{{ entries.length - index }}</span
@@ -77,13 +77,13 @@
           </div>
 
           <!-- XP Luna Menu Bar -->
-          <div v-if="getRandomStyleClass(index) === 'gb-style-xp-luna'" class="gb-menu-bar">
+          <div v-if="getEntryStyle(entry, index) === 'gb-style-xp-luna'" class="gb-menu-bar">
             File | Edit | View | Favorites | Tools | Help
           </div>
 
           <!-- Content Area - Conditional structure for icon styles -->
-          <div v-if="styleRequiresIcon(getRandomStyleClass(index))" class="gb-content-wrapper">
-            <div class="gb-icon">{{ getIconForStyle(getRandomStyleClass(index)) }}</div>
+          <div v-if="styleRequiresIcon(getEntryStyle(entry, index))" class="gb-content-wrapper">
+            <div class="gb-icon">{{ getIconForStyle(getEntryStyle(entry, index)) }}</div>
             <div class="gb-content">
               <p>
                 {{ entry.name }}
@@ -103,7 +103,7 @@
           </div>
 
           <!-- XP Glitch Trail Elements -->
-          <template v-if="getRandomStyleClass(index) === 'gb-style-xp-glitch'">
+          <template v-if="getEntryStyle(entry, index) === 'gb-style-xp-glitch'">
             <div
               v-for="(trailStyle, trailIndex) in trailStyles"
               :key="`trail-${trailIndex}`"
@@ -126,7 +126,7 @@
 
           <!-- Clippy Image - Positioned absolutely relative to the entry window -->
           <img
-            v-if="getRandomStyleClass(index) === 'gb-style-clippy'"
+            v-if="getEntryStyle(entry, index) === 'gb-style-clippy'"
             src="/assets/images/clippy_on_paper.png"
             alt="Clippy"
             class="gb-clippy-image"
@@ -187,10 +187,7 @@
     pending,
     error,
     refresh,
-  } = await useAsyncData(
-    'guestbookEntries',
-    () => queryCollection('guestbook').order('timestamp', 'DESC').all()
-  );
+  } = await useFetch('/api/guestbook');
 
   // Form submission handler
   async function submitEntry() {
@@ -200,11 +197,15 @@
     submitStatus.isError = false;
 
     try {
+      // Pick a random style for the new entry
+      const randomStyle = availableStyles[Math.floor(Math.random() * availableStyles.length)];
+      
       const response = await $fetch('/api/guestbook', {
         method: 'POST',
         body: {
           name: form.name,
           message: form.message,
+          style: randomStyle,
         },
       });
 
@@ -307,6 +308,10 @@
       default:
         return '';
     }
+  }
+
+  function getEntryStyle(entry: any, index: number): string {
+    return entry?.style || getRandomStyleClass(index);
   }
 
   let angle = 80; // Launch angle in degrees (90 = straight up)
