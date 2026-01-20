@@ -13,7 +13,11 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.koroluk.rule=Host(`korol.uk`)"
       - "traefik.http.routers.koroluk.entrypoints=http" 
-      - "traefik.http.routers.koroluk.middlewares=redirect-to-https"
+      
+      # Define Middleware locally to ensure it exists
+      - "traefik.http.middlewares.koroluk-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.koroluk.middlewares=koroluk-redirect"
+
       - "traefik.http.services.koroluk.loadbalancer.server.port=3000"
       
       # HTTPS Configuration
