@@ -37,16 +37,6 @@ export const useDb = async () => {
         )
       `);
 
-      // Migration: Ensure next_refresh exists
-      try {
-        await connection.query('ALTER TABLE map_seeds ADD COLUMN next_refresh BIGINT DEFAULT NULL');
-      } catch (e: any) {
-        // Ignore if column already exists
-        if (e.code !== 'ER_DUP_FIELDNAME') {
-           // console.log('Note: ' + e.message);
-        }
-      }
-
       await connection.query(`
         CREATE TABLE IF NOT EXISTS stoner_benches (
           id INT AUTO_INCREMENT PRIMARY KEY,
