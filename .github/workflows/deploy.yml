@@ -80,33 +80,35 @@ jobs:
           target: '/var/www/korol.uk'
           strip_components: 2 # Removes .output/public from the path
 
-  deploy:
-    needs: build-and-push-image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # This whole section was replaced with coolify running on my VPS, but ig it's a good fallback
+
+  # deploy:
+  #   needs: build-and-push-image
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
       
-      - name: Copy docker-compose.yml
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml"
-          target: "/projects/korol.uk/"
+  #     - name: Copy docker-compose.yml
+  #       uses: appleboy/scp-action@master
+  #       with:
+  #         host: ${{ secrets.VPS_HOST }}
+  #         username: ${{ secrets.VPS_USER }}
+  #         key: ${{ secrets.VPS_SSH_KEY }}
+  #         source: "docker-compose.yml"
+  #         target: "/projects/korol.uk/"
       
-      - name: Deploy on VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /projects/korol.uk/
-            docker compose pull
-            docker compose up -d
-            docker image prune -f
+  #     - name: Deploy on VPS
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.VPS_HOST }}
+  #         username: ${{ secrets.VPS_USER }}
+  #         key: ${{ secrets.VPS_SSH_KEY }}
+  #         script: |
+  #           cd /projects/korol.uk/
+  #           docker compose pull
+  #           docker compose up -d
+  #           docker image prune -f
 
       # # Deploy Backend & Docker Config (Preserves .env)
       # - name: Deploy Backend & Docker
