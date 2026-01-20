@@ -7,8 +7,11 @@
 
     <div class="controls">
       <div class="seed-display">
-        <span class="label">Current Seed:</span>
-        <span class="seed-value">{{ currentSeed }}</span>
+        <span class="seed-value" v-if="currentMap?.seed">{{ currentMap.seed }}</span>
+      </div>
+      <div class="countdown-display">
+        <span class="label">NEXT MAP IN:</span>
+        <span class="digital-clock">{{ timeRemaining }}</span>
       </div>
     </div>
 
@@ -115,6 +118,11 @@
 </template>
 
 <script setup lang="ts">
+  interface Map {
+    seed: string;
+    nextRefresh: string;
+  }
+
   interface Bench {
     id: number;
     x: number;
@@ -130,7 +138,17 @@
   const canvasHeight = 600;
   const tileSize = 8;
 
-  const currentSeed = ref('');
+  const currentMap = ref<Map | null>();
+
+  const timeRemaining = computed(() => {
+    if (!currentMap.value)
+      return '--:--:--';
+    
+    const now = new Date();
+    const nextRefresh = new Date(currentMap.value.nextRefresh);
+    const deltaTime = Math.abs(now.getTime() - nextRefresh.getTime());
+    return new Intl.DateTimeFormat('de-CH', { timeStyle: 'medium', timeZone: 'Europe/Zurich' }).format(deltaTime);
+  });
 
   // Benches state
   const benches = ref<Bench[]>([]);
@@ -162,7 +180,7 @@
   async function fetchBenches() {
     try {
       const response = await $fetch<{ benches: Bench[] }>('/api/stoner-benches/benches', {
-        query: { seedValue: currentSeed.value },
+        query: { seedValue: currentMap.value.seed },
       });
       benches.value = response.benches || [];
     } catch (error) {
@@ -262,7 +280,7 @@
       await $fetch('/api/stoner-benches/benches', {
         method: 'POST',
         body: {
-          seedValue: currentSeed.value,
+          seedValue: currentMap.value.seed,
           x: clickCoords.value.x,
           y: clickCoords.value.y,
           title: benchForm.value.title,
@@ -285,14 +303,39 @@
     }
   }
 
-  async function getLastSeed(): Promise<string | null> {
+  async function getLastMap(): Promise<{ seed: string | null; nextRefresh: string | null }> {
     try {
-      const { seed } = await $fetch<{ seed: string | null }>('/api/stoner-benches/latest-seed');
-      return seed;
+      const data = await $fetch<{ seed: string | null; nextRefresh: string | null }>(
+        '/api/stoner-benches/latest-seed'
+      );
+      return data;
     } catch (error) {
       console.error('Error fetching last seed:', error);
-      return null;
+      return { seed: null, nextRefresh: null };
     }
+  }
+
+  function updateTimer() {
+    if (!nextRefreshTime.value) return;
+
+    const now = new Date();
+    const diff = nextRefreshTime.value.getTime() - now.getTime();
+
+    console.log('time diff:', diff)
+
+    if (diff <= 0) {
+      timeRemaining.value = '00:00:00';
+      // Optionally trigger a reload here if needed, but for now just stop
+      return;
+    }
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    timeRemaining.value = `${hours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
   function seededRandom(seed: string): () => number {
@@ -451,10 +494,10 @@
   }
 
   onMounted(async () => {
-    const lastSeed = await getLastSeed();
-    if (lastSeed) {
-      currentSeed.value = lastSeed;
-      drawMap(currentSeed.value);
+    const lastMap = await getLastMap();
+    if (lastMap) {
+      currentMap.value = lastMap;
+      drawMap(lastMap.seed);
       fetchBenches();
     }
   });
@@ -502,6 +545,8 @@
     padding: 10px 20px;
     border: 2px solid #228b22;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
   }
 
   .label {
@@ -510,8 +555,14 @@
   }
 
   .seed-value {
-    color: #90ee90;
+    color: #fff;
     font-weight: bold;
+    font-family: 'Orbitron', monospace;
+    font-size: 24px;
+    text-shadow: 
+      0 0 5px #00ff00,
+      0 0 10px #00ff00;
+    letter-spacing: 2px;
   }
 
   .refresh-btn {
@@ -530,6 +581,35 @@
     background: #228b22;
     color: #fff;
     box-shadow: 0 0 10px rgba(34, 139, 34, 0.6);
+  }
+
+  .countdown-display {
+    background: #000;
+    padding: 10px 20px;
+    border: 4px ridge #444;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: inset 0 0 10px #000;
+  }
+
+  .countdown-display .label {
+    color: #ff4500;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 2px #ff4500;
+  }
+
+  .digital-clock {
+    font-family: 'Orbitron', monospace;
+    font-size: 24px;
+    color: #ff0000;
+    text-shadow: 
+      0 0 5px #ff0000,
+      0 0 10px #ff0000;
+    letter-spacing: 2px;
   }
 
   .canvas-wrapper {

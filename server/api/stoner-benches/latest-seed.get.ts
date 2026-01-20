@@ -9,15 +9,19 @@ export default defineEventHandler(async (event) => {
     let currentSeed: string | null = null;
     let shouldCreateNew = true;
 
+    let nextRefresh: Date = new Date();
+
     if (Array.isArray(seeds) && seeds.length > 0) {
       const latest = seeds[0] as { id: number; seed_value: string; created_at: Date };
       const now = new Date();
-      const diff = now.getTime() - new Date(latest.created_at).getTime();
+      const createdAt = new Date(latest.created_at);
+      const diff = now.getTime() - createdAt.getTime();
       const hours = diff / (1000 * 60 * 60);
 
       if (hours < 24) {
         currentSeed = latest.seed_value;
         shouldCreateNew = false;
+        nextRefresh = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
       }
     }
 
@@ -32,9 +36,10 @@ export default defineEventHandler(async (event) => {
       );
       
       currentSeed = newSeedValue;
+      nextRefresh = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
 
-    return { seed: currentSeed };
+    return { seed: currentSeed, nextRefresh: nextRefresh.toISOString() };
   } catch (error) {
     console.error('Database error:', error);
     // Don't fail hard, just return null so frontend generates a random one
