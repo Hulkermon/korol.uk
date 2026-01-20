@@ -38,36 +38,42 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # - name: Build (Skipped - Example building in Docker on Server)
-      #   run: pnpm build
+      - name: Build
+        run: pnpm build
 
-      - name: Deploy to VPS
+      # 1. Deploy Frontend Assets to Public Web Root
+      - name: Deploy Frontend Assets
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          # Copy source code (files needed for build)
-          source: "."
+          source: ".output/public/*"
           target: "/var/www/korol.uk"
-          # Exclude heavy folders to speed up transfer
-          rm: true
+          strip_components: 2 # Removes .output/public from the path
 
-      - name: Build and Start Docker
+      # 2. Deploy Backend & Docker Config (Preserves .env)
+      - name: Deploy Backend & Docker
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: ".output,Dockerfile,docker-compose.yml,package.json,pnpm-lock.yaml"
+          target: "/projects/korol.uk"
+          # rm: false is default, so .env will NOT be wiped
+
+      - name: Restart Application
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/korol.uk
+            cd /projects/korol.uk
             
-            # 1. Stop any existing containers using port 80 to avoid conflicts
-            # (Optional: brute force cleanup if you are sure)
-            # docker stop $(docker ps -q --filter "publish=80") || true
-            
-            # 2. Build and start using Docker Compose
-            # This handles pulling/building the image and restarting the container
+            # Rebuild container with new artifacts
+            # We use --build to ensure the COPY .output gets the latest files
             docker compose down --remove-orphans || true
             docker compose up -d --build --remove-orphans
             
