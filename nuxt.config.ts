@@ -16,7 +16,6 @@ export default defineNuxtConfig({
       database: process.env.MYSQL_DATABASE,
     },
   },
-  ssr: false,
   app: {
     head: {
       title: 'wameguan',
@@ -30,4 +29,5 @@ export default defineNuxtConfig({
       meta: [{ name: 'apple-mobile-web-app-title', content: 'korol.uk' }],
     },
   },
+  ssr: false,
 });

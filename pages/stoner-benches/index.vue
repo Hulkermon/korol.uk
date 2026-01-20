@@ -19,11 +19,49 @@
         :width="canvasWidth"
         :height="canvasHeight"
         @click="handleCanvasClick"
+        @mousemove="handleCanvasHover"
+        @mouseleave="hideTooltip"
       ></canvas>
+      <!-- Bench markers overlay -->
+      <div class="bench-markers">
+        <div
+          v-for="bench in benches"
+          :key="bench.id"
+          class="bench-marker"
+          :style="{ left: `${bench.x}px`, top: `${bench.y}px` }"
+          @mouseenter="showBenchTooltip(bench, $event)"
+          @mouseleave="hideTooltip"
+          @click.stop="showBenchDetails(bench)"
+        >
+          🪑
+        </div>
+      </div>
+      <!-- Tooltip -->
+      <div v-if="tooltipVisible" class="bench-tooltip" :style="tooltipPosition">
+        <div class="tooltip-title">{{ tooltipBench?.title }}</div>
+        <div class="tooltip-author">by {{ tooltipBench?.author_name }}</div>
+        <div class="tooltip-hint">Click for details</div>
+      </div>
     </div>
 
     <div class="footer-info">
       <p>Click anywhere on the map to place a bench</p>
+      <p v-if="benches.length > 0" class="bench-count">🪑 {{ benches.length }} bench{{ benches.length === 1 ? '' : 'es' }} on this map</p>
+    </div>
+
+    <!-- Bench Details Modal -->
+    <div v-if="showDetailsModal" class="modal-overlay" @click.self="closeDetailsModal">
+      <div class="modal details-modal">
+        <div class="modal-header">
+          <h2>🪑 {{ selectedBench?.title }}</h2>
+          <button class="close-btn" @click="closeDetailsModal">×</button>
+        </div>
+        <div class="bench-details">
+          <p class="detail-description">{{ selectedBench?.description }}</p>
+          <p class="detail-author">— {{ selectedBench?.author_name }}</p>
+          <p class="detail-date">Placed on {{ formatDate(selectedBench?.created_at) }}</p>
+        </div>
+      </div>
     </div>
 
     <!-- Bench Placement Modal -->
@@ -80,12 +118,34 @@
 </template>
 
 <script setup lang="ts">
+interface Bench {
+  id: number;
+  x: number;
+  y: number;
+  title: string;
+  description: string;
+  author_name: string;
+  created_at: string;
+}
+
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvasWidth = 800;
 const canvasHeight = 600;
 const tileSize = 8;
 
 const currentSeed = ref(generateRandomSeed());
+
+// Benches state
+const benches = ref<Bench[]>([]);
+
+// Tooltip state
+const tooltipVisible = ref(false);
+const tooltipBench = ref<Bench | null>(null);
+const tooltipPosition = ref({ left: '0px', top: '0px' });
+
+// Bench details modal state
+const showDetailsModal = ref(false);
+const selectedBench = ref<Bench | null>(null);
 
 // Modal state
 const showModal = ref(false);
@@ -101,6 +161,55 @@ const benchForm = ref({
 const isSubmitting = ref(false);
 const submitMessage = ref('');
 const submitError = ref(false);
+
+async function fetchBenches() {
+  try {
+    const response = await $fetch<{ benches: Bench[] }>('/api/stoner-benches/benches', {
+      query: { seedValue: currentSeed.value },
+    });
+    benches.value = response.benches || [];
+  } catch (error) {
+    console.error('Error fetching benches:', error);
+    benches.value = [];
+  }
+}
+
+function showBenchTooltip(bench: Bench, event: MouseEvent) {
+  tooltipBench.value = bench;
+  tooltipPosition.value = {
+    left: `${bench.x + 20}px`,
+    top: `${bench.y - 10}px`,
+  };
+  tooltipVisible.value = true;
+}
+
+function hideTooltip() {
+  tooltipVisible.value = false;
+}
+
+function handleCanvasHover() {
+  // Canvas hover is handled by bench markers
+}
+
+function showBenchDetails(bench: Bench) {
+  selectedBench.value = bench;
+  showDetailsModal.value = true;
+}
+
+function closeDetailsModal() {
+  showDetailsModal.value = false;
+  selectedBench.value = null;
+}
+
+function formatDate(dateString: string | undefined): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
 function handleCanvasClick(event: MouseEvent) {
   const canvas = canvasRef.value;
@@ -166,6 +275,7 @@ async function submitBench() {
     });
 
     submitMessage.value = 'Bench placed successfully! 🪑';
+    await fetchBenches();
     setTimeout(() => {
       closeModal();
     }, 1500);
@@ -339,10 +449,12 @@ function drawMap(seed: string) {
 
 onMounted(() => {
   drawMap(currentSeed.value);
+  fetchBenches();
 });
 
 watch(currentSeed, (newSeed) => {
   drawMap(newSeed);
+  fetchBenches();
 });
 </script>
 
@@ -402,6 +514,7 @@ watch(currentSeed, (newSeed) => {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
+  position: relative;
 }
 
 .map-canvas {
@@ -411,10 +524,71 @@ watch(currentSeed, (newSeed) => {
   image-rendering: pixelated;
 }
 
+.bench-markers {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 600px;
+  pointer-events: none;
+}
+
+.bench-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  cursor: pointer;
+  pointer-events: auto;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  transition: transform 0.2s, filter 0.2s;
+  z-index: 10;
+}
+
+.bench-marker:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 1));
+}
+
+.bench-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #228B22;
+  border-radius: 4px;
+  padding: 8px 12px;
+  pointer-events: none;
+  z-index: 20;
+  max-width: 200px;
+}
+
+.tooltip-title {
+  color: #90EE90;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.tooltip-author {
+  color: #6B8E23;
+  font-size: 12px;
+}
+
+.tooltip-hint {
+  color: #4a6b4a;
+  font-size: 10px;
+  margin-top: 6px;
+  font-style: italic;
+}
+
 .footer-info {
   text-align: center;
   color: #6B8E23;
   font-size: 14px;
+}
+
+.bench-count {
+  margin-top: 8px;
+  color: #90EE90;
 }
 
 /* Modal styles */
@@ -558,5 +732,36 @@ watch(currentSeed, (newSeed) => {
 .submit-message.error {
   color: #ff6b6b;
   background: rgba(255, 107, 107, 0.1);
+}
+
+/* Bench Details Modal */
+.details-modal {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.bench-details {
+  padding: 10px 0;
+}
+
+.detail-description {
+  color: #90EE90;
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+
+.detail-author {
+  color: #6B8E23;
+  font-style: italic;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.detail-date {
+  color: #4a6b4a;
+  font-size: 12px;
 }
 </style>
