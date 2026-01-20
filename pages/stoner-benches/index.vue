@@ -286,8 +286,14 @@
     }
   }
 
-  function getLastSeed(): string {
-    // TODO
+  async function getLastSeed(): Promise<string | null> {
+    try {
+      const { seed } = await $fetch<{ seed: string | null }>('/api/stoner-benches/latest-seed');
+      return seed;
+    } catch (error) {
+      console.error('Error fetching last seed:', error);
+      return null;
+    }
   }
 
   function generateRandomSeed(): string {
@@ -453,9 +459,14 @@
     }
   }
 
-  onMounted(() => {
-    drawMap(currentSeed.value);
-    fetchBenches();
+  onMounted(async () => {
+    const lastSeed = await getLastSeed();
+    if (lastSeed && lastSeed !== currentSeed.value) {
+      currentSeed.value = lastSeed;
+    } else {
+      drawMap(currentSeed.value);
+      fetchBenches();
+    }
   });
 
   watch(currentSeed, (newSeed) => {
