@@ -1,0 +1,16 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Contact: mailto:hulkermon@gmail.com
+Expires: 2029-01-19T23:00:00.000Z
+Encryption: https://korol.uk/.well-known/pgp-public-key.txt
+Preferred-Languages: en
+Canonical: https://korol.uk/.well-known/security.txt
+
+-----BEGIN PGP SIGNATURE-----
+
+iIoEARYKADIWIQR9ycH+TZXAI5CGPfUuv0QUG1YprwUCaW+ppBQcaHVsa2VybW9u
+QGdtYWlsLmNvbQAKCRAuv0QUG1Ypr01UAP9wXDC4cLmj5gSZ62vZL6t+CoSL0/DX
+p5sYMvYn+dD4RQEA2VjpThaXHMT6KjcxWlxFRhk6PMCYi8XbWU8KOWjcfgM=
+=Kb1L
+-----END PGP SIGNATURE-----
