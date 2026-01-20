@@ -10,7 +10,6 @@
         <span class="label">Current Seed:</span>
         <span class="seed-value">{{ currentSeed }}</span>
       </div>
-      <button class="refresh-btn" @click="refreshMap">🔄 Refresh Map</button>
     </div>
 
     <div class="canvas-wrapper">
@@ -131,7 +130,7 @@
   const canvasHeight = 600;
   const tileSize = 8;
 
-  const currentSeed = ref(generateRandomSeed());
+  const currentSeed = ref('');
 
   // Benches state
   const benches = ref<Bench[]>([]);
@@ -296,14 +295,6 @@
     }
   }
 
-  function generateRandomSeed(): string {
-    return Math.random().toString(36).substring(2, 15);
-  }
-
-  function refreshMap() {
-    currentSeed.value = generateRandomSeed();
-  }
-
   function seededRandom(seed: string): () => number {
     let hash = 0;
     for (let i = 0; i < seed.length; i++) {
@@ -461,17 +452,11 @@
 
   onMounted(async () => {
     const lastSeed = await getLastSeed();
-    if (lastSeed && lastSeed !== currentSeed.value) {
+    if (lastSeed) {
       currentSeed.value = lastSeed;
-    } else {
       drawMap(currentSeed.value);
       fetchBenches();
     }
-  });
-
-  watch(currentSeed, (newSeed) => {
-    drawMap(newSeed);
-    fetchBenches();
   });
 </script>
 
