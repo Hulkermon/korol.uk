@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ Hulkermon/korol.uk }}
+  IMAGE_NAME: ${{ Hulkermon/korol\.uk }}
 
 jobs:
   build-and-push-image:
