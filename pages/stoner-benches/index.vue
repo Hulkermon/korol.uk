@@ -140,13 +140,25 @@
 
   const currentMap = ref<Map | null>();
 
+  const now = ref(new Date());
+  let timer: any;
+
+  onMounted(() => {
+    timer = setInterval(() => {
+      now.value = new Date();
+    }, 1000);
+  });
+
+  onUnmounted(() => {
+    clearInterval(timer);
+  });
+
   const timeRemaining = computed(() => {
     if (!currentMap.value)
       return '--:--:--';
     
-    const now = new Date();
     const nextRefresh = new Date(currentMap.value.nextRefresh);
-    const deltaTime = Math.abs(now.getTime() - nextRefresh.getTime());
+    const deltaTime = Math.abs(now.value.getTime() - nextRefresh.getTime());
     return new Intl.DateTimeFormat('de-CH', { timeStyle: 'medium', timeZone: 'Europe/Zurich' }).format(deltaTime);
   });
 
