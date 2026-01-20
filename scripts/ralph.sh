@@ -95,7 +95,7 @@ for i in $(seq 1 $MAX_ITERATIONS); do
     OUTPUT=$(claude --dangerously-skip-permissions --print < "$SCRIPT_DIR/CLAUDE.md" 2>&1 | tee /dev/stderr) || true
   else
     # Gemini: use --yolo for auto-approval (equivalent to amp's --dangerously-allow-all)
-    OUTPUT=$(cat "$SCRIPT_DIR/GEMINI.md" | gemini --model gemini-2.5-flash-lite --yolo 2>&1 | tee /dev/stderr) || true
+    OUTPUT=$(cat "$SCRIPT_DIR/GEMINI.md" | gemini --model gemini-2.5-flash --yolo 2>&1 | tee /dev/stderr) || true
   fi
   
   # Check for completion signal
