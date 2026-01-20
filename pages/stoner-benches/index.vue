@@ -10,6 +10,9 @@
         <span class="label">Current Seed:</span>
         <span class="seed-value">{{ currentSeed }}</span>
       </div>
+      <button class="refresh-btn" @click="refreshMap">
+        🔄 Refresh Map
+      </button>
     </div>
 
     <div class="canvas-wrapper">
@@ -292,6 +295,10 @@ function generateRandomSeed(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
+function refreshMap() {
+  currentSeed.value = generateRandomSeed();
+}
+
 function seededRandom(seed: string): () => number {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
@@ -508,6 +515,24 @@ watch(currentSeed, (newSeed) => {
 .seed-value {
   color: #90EE90;
   font-weight: bold;
+}
+
+.refresh-btn {
+  background: rgba(34, 139, 34, 0.3);
+  border: 2px solid #228B22;
+  border-radius: 4px;
+  padding: 10px 20px;
+  color: #90EE90;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #228B22;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(34, 139, 34, 0.6);
 }
 
 .canvas-wrapper {
