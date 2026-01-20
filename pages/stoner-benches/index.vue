@@ -124,7 +124,7 @@
 <script setup lang="ts">
   interface Map {
     seed: string;
-    nextRefresh: string;
+    nextRefresh: number;
   }
 
   interface Bench {
@@ -159,7 +159,7 @@
 
   async function adjustTime(unit: 'HOUR' | 'MINUTE' | 'SECOND', amount: number) {
     try {
-      const data = await $fetch<{ success: boolean; nextRefresh: string }>('/api/stoner-benches/debug-advance-time', {
+      const data = await $fetch<{ success: boolean; nextRefresh: number }>('/api/stoner-benches/debug-advance-time', {
         method: 'POST',
         body: { unit, amount },
       });
@@ -172,12 +172,22 @@
   }
 
   const timeRemaining = computed(() => {
-    if (!currentMap.value)
+    if (!currentMap.value?.nextRefresh)
       return '--:--:--';
     
-    const nextRefresh = new Date(currentMap.value.nextRefresh);
-    const deltaTime = Math.abs(now.value.getTime() - nextRefresh.getTime());
-    return new Intl.DateTimeFormat('en-GB', { timeStyle: 'medium' }).format(deltaTime);
+    // nextRefresh is in seconds. Convert to ms.
+    const targetTime = currentMap.value.nextRefresh * 1000;
+    const diff = targetTime - now.value.getTime();
+    
+    if (diff <= 0) return '00:00:00';
+
+    // Format as simple countdown HH:MM:SS
+    const totalSeconds = Math.floor(diff / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    
+    return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
   });
 
   // Benches state
@@ -333,9 +343,9 @@
     }
   }
 
-  async function getLastMap(): Promise<{ seed: string | null; nextRefresh: string | null }> {
+  async function getLastMap(): Promise<{ seed: string | null; nextRefresh: number | null }> {
     try {
-      const data = await $fetch<{ seed: string | null; nextRefresh: string | null }>(
+      const data = await $fetch<{ seed: string | null; nextRefresh: number | null }>(
         '/api/stoner-benches/latest-seed'
       );
       return data;
@@ -345,28 +355,7 @@
     }
   }
 
-  function updateTimer() {
-    if (!nextRefreshTime.value) return;
 
-    const now = new Date();
-    const diff = nextRefreshTime.value.getTime() - now.getTime();
-
-    console.log('time diff:', diff)
-
-    if (diff <= 0) {
-      timeRemaining.value = '00:00:00';
-      // Optionally trigger a reload here if needed, but for now just stop
-      return;
-    }
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    timeRemaining.value = `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }
 
   function seededRandom(seed: string): () => number {
     let hash = 0;

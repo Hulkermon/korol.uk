@@ -32,9 +32,20 @@ export const useDb = async () => {
         CREATE TABLE IF NOT EXISTS map_seeds (
           id INT AUTO_INCREMENT PRIMARY KEY,
           seed_value VARCHAR(255) NOT NULL UNIQUE,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          next_refresh BIGINT DEFAULT NULL
         )
       `);
+
+      // Migration: Ensure next_refresh exists
+      try {
+        await connection.query('ALTER TABLE map_seeds ADD COLUMN next_refresh BIGINT DEFAULT NULL');
+      } catch (e: any) {
+        // Ignore if column already exists
+        if (e.code !== 'ER_DUP_FIELDNAME') {
+           // console.log('Note: ' + e.message);
+        }
+      }
 
       await connection.query(`
         CREATE TABLE IF NOT EXISTS stoner_benches (
