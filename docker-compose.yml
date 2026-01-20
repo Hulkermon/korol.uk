@@ -11,17 +11,12 @@ services:
       - default
     labels:
       - "traefik.enable=true"
-      
-      # Middleware: Redirect HTTP to HTTPS (Defined locally to be safe)
-      - "traefik.http.middlewares.koroluk-https-redirect.redirectscheme.scheme=https"
-      
-      # HTTP Router
       - "traefik.http.routers.koroluk.rule=Host(`korol.uk`)"
       - "traefik.http.routers.koroluk.entrypoints=http" 
-      - "traefik.http.routers.koroluk.middlewares=koroluk-https-redirect"
+      - "traefik.http.routers.koroluk.middlewares=redirect-to-https"
       - "traefik.http.services.koroluk.loadbalancer.server.port=3000"
       
-      # HTTPS Router
+      # HTTPS Configuration
       - "traefik.http.routers.koroluk-secure.rule=Host(`korol.uk`)"
       - "traefik.http.routers.koroluk-secure.entrypoints=https"
       - "traefik.http.routers.koroluk-secure.tls=true"
