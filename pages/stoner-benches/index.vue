@@ -146,10 +146,35 @@
 
   const now = ref(new Date());
   let timer: any;
+  const isRefreshingMap = ref(false);
+
+  async function checkAndReloadMap() {
+    if (!currentMap.value?.nextRefresh || isRefreshingMap.value) return;
+
+    if (now.value.getTime() >= currentMap.value.nextRefresh * 1000) {
+      isRefreshingMap.value = true;
+      try {
+        const lastMap = await getLastMap();
+        if (lastMap && lastMap.seed && lastMap.seed !== currentMap.value.seed) {
+          currentMap.value = lastMap;
+          drawMap(lastMap.seed);
+          fetchBenches();
+        } else if (lastMap && lastMap.nextRefresh) {
+            // Even if seed is same (maybe just refreshed exact moment), update refresh time
+            currentMap.value = lastMap;
+        }
+      } catch (e) {
+        console.error('Failed to reload map', e);
+      } finally {
+        isRefreshingMap.value = false;
+      }
+    }
+  }
 
   onMounted(() => {
     timer = setInterval(() => {
       now.value = new Date();
+      checkAndReloadMap();
     }, 1000);
   });
 
