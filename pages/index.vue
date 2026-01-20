@@ -36,9 +36,9 @@
           </div>
         </NuxtLink>
 
-        <NuxtLink to="/stoner-benches" class="nav-card">
+        <NuxtLink to="/stoned-benches" class="nav-card">
           <div class="card-inner">
-            <div class="card-title">Stoner Benches</div>
+            <div class="card-title">Stoned Benches</div>
             <div class="card-desc">Rate the best benches for chilling out!</div>
             <div class="card-cta">BLAZE IT!</div>
           </div>

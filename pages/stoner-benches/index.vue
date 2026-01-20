@@ -1,8 +1,8 @@
 <template>
   <div class="stoner-benches-container">
     <div class="header">
-      <h1>🌿 STONER BENCHES 🌿</h1>
-      <p class="subtitle">Find your spot in the digital wilderness</p>
+      <h1>🌿 STONED BENCHES 🌿</h1>
+      <p class="subtitle">Find yous a spot in jah digital wilderness</p>
     </div>
 
     <div class="controls">
@@ -10,10 +10,10 @@
         <span class="seed-value" v-if="currentMap?.seed">{{ currentMap.seed }}</span>
       </div>
       <div class="countdown-display">
-        <span class="label">
-          <span @click="adjustTime('HOUR', 1)" @contextmenu.prevent="adjustTime('HOUR', -1)" class="hidden-trigger mr-2">NEXT</span>
-          <span @click="adjustTime('MINUTE', 1)" @contextmenu.prevent="adjustTime('MINUTE', -1)" class="hidden-trigger mr-2">MAP</span>
-          <span @click="adjustTime('SECOND', 1)" @contextmenu.prevent="adjustTime('SECOND', -1)" class="hidden-trigger">IN:</span>
+        <span class="label flex gap-2">
+          <span @click="adjustTime('HOUR', 1)" @contextmenu.prevent="adjustTime('HOUR', -1)">NEXT</span>
+          <span @click="adjustTime('MINUTE', 1)" @contextmenu.prevent="adjustTime('MINUTE', -1)">MAP</span>
+          <span @click="adjustTime('SECOND', 1)" @contextmenu.prevent="adjustTime('SECOND', -1)">IN:</span>
         </span>
         <span class="digital-clock">{{ timeRemaining }}</span>
       </div>
@@ -645,11 +645,6 @@
     font-weight: bold;
     letter-spacing: 1px;
     text-shadow: 0 0 2px #ff4500;
-  }
-
-  .hidden-trigger {
-    cursor: default;
-    user-select: none;
   }
 
   .digital-clock {
