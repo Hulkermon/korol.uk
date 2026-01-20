@@ -10,7 +10,11 @@
         <span class="seed-value" v-if="currentMap?.seed">{{ currentMap.seed }}</span>
       </div>
       <div class="countdown-display">
-        <span class="label">NEXT MAP IN:</span>
+        <span class="label">
+          <span @click="adjustTime('HOUR', 1)" @contextmenu.prevent="adjustTime('HOUR', -1)" class="hidden-trigger mr-2">NEXT</span>
+          <span @click="adjustTime('MINUTE', 1)" @contextmenu.prevent="adjustTime('MINUTE', -1)" class="hidden-trigger mr-2">MAP</span>
+          <span @click="adjustTime('SECOND', 1)" @contextmenu.prevent="adjustTime('SECOND', -1)" class="hidden-trigger">IN:</span>
+        </span>
         <span class="digital-clock">{{ timeRemaining }}</span>
       </div>
     </div>
@@ -153,13 +157,27 @@
     clearInterval(timer);
   });
 
+  async function adjustTime(unit: 'HOUR' | 'MINUTE' | 'SECOND', amount: number) {
+    try {
+      const data = await $fetch<{ success: boolean; nextRefresh: string }>('/api/stoner-benches/debug-advance-time', {
+        method: 'POST',
+        body: { unit, amount },
+      });
+      if (data && data.success && data.nextRefresh && currentMap.value) {
+        currentMap.value.nextRefresh = data.nextRefresh;
+      }
+    } catch (e) {
+      console.error('Failed to shift time', e);
+    }
+  }
+
   const timeRemaining = computed(() => {
     if (!currentMap.value)
       return '--:--:--';
     
     const nextRefresh = new Date(currentMap.value.nextRefresh);
     const deltaTime = Math.abs(now.value.getTime() - nextRefresh.getTime());
-    return new Intl.DateTimeFormat('de-CH', { timeStyle: 'medium', timeZone: 'Europe/Zurich' }).format(deltaTime);
+    return new Intl.DateTimeFormat('en-GB', { timeStyle: 'medium' }).format(deltaTime);
   });
 
   // Benches state
@@ -602,8 +620,9 @@
     border-radius: 4px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 5px;
     box-shadow: inset 0 0 10px #000;
+    user-select: none;
   }
 
   .countdown-display .label {
@@ -612,6 +631,11 @@
     font-weight: bold;
     letter-spacing: 1px;
     text-shadow: 0 0 2px #ff4500;
+  }
+
+  .hidden-trigger {
+    cursor: default;
+    user-select: none;
   }
 
   .digital-clock {
