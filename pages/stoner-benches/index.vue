@@ -13,11 +13,68 @@
     </div>
 
     <div class="canvas-wrapper">
-      <canvas ref="canvasRef" class="map-canvas" :width="canvasWidth" :height="canvasHeight"></canvas>
+      <canvas
+        ref="canvasRef"
+        class="map-canvas"
+        :width="canvasWidth"
+        :height="canvasHeight"
+        @click="handleCanvasClick"
+      ></canvas>
     </div>
 
     <div class="footer-info">
       <p>Click anywhere on the map to place a bench</p>
+    </div>
+
+    <!-- Bench Placement Modal -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal" :style="modalPosition">
+        <div class="modal-header">
+          <h2>🪑 Place a Bench</h2>
+          <button class="close-btn" @click="closeModal">×</button>
+        </div>
+        <form @submit.prevent="submitBench">
+          <div class="form-group">
+            <label for="authorName">Your Name *</label>
+            <input
+              id="authorName"
+              v-model="benchForm.authorName"
+              type="text"
+              required
+              placeholder="Anonymous Stoner"
+            />
+          </div>
+          <div class="form-group">
+            <label for="title">Bench Title *</label>
+            <input
+              id="title"
+              v-model="benchForm.title"
+              type="text"
+              required
+              placeholder="A chill spot"
+            />
+          </div>
+          <div class="form-group">
+            <label for="description">Message *</label>
+            <textarea
+              id="description"
+              v-model="benchForm.description"
+              required
+              rows="3"
+              placeholder="Leave your thoughts..."
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" @click="closeModal">Cancel</button>
+            <button type="submit" class="submit-btn" :disabled="isSubmitting">
+              {{ isSubmitting ? 'Placing...' : 'Place Bench' }}
+            </button>
+          </div>
+          <p v-if="submitMessage" class="submit-message" :class="{ error: submitError }">
+            {{ submitMessage }}
+          </p>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -29,6 +86,97 @@ const canvasHeight = 600;
 const tileSize = 8;
 
 const currentSeed = ref(generateRandomSeed());
+
+// Modal state
+const showModal = ref(false);
+const clickCoords = ref({ x: 0, y: 0 });
+const modalPosition = ref({ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' });
+
+// Form state
+const benchForm = ref({
+  authorName: '',
+  title: '',
+  description: '',
+});
+const isSubmitting = ref(false);
+const submitMessage = ref('');
+const submitError = ref(false);
+
+function handleCanvasClick(event: MouseEvent) {
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(event.clientX - rect.left);
+  const y = Math.floor(event.clientY - rect.top);
+
+  clickCoords.value = { x, y };
+
+  // Position modal near click but ensure it stays on screen
+  const modalWidth = 320;
+  const modalHeight = 350;
+  let modalX = event.clientX + 20;
+  let modalY = event.clientY - modalHeight / 2;
+
+  // Keep modal within viewport
+  if (modalX + modalWidth > window.innerWidth) {
+    modalX = event.clientX - modalWidth - 20;
+  }
+  if (modalY < 10) modalY = 10;
+  if (modalY + modalHeight > window.innerHeight - 10) {
+    modalY = window.innerHeight - modalHeight - 10;
+  }
+
+  modalPosition.value = {
+    left: `${modalX}px`,
+    top: `${modalY}px`,
+    transform: 'none',
+  };
+
+  showModal.value = true;
+  submitMessage.value = '';
+  submitError.value = false;
+}
+
+function closeModal() {
+  showModal.value = false;
+  benchForm.value = { authorName: '', title: '', description: '' };
+  submitMessage.value = '';
+  submitError.value = false;
+}
+
+async function submitBench() {
+  if (isSubmitting.value) return;
+
+  isSubmitting.value = true;
+  submitMessage.value = '';
+  submitError.value = false;
+
+  try {
+    await $fetch('/api/stoner-benches/benches', {
+      method: 'POST',
+      body: {
+        seedValue: currentSeed.value,
+        x: clickCoords.value.x,
+        y: clickCoords.value.y,
+        title: benchForm.value.title,
+        description: benchForm.value.description,
+        authorName: benchForm.value.authorName,
+      },
+    });
+
+    submitMessage.value = 'Bench placed successfully! 🪑';
+    setTimeout(() => {
+      closeModal();
+    }, 1500);
+  } catch (error) {
+    console.error('Error placing bench:', error);
+    submitMessage.value = 'Failed to place bench. Please try again.';
+    submitError.value = true;
+  } finally {
+    isSubmitting.value = false;
+  }
+}
 
 function generateRandomSeed(): string {
   return Math.random().toString(36).substring(2, 15);
@@ -267,5 +415,148 @@ watch(currentSeed, (newSeed) => {
   text-align: center;
   color: #6B8E23;
   font-size: 14px;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+.modal {
+  position: fixed;
+  background: linear-gradient(135deg, #1a2a1a 0%, #0d1b0d 100%);
+  border: 3px solid #228B22;
+  border-radius: 8px;
+  padding: 20px;
+  width: 320px;
+  box-shadow: 0 0 30px rgba(34, 139, 34, 0.6);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #228B22;
+  padding-bottom: 12px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #90EE90;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #90EE90;
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  display: block;
+  color: #6B8E23;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #228B22;
+  border-radius: 4px;
+  color: #90EE90;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #4a6b4a;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #90EE90;
+  box-shadow: 0 0 8px rgba(144, 238, 144, 0.4);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.cancel-btn,
+.submit-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 2px solid #228B22;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn {
+  background: transparent;
+  color: #90EE90;
+}
+
+.cancel-btn:hover {
+  background: rgba(34, 139, 34, 0.2);
+}
+
+.submit-btn {
+  background: #228B22;
+  color: #fff;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #2d9d2d;
+  box-shadow: 0 0 10px rgba(34, 139, 34, 0.6);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit-message {
+  margin-top: 12px;
+  padding: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #90EE90;
+  background: rgba(34, 139, 34, 0.2);
+  border-radius: 4px;
+}
+
+.submit-message.error {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
 }
 </style>
