@@ -17,7 +17,7 @@ export const useDb = async () => {
     try {
       const connection = await mysql.createConnection(dbConfig);
       
-      // 2. Ensure Table Exists
+      // 2. Ensure Tables Exist
       await connection.query(`
         CREATE TABLE IF NOT EXISTS guestbook_entries (
           id INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,6 +25,28 @@ export const useDb = async () => {
           message TEXT NOT NULL,
           style VARCHAR(50),
           timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS map_seeds (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          seed_value VARCHAR(255) NOT NULL UNIQUE,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS stoner_benches (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          map_seed_id INT NOT NULL,
+          x INT NOT NULL,
+          y INT NOT NULL,
+          title VARCHAR(255) NOT NULL,
+          description TEXT NOT NULL,
+          author_name VARCHAR(255) NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (map_seed_id) REFERENCES map_seeds(id) ON DELETE CASCADE
         )
       `);
       
