@@ -1,23 +1,33 @@
-name: Deploy to VPS
+name: Deploy to Production
 
 on:
   push:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ Hulkermon/korol.uk }}
+
 jobs:
-  build-and-deploy:
+  build-and-push-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # required for ghcr.io
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
         with:
           version: 8
           run_install: false
@@ -41,42 +51,86 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # 1. Deploy Frontend Assets to Public Web Root
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          file: Dockerfile
+
+
+      # Deploy Frontend Assets to Public Web Root
       - name: Deploy Frontend Assets
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: ".output/public/*"
-          target: "/var/www/korol.uk"
+          source: '.output/public/*'
+          target: '/var/www/korol.uk'
           strip_components: 2 # Removes .output/public from the path
 
-      # 2. Deploy Backend & Docker Config (Preserves .env)
-      - name: Deploy Backend & Docker
-        uses: appleboy/scp-action@v0.1.7
+  deploy:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Copy docker-compose.yaml
+        uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: ".output,Dockerfile,docker-compose.yml,package.json,pnpm-lock.yaml"
-          target: "/projects/korol.uk"
-          # rm: false is default, so .env will NOT be wiped
-
-      - name: Restart Application
-        uses: appleboy/ssh-action@v1.0.3
+          source: "docker-compose.yaml"
+          target: "/projects/korol.uk/"
+      
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /projects/korol.uk
-            
-            # Rebuild container with new artifacts
-            # We use --build to ensure the COPY .output gets the latest files
-            docker compose down --remove-orphans || true
-            docker compose up -d --build --remove-orphans
-            
-            # Prune unused images to save space
+            cd /projects/korol.uk/
+            docker compose pull
+            docker compose up -d
             docker image prune -f
-          
+
+      # # Deploy Backend & Docker Config (Preserves .env)
+      # - name: Deploy Backend & Docker
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.VPS_HOST }}
+      #     username: ${{ secrets.VPS_USER }}
+      #     key: ${{ secrets.VPS_SSH_KEY }}
+      #     source: '.output,Dockerfile,docker-compose.yml,package.json,pnpm-lock.yaml'
+      #     target: '/projects/korol.uk'
+      #     # rm: false is default, so .env will NOT be wiped
+
+      # - name: Restart Application
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.VPS_HOST }}
+      #     username: ${{ secrets.VPS_USER }}
+      #     key: ${{ secrets.VPS_SSH_KEY }}
+      #     script: |
+      #       cd /projects/korol.uk
+
+      #       # Rebuild container with new artifacts
+      #       # We use --build to ensure the COPY .output gets the latest files
+      #       docker compose down --remove-orphans || true
+      #       docker compose up -d --build --remove-orphans
+
+      #       # Prune unused images to save space
+      #       docker image prune -f
