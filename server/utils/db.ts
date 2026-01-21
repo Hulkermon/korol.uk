@@ -50,6 +50,18 @@ export const useDb = async () => {
           FOREIGN KEY (map_seed_id) REFERENCES map_seeds(id) ON DELETE CASCADE
         )
       `);
+
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS visitor_counter (
+          name VARCHAR(50) PRIMARY KEY,
+          count BIGINT DEFAULT 0
+        )
+      `);
+
+      // Initialize counter if it doesn't exist
+      await connection.query(`
+        INSERT IGNORE INTO visitor_counter (name, count) VALUES ('homepage', 0)
+      `);
       
       await connection.end();
 

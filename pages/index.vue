@@ -9,7 +9,7 @@
           ***** WELCOME TO MY HOMEPAGE ***** UNDER CONSTRUCTION *****
         </marquee>
       </div>
-      <div class="counter">Visitors: 12345</div>
+      <div class="counter">Visitors: {{ visitorCount }}</div>
     </div>
 
     <!-- Navigation cards section -->
@@ -70,12 +70,23 @@
     rainbowCursor,
   } from 'cursor-effects';
 
-  // prettier-ignore
-  onMounted(() => {
+  const visitorCount = ref(1);
+
+  onMounted(async () => {
+    // --- visitor counter ---
+    try {
+      const data = await $fetch<{count: number}>('/api/visit', { method: 'POST' });
+       if (data && typeof data.count === 'number') {
+        visitorCount.value = data.count;
+      }
+    } catch (e) {
+      console.error('Failed to count visit', e);
+    }
+
+    // --- radical cursor effects ---
     if (!document.querySelector('.cursor-effect-container')) {
       document.body.appendChild(document.createElement('div')).className = 'cursor-effect-container';
     }
-
     cursorEffectsContainer = document.querySelector('.cursor-effect-container')!; // trust me bro
     randomCursorEffect({
       element: cursorEffectsContainer,
@@ -86,7 +97,6 @@
       characterLifeSpanFunction: () => [75 + Math.random() * 50, 2000][Math.floor(Math.random() * 1.05)],
       size: 2 + (Math.random() * 4) ** 3,
     });
-    
     if (customCursor.framesUrl) {
       document.body.style.animation = 'cursor 0.5s linear infinite';
     } else {
