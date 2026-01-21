@@ -17,7 +17,7 @@ export const useDb = async () => {
     try {
       const connection = await mysql.createConnection(dbConfig);
       
-      // 2. Ensure Tables Exist
+      // Ensure Tables Exist
       await connection.query(`
         CREATE TABLE IF NOT EXISTS guestbook_entries (
           id INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,14 +58,14 @@ export const useDb = async () => {
         )
       `);
 
-      // Initialize counter if it doesn't exist
+      // Initialize homepage visitor counter if it doesn't exist
       await connection.query(`
         INSERT IGNORE INTO visitor_counter (name, count) VALUES ('homepage', 0)
       `);
       
       await connection.end();
 
-      // 3. Create Pool for the specific database
+      // Create Pool for the specific database
       pool = mysql.createPool({
         ...dbConfig,
         waitForConnections: true,
