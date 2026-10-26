@@ -6,6 +6,9 @@ services:
             dockerfile: Dockerfile
         volumes:
             - ../:/workspaces/app:cached
+            - ${HOME}/.claude-configs/korol.uk:/home/node/.claude
+        environment:
+            CLAUDE_CONFIG_DIR: /home/node/.claude
         env_file: ../.env
         command: sleep infinity # chill out a bit
 

@@ -6,7 +6,9 @@
   "service": "nuxt-app",
   "workspaceFolder": "/workspaces/app",
   "forwardPorts": [3000, "db:3306"],
-  "features": {},
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+  },
   "mounts": [
     // {
     //   "source": "${localEnv:HOME}/.ssh",
