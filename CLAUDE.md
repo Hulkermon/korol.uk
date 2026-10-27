@@ -55,6 +55,22 @@ There are no test files yet. `vitest.config.ts` imports `@vitejs/plugin-vue`, wh
 - The devcontainer (`.devcontainer/`) runs the app container next to a `db` MySQL service. Both read the root `.env`, so set `MYSQL_HOST=db`.
 - When you push to `main`, `.github/workflows/deploy.yml` builds the app, pushes `ghcr.io/hulkermon/koroluk-app:latest` (the `Dockerfile` only copies the prebuilt `.output`), and copies `.output/public` to the VPS web root. Coolify on the VPS runs the root `docker-compose.yml` (app + MySQL behind Traefik). This means every commit to `main` ships to production.
 
+## Workflow
+
+### Commits
+
+- Keep commits small. Each one touches 1–5 files.
+- A commit can contain a large content change, such as copy, assets or data. Logic changes, though, go in small focused commits.
+- A commit message is one short line in the existing conventional style (`feat:`, `fix:`, `refactor:`, `chore:`, `dev:`), with no body. Never add trailers, including `Co-Authored-By`.
+
+### Tasks bigger than one commit
+
+These run as a manager/sub-agent setup. The point is better output and faster work while keeping token use low.
+
+1. **Plan.** The main session is the manager. It works out the approach first and splits it into an ordered list of small tasks, each one commit.
+2. **Delegate.** Each commit-sized task goes to a sub-agent (Agent tool) with a self-contained brief: the goal, the files to touch, the relevant context, and how to know it's done. Hand over only the context that task needs, so sub-agents don't have to re-explore the repo. Pass `effort: "lower"` for mechanical tasks.
+3. **Oversee.** The manager checks each sub-agent's result against the plan, makes sure the commit stays within the 1–5 file limit, and fixes or re-delegates anything that went wrong. It also tracks progress across the whole task. Run tasks in parallel only if they're independent and don't touch the same files.
+
 ## Misc
 
 - `scripts/ralph.sh` and `skills/{prd,ralph}` belong to an autonomous agent-loop ("Ralph") workflow. They aren't part of the site. Its working files (`prd.json`, `progress.txt`, `.last-branch`) are gitignored.
