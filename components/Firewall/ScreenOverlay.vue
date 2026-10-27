@@ -35,9 +35,10 @@
  ___ ___ ___ _____      ___   _    _       _____  _____
 | __|_ _| _ \ __\ \    / /_\ | |  | |     | __\ \/ / __|
 | _| | ||   / _| \ \/\/ / _ \| |__| |__ _ | _| >  <| _|
-|_| |___|_|_\___| \_/\_/_/ \_\____|____(_)|___/_/\_\___|</pre>
+|_| |___|_|_\___| \_/\_/_/ \_\____|____(_)|___/_/\_\___|</pre
+      >
       <h1 class="fw-logo-text">FIREWALL.EXE</h1>
-      <p class="fw-tagline">Defend the LAN. It is 2001. Everything is on fire.</p>
+      <p class="fw-tagline">Defend the LAN. It is Dec 31, 1999. Everything is on fire.</p>
       <ul class="fw-howto">
         <li>Click a tower in the shop, then click a tile to build it.</li>
         <li>Upgrades fork at level 3. Pick a path wisely.</li>
