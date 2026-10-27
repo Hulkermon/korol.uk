@@ -1,7 +1,7 @@
 ---
 name: implement
 description: Manage a task that needs 2 or more commits. It works from an approved plan in .claude/plans/, delegates each commit-sized task to implementer sub-agents (several at once where the dependency graph allows), reviews and commits each result on a feature branch, then verifies with a build and a browser check. Use for any multi-commit change. If no approved plan exists, it runs impl-plan first.
-argument-hint: [plan slug | task description]
+argument-hint: '[plan slug | task description]'
 ---
 
 # Implement
