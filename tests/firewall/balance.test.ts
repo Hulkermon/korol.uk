@@ -1,258 +1,77 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { buyUpgrade, placeBuilding, placeTower } from '../../composables/firewall/engine/economy';
-import { useAbility } from '../../composables/firewall/engine/abilities';
-import { beginRun, createGame, update } from '../../composables/firewall/engine/game';
-import { computeScore } from '../../composables/firewall/engine/score';
-import { startWave } from '../../composables/firewall/engine/waves';
-import type { GameState } from '../../composables/firewall/engine/types';
+import { TOWER_DEFS } from '../../composables/firewall/data/towers';
+import { availableUpgrades, computeStats } from '../../composables/firewall/engine/stats';
+import { playBot, type Branch, type Outcome } from './planbot';
+import { costToLevel, holdWave, simulate } from './sim';
 
 afterEach(() => vi.restoreAllMocks());
 
-type Branch = 'A' | 'B';
+const ENTITIES = [
+  'ping1',
+  'ping2',
+  'arc1',
+  'arc2',
+  'bomb1',
+  'bomb2',
+  'ice1',
+  'scan1',
+  'farm',
+  'rack',
+  'antenna',
+];
 
-type Step =
-  | { k: 'tower' | 'building'; def: string; col: number; row: number; key: string }
-  | { k: 'upgrade'; key: string; node: string };
-
-interface BotOptions {
-  /** fork taken by every tower / building upgrade chain */
-  branch?: Branch;
-  /** per-key override of the fork */
-  branches?: Record<string, Branch>;
-  upgrades?: boolean;
-  support?: boolean;
-  defense?: boolean;
-  /** stop playing after this many cleared waves */
-  untilWave?: number;
-}
-
-interface Outcome {
-  phase: string;
-  wave: number;
-  integrity: number;
-  credits: number;
-  kills: number;
-  minIntegrity: number;
-  score: number;
-  creditsAt: Record<number, number>;
-  /** credits plus everything spent on towers and buildings, at the start of each build phase */
-  wealthAt: Record<number, number>;
-  integrityAt: Record<number, number>;
-}
-
-/** Upgrade steps for levels `from`..`to` of one entity (level 2 = the shared root node). */
-const chain = (key: string, to: number, branch: Branch, from = 2): Step[] => {
-  const steps: Step[] = [];
-  for (let level = from; level <= to; level++) {
-    const node = level === 2 ? 'n2' : `n${level}${branch.toLowerCase()}`;
-    steps.push({ k: 'upgrade', key, node });
-  }
-  return steps;
+/** deterministic fork assignments, so that a failure is reproducible */
+const randomForks = (count: number): Record<string, Branch>[] => {
+  let x = 4242;
+  const next = () => (x = (Math.imul(x, 1664525) + 1013904223) >>> 0) / 4294967296;
+  return Array.from({ length: count }, () =>
+    Object.fromEntries(ENTITIES.map((k) => [k, next() < 0.5 ? 'A' : 'B'])),
+  );
 };
 
-const tower = (def: string, col: number, row: number, key: string): Step => ({
-  k: 'tower',
-  def,
-  col,
-  row,
-  key,
-});
-const building = (def: string, col: number, row: number, key: string): Step => ({
-  k: 'building',
-  def,
-  col,
-  row,
-  key,
-});
-
-/**
- * Fixed purchase priority list. The bot buys the first unfinished step as soon as it can afford
- * it, and saves up while it can't. Towers hug the two corridors between the bus rows.
- */
-const buildPlan = (opts: BotOptions): Step[] => {
-  const b = (key: string): Branch => opts.branches?.[key] ?? opts.branch ?? 'A';
-  const plan: Step[] = [
-    tower('ping', 6, 3, 'ping1'),
-    tower('ping', 10, 3, 'ping2'),
-    building('farm', 4, 2, 'farm'),
-    tower('ice', 8, 2, 'ice1'),
-    tower('arc', 8, 5, 'arc1'),
-    building('rack', 8, 3, 'rack'),
-    ...chain('farm', 2, b('farm')),
-    tower('bomb', 5, 5, 'bomb1'),
-    building('antenna', 7, 6, 'antenna'),
-    ...chain('antenna', 2, b('antenna')),
-    ...chain('rack', 3, b('rack')),
-    ...chain('ping1', 3, b('ping1')),
-    ...chain('arc1', 3, b('arc1')),
-    tower('scanner', 11, 5, 'scan1'),
-    ...chain('ice1', 3, b('ice1')),
-    ...chain('bomb1', 3, b('bomb1')),
-    ...chain('ping2', 3, b('ping2')),
-    tower('arc', 11, 3, 'arc2'),
-    ...chain('scan1', 3, b('scan1')),
-    tower('bomb', 12, 6, 'bomb2'),
-    ...chain('farm', 4, b('farm'), 3),
-    ...chain('rack', 5, b('rack'), 4),
-    ...chain('arc2', 3, b('arc2')),
-    ...chain('bomb2', 3, b('bomb2')),
-    ...chain('ping1', 5, b('ping1'), 4),
-    ...chain('arc1', 5, b('arc1'), 4),
-    ...chain('bomb1', 5, b('bomb1'), 4),
-    ...chain('scan1', 5, b('scan1'), 4),
-    ...chain('ice1', 5, b('ice1'), 4),
-    ...chain('ping2', 5, b('ping2'), 4),
-    ...chain('antenna', 5, b('antenna'), 3),
-    ...chain('arc2', 5, b('arc2'), 4),
-    ...chain('bomb2', 5, b('bomb2'), 4),
-  ];
-  return plan.filter((s) => {
-    if (opts.upgrades === false && s.k === 'upgrade') return false;
-    if (opts.support === false) {
-      const key = s.key;
-      if (key === 'farm' || key === 'rack') return false;
-    }
-    return true;
-  });
+const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+const winRate = (runs: Outcome[]) => runs.filter((r) => r.phase === 'won').length / runs.length;
+const run = (opts: Parameters<typeof playBot>[0]) => {
+  const out = playBot(opts);
+  vi.restoreAllMocks();
+  return out;
 };
 
-const seeded = (seed: number) => {
-  let s = seed >>> 0;
-  vi.spyOn(Math, 'random').mockImplementation(() => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    return s / 4294967296;
-  });
-};
-
-const STEP = 1 / 20;
-const LOOKAHEAD = 3;
-const MAX_STEPS_PER_WAVE = 20 * 240;
-
-const useAbilities = (state: GameState) => {
-  if (state.enemies.length === 0) return;
-  if (state.integrity < 80) useAbility(state, 'restore');
-  useAbility(state, 'auction');
-  if (state.enemies.length >= 6) {
-    useAbility(state, 'surge');
-    useAbility(state, 'ctrlaltdel');
-  }
-  // strike the front-most enemy
-  let lead = state.enemies[0];
-  for (const e of state.enemies) if (e.dist > lead.dist) lead = e;
-  useAbility(state, 'ion', { ...lead.pos });
-};
-
-const playBot = (opts: BotOptions = {}): Outcome => {
-  seeded(1337);
-  const state = createGame();
-  beginRun(state);
-  const plan = opts.defense === false ? [] : buildPlan(opts);
-  const ids: Record<string, { kind: 'tower' | 'building'; id: number }> = {};
-  const done = new Set<number>();
-  const outcome: Outcome = {
-    phase: '',
-    wave: 0,
-    integrity: 0,
-    credits: 0,
-    kills: 0,
-    minIntegrity: 100,
-    score: 0,
-    creditsAt: {},
-    wealthAt: {},
-    integrityAt: {},
-  };
-  const limit = opts.untilWave ?? 20;
-
-  while (state.phase === 'build' && state.wave < limit) {
-    outcome.creditsAt[state.wave] = state.credits;
-    outcome.wealthAt[state.wave] =
-      state.credits + [...state.towers, ...state.buildings].reduce((n, e) => n + e.spent, 0);
-    outcome.integrityAt[state.wave] = state.integrity;
-    // spend in priority order, looking a few steps ahead when the head is too expensive
-    for (let bought = true; bought;) {
-      bought = false;
-      const pending = plan.filter((_, i) => !done.has(i));
-      const window = pending.slice(0, LOOKAHEAD);
-      for (const step of window) {
-        // an upgrade can't jump the queue ahead of its own earlier steps
-        const index = plan.indexOf(step);
-        if (plan.some((s, i) => i < index && s.key === step.key && !done.has(i))) continue;
-        let ok = false;
-        if (step.k === 'upgrade') {
-          const ref = ids[step.key];
-          ok = buyUpgrade(state, ref.kind, ref.id, step.node).ok;
-        } else {
-          const place = step.k === 'tower' ? placeTower : placeBuilding;
-          const before = state.nextId;
-          ok = place(state, step.def, { col: step.col, row: step.row }).ok;
-          if (ok) ids[step.key] = { kind: step.k, id: before };
-        }
-        if (ok) {
-          done.add(index);
-          bought = true;
-          break;
-        }
-      }
-    }
-    startWave(state);
-    for (let i = 0; i < MAX_STEPS_PER_WAVE && state.phase === 'wave'; i++) {
-      if (i % 10 === 0) useAbilities(state);
-      update(state, STEP);
-      outcome.minIntegrity = Math.min(outcome.minIntegrity, state.integrity);
-    }
-  }
-
-  outcome.phase = state.phase;
-  outcome.wave = state.wave;
-  outcome.integrity = state.integrity;
-  outcome.credits = state.credits;
-  outcome.kills = state.stats.kills;
-  outcome.score = computeScore({
-    wave: state.wave,
-    kills: state.stats.kills,
-    integrity: state.integrity,
-    credits: state.credits,
-    won: state.phase === 'won',
-  });
-  return outcome;
-};
-
-describe('bot balance', () => {
+describe('skilled bot (hand-built plan)', () => {
+  const SEEDS = [11, 12, 13, 14];
   let none: Outcome;
-  let good: Outcome;
   let plain: Outcome;
   let noSupport: Outcome;
-  let forkB: Outcome;
+  let good: Outcome;
+  let uniformA: Outcome[];
+  let uniformB: Outcome[];
+  let mixed: Outcome[];
 
   beforeAll(() => {
-    none = playBot({ defense: false });
-    good = playBot({ branch: 'A' });
-    forkB = playBot({ branch: 'B' });
-    plain = playBot({ upgrades: false });
-    noSupport = playBot({ support: false, untilWave: 10 });
-  });
+    none = run({ defense: false });
+    plain = run({ upgrades: false });
+    good = run({ branch: 'A', untilWave: 10 });
+    noSupport = run({ support: false, untilWave: 10 });
+    uniformA = SEEDS.map((seed) => run({ branch: 'A', seed }));
+    uniformB = SEEDS.map((seed) => run({ branch: 'B', seed }));
+    mixed = randomForks(12).map((branches, i) => run({ branches, seed: 100 + i }));
+  }, 120_000);
 
   it('loses an undefended run within the first 6 waves', () => {
     expect(none.phase).toBe('lost');
     expect(none.wave).toBeLessThan(6);
   });
 
-  it('survives waves 1-10 with a good build and clears the Y2K Bug', () => {
-    expect(good.integrityAt[9]).toBeGreaterThan(40);
-    // integrityAt[10] only exists once wave 10 (the Y2K Bug) has been cleared
-    expect(good.integrityAt[10]).toBeGreaterThan(40);
+  it('does not lose the game in the first 10 waves, whatever the forks', () => {
+    for (const r of [...uniformA, ...uniformB, ...mixed]) {
+      expect(r.integrityAt[9]).toBeGreaterThan(40);
+      expect(r.integrityAt[10]).toBeGreaterThan(30);
+    }
   });
 
   it('does worse without any upgrades', () => {
-    expect(plain.score).toBeLessThan(good.score);
-    expect(plain.wave).toBeLessThan(good.wave);
-  });
-
-  it('has no strictly dominant upgrade fork', () => {
-    expect(good.wave).toBeGreaterThanOrEqual(10);
-    expect(forkB.wave).toBeGreaterThanOrEqual(10);
-    const diff = Math.abs(good.score - forkB.score) / Math.max(good.score, forkB.score);
-    expect(diff).toBeLessThan(0.35);
+    expect(plain.phase).toBe('lost');
+    expect(plain.score).toBeLessThan(mean(uniformA.map((r) => r.score)));
   });
 
   it('is poorer at wave 10 without the Farm and Rack', () => {
@@ -260,10 +79,135 @@ describe('bot balance', () => {
     expect(noSupport.wealthAt[9]).toBeLessThan(good.wealthAt[9]);
   });
 
-  it('can win, but not trivially', () => {
-    for (const run of [good, forkB]) {
-      expect(run.phase).toBe('won');
-      expect(run.integrity).toBeLessThan(100);
+  it('wins nearly every fork combination', () => {
+    expect(winRate(uniformA)).toBe(1);
+    expect(winRate(uniformB)).toBe(1);
+    expect(winRate(mixed)).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it('is never a walkover: every run ends with integrity to spare, not to waste', () => {
+    for (const r of [...uniformA, ...uniformB, ...mixed]) {
+      expect(r.integrity).toBeLessThan(95);
+    }
+    expect(mean(mixed.map((r) => r.integrity))).toBeGreaterThan(15);
+    expect(mean(mixed.map((r) => r.integrity))).toBeLessThan(75);
+  });
+
+  it('has no dominant fork: all-A and all-B finish within 15% of each other', () => {
+    const a = mean(uniformA.map((r) => r.score));
+    const b = mean(uniformB.map((r) => r.score));
+    expect(Math.abs(a - b) / Math.max(a, b)).toBeLessThan(0.15);
+  });
+});
+
+describe('weaker players', () => {
+  const SEEDS = [21, 22, 23, 24, 25, 26];
+  let optimal: Outcome[];
+  let casual: Outcome[];
+  let careless: Outcome[];
+
+  beforeAll(() => {
+    optimal = SEEDS.map((seed) => run({ seed, branch: 'B' }));
+    casual = SEEDS.map((seed) => run({ seed, branch: 'B', sloppy: 0.3 }));
+    careless = SEEDS.map((seed) => run({ seed, branch: 'B', sloppy: 0.6 }));
+  }, 120_000);
+
+  it('win less often the less of the plan they build', () => {
+    expect(winRate(optimal)).toBeGreaterThan(winRate(casual));
+    expect(winRate(casual)).toBeGreaterThanOrEqual(winRate(careless));
+  });
+
+  it('can still win with most of the plan, but not with half of it', () => {
+    expect(winRate(casual)).toBeGreaterThan(0);
+    expect(winRate(careless)).toBeLessThanOrEqual(0.2);
+  });
+
+  it('lose late, not early', () => {
+    for (const r of careless.filter((x) => x.phase === 'lost')) {
+      expect(r.wave).toBeGreaterThanOrEqual(10);
+    }
+  });
+});
+
+describe('exploits and dominant strategies', () => {
+  it('two Pings on fork B cannot stun-lock a late wave', () => {
+    // with unlimited re-stunning this pair held 19 of 20 waves; without it, about 8
+    const pair = 2 * costToLevel('ping', 5, 'B');
+    expect(holdWave('ping', 'B', 5, pair, 12).leaked).toBeGreaterThan(3);
+  });
+
+  it('a pile of level-1 Scanners cannot hold the late waves', () => {
+    expect(holdWave('scanner', 'A', 1, 2400, 14).leaked).toBeGreaterThan(3);
+  });
+
+  it('ICE alone is a support, not a defense', () => {
+    for (const branch of ['A', 'B'] as const) {
+      expect(holdWave('ice', branch, 5, 4000, 12).leaked).toBeGreaterThan(3);
+    }
+  });
+});
+
+describe('naive bot (spends evenly, saves for the next item)', () => {
+  const SEEDS = [31, 32, 33];
+  const SUPPORT = ['farm', 'rack', 'backup'];
+  // opening with a cheap tower: the first 300 credits decide a lot
+  const leak = (towers: string[]) =>
+    mean(
+      SEEDS.map((seed) => {
+        const r = simulate({ towers, support: SUPPORT, maxTowers: 8, immortal: true }, seed);
+        vi.restoreAllMocks();
+        return r.leak;
+      }),
+    );
+
+  it('does better with a mixed team than with only ARC, only Bomb or only ICE', () => {
+    const mixed = leak(['ping', 'bomb', 'arc', 'scanner']);
+    for (const only of ['arc', 'bomb', 'ice']) {
+      expect(mixed).toBeLessThan(leak([only]));
+    }
+  });
+});
+
+describe('tower value for money', () => {
+  const levels = (id: string, branch: Branch) => {
+    const def = TOWER_DEFS.find((d) => d.id === id)!;
+    const out: { level: number; perCredit: number }[] = [];
+    let purchased: string[] = [];
+    for (let level = 1; level <= 5; level++) {
+      if (level > 1) {
+        const options = availableUpgrades(def.tree, purchased);
+        const node = options.length > 1 ? options.find((n) => n.branch === branch)! : options[0];
+        purchased = [...purchased, node.id];
+      }
+      const s = computeStats(def.base, def.tree, purchased);
+      // single-target damage per second against armor 3, counting the first chain hop
+      const armor = 3;
+      const hit = (dmg: number) => Math.max(1, dmg - armor * (1 - s.armorPierce));
+      let total = hit(s.damage);
+      let dmg = s.damage;
+      for (let i = 0; i < Math.min(s.chainCount, 2); i++) total += hit((dmg *= 0.8));
+      const dps = total / s.cooldown + s.dotDps * Math.min(1, s.dotDuration / s.cooldown);
+      out.push({ level, perCredit: dps / costToLevel(id, level, branch) });
+    }
+    return out;
+  };
+
+  it('keeps every damage dealer within a band of the others at each level', () => {
+    const dealers = ['ping', 'scanner', 'arc'];
+    for (let level = 1; level <= 5; level++) {
+      const values = dealers.flatMap((id) =>
+        (['A', 'B'] as const).map((b) => levels(id, b)[level - 1].perCredit),
+      );
+      expect(Math.max(...values) / Math.min(...values)).toBeLessThan(2.5);
+    }
+  });
+
+  it('never gets worse value out of a fork than half of its sibling', () => {
+    // ICE fork A is a pure slow tower, so damage per credit says nothing about it
+    for (const id of ['ping', 'scanner', 'arc', 'bomb']) {
+      const a = levels(id, 'A')[4].perCredit;
+      const b = levels(id, 'B')[4].perCredit;
+      expect(Math.min(a, b) / Math.max(a, b)).toBeGreaterThan(0.4);
     }
   });
 });

@@ -71,7 +71,7 @@ describe('buyUpgrade', () => {
     expect(buyUpgrade(state, 'tower', state.towers[0].id, 'n2').ok).toBe(true);
     expect(state.credits).toBe(before - 60);
     expect(state.towers[0].purchased).toEqual(['n2']);
-    expect(state.towers[0].stats.damage).toBeCloseTo(8 * 1.4);
+    expect(state.towers[0].stats.damage).toBeCloseTo(getTowerDef('ping').base.damage * 1.4);
   });
 
   it('refuses a locked sibling', () => {

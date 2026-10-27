@@ -1,7 +1,8 @@
 import type { SpawnGroup, WaveDef } from '../engine/types';
 
+/** Enemy HP multiplier. The extra slope after wave 10 keeps the late waves from going slack. */
 export const hpScaleForWave = (waveIndex: number): number =>
-  1 + 0.12 * waveIndex + 0.003 * waveIndex * waveIndex;
+  1 + 0.12 * waveIndex + 0.003 * waveIndex * waveIndex + 0.18 * Math.max(0, waveIndex - 10);
 
 const g = (enemyId: string, count: number, interval: number, delay = 0): SpawnGroup => ({
   enemyId,
