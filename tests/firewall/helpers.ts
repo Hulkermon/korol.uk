@@ -1,0 +1,25 @@
+import type { GameState } from '../../composables/firewall/engine/types';
+
+export const makeTestState = (overrides: Partial<GameState> = {}): GameState => ({
+  phase: 'build',
+  paused: false,
+  speed: 1,
+  wave: 0,
+  credits: 1000,
+  integrity: 100,
+  maxIntegrity: 100,
+  time: 0,
+  waveTime: 0,
+  spawnQueue: [],
+  towers: [],
+  buildings: [],
+  enemies: [],
+  projectiles: [],
+  fx: [],
+  abilityCooldowns: {},
+  buffs: { fireRateMul: 1, fireRateMulUntil: 0 },
+  news: [],
+  nextId: 1,
+  stats: { kills: 0, leaks: 0 },
+  ...overrides,
+});
