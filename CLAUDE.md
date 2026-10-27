@@ -26,6 +26,7 @@ Current sub-projects:
 | `/dos` | `pages/dos/`, `components/Terminal/`, `composables/dos/`, `composables/terminal/` | Canvas CRT terminal with a fake DOS shell and snake game |
 | `/3D` | `pages/3D/index.vue` | Three.js, all in one file |
 | `/stoned-benches` | `pages/stoned-benches/`, `server/api/stoner-benches/` | Seeded map where users place benches. The page route is `stoned-benches`, but the API path and DB table still use `stoner-benches`/`stoner_benches` |
+| `/firewall` | `pages/firewall/`, `components/Firewall/`, `composables/firewall/`, `server/api/firewall/`, `assets/css/firewall.css`, `tests/firewall/` | Canvas tower defense. Pure-TS engine in `composables/firewall/engine/`, data-driven defs in `composables/firewall/data/`, leaderboard in table `firewall_scores` |
 
 ## Commands
 

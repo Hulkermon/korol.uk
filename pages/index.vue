@@ -43,6 +43,14 @@
             <div class="card-cta">BLAZE IT!</div>
           </div>
         </NuxtLink>
+
+        <NuxtLink to="/firewall" class="nav-card">
+          <div class="card-inner">
+            <div class="card-title">FIREWALL.EXE</div>
+            <div class="card-desc">Defend the LAN from the Y2K bug!</div>
+            <div class="card-cta">TOWER DEFENSE!</div>
+          </div>
+        </NuxtLink>
         
       </div>
     </div>
