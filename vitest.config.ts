@@ -8,8 +8,11 @@ export default defineConfig({
     globals: true, // Use Vitest global APIs (describe, it, etc.) without importing
     environment: 'jsdom', // Simulate browser environment for component testing
     // If using @vue/test-utils:
-    deps: {
-        inline: ['@vue/test-utils']
+    include: ['{composables,components,server,utils,pages,tests}/**/*.{test,spec}.ts'],
+    server: {
+      deps: {
+        inline: ['@vue/test-utils'],
+      },
     },
   },
   resolve: {

@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@vitejs/plugin-vue": "^6.0.10",
     "@vitest/ui": "^3.1.1",
     "@vue/test-utils": "^2.4.6",
     "jsdom": "^26.0.0",

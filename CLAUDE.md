@@ -41,7 +41,7 @@ pnpm vitest run path/to/file.test.ts   # single test file
 pnpm vitest run -t "test name"         # single test by name
 ```
 
-There are no test files yet. `vitest.config.ts` imports `@vitejs/plugin-vue`, which isn't a direct dependency, so you may need to add it before tests run. There's no lint script. Formatting follows `.prettierrc`: 2 spaces, single quotes, width 100, `vueIndentScriptAndStyle`, `bracketSameLine`.
+Vitest works (`@vitejs/plugin-vue` is a devDependency). `vitest.config.ts` only collects `*.test.ts`/`*.spec.ts` under `composables/`, `components/`, `server/`, `utils/`, `pages/` and `tests/`, so skill assets under `.claude/` are ignored. `pnpm test` exits non-zero when there are no test files. Nuxt auto-imports (`useDb`, `ref`, `$fetch`, ...) don't exist in the test environment: import `ref` etc. from `vue` explicitly, stub globals with `vi.stubGlobal`, and keep logic in pure modules that tests can import directly. There's no lint script. Formatting follows `.prettierrc`: 2 spaces, single quotes, width 100, `vueIndentScriptAndStyle`, `bracketSameLine`.
 
 ## Architecture
 
@@ -57,6 +57,17 @@ There are no test files yet. `vitest.config.ts` imports `@vitejs/plugin-vue`, wh
 
 ## Workflow
 
+### Tests
+
+Write tests for new and changed logic as part of the same task, and run `pnpm test` before committing.
+
+- Put tests in `tests/<project>/<name>.test.ts`, never next to the code. Nuxt scans `components/` and `pages/` for `.ts` files and would try to bundle a test file there.
+- Pure logic (engines, data, validation, formulas) gets unit tests. Interactive components get `@vue/test-utils` tests. Make tests deterministic: stub `Math.random` and time.
+- API handlers that need MySQL can't run in unit tests. Keep their validation and logic in a pure module that is tested, and keep the handler thin.
+- Pure presentation with no behavior (static markup and styling) doesn't need a test.
+- A commit that changes logic includes its tests.
+- **Tests must pass for the manager to approve a task.** In the manager/sub-agent flow, the manager runs the task's tests and then `pnpm test` itself before committing, and sends the task back if anything fails or if a logic task has no real tests. Never skip, delete or loosen a test to get green. The branch finishes with `pnpm test` and `pnpm build`.
+
 ### Commits
 
 - Keep commits small. Each one touches 1–5 files.
@@ -68,7 +79,7 @@ There are no test files yet. `vitest.config.ts` imports `@vitejs/plugin-vue`, wh
 These run as a manager/sub-agent setup. The point is better output and faster work while keeping token use low. The main session is the manager.
 
 1. **Plan** with the `impl-plan` skill. It splits the work into commit-sized tasks, each with its files, its dependencies and a self-contained brief, and saves the plan to `.claude/plans/<slug>.md` (gitignored). Then it waits for the user's approval.
-2. **Implement** with the `implement` skill. It works on a branch named after the slug. As soon as a task's dependencies are committed, it starts an `implementer` sub-agent (`.claude/agents/implementer.md`) for that task. Up to 3 run at once, and never two on the same file. The manager reviews each diff and makes the commit itself. The branch finishes with `pnpm build` and a browser check.
+2. **Implement** with the `implement` skill. It works on a branch named after the slug. As soon as a task's dependencies are committed, it starts an `implementer` sub-agent (`.claude/agents/implementer.md`) for that task. Up to 3 run at once, and never two on the same file. The manager reviews each diff and makes the commit itself. The branch finishes with `pnpm test`, `pnpm build` and a browser check.
 3. **Never push.** Pushing `main` deploys, so the user merges and pushes.
 
 ## Misc
