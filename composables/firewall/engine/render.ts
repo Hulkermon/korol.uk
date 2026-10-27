@@ -2,10 +2,22 @@ import { getAbilityDef } from '../data/abilities';
 import { getBuildingDef } from '../data/buildings';
 import { getEnemyDef } from '../data/enemies';
 import { getTowerDef } from '../data/towers';
+import { effectiveTowerStats, getAuraBonus } from './buildings';
 import { canPlace } from './economy';
 import { getPathLength, getPathPoints, cellCenter, posAtDist } from './path';
 import { drawShape } from './sprites';
-import { CELL, COLS, H, ROWS, W, type Cell, type Fx, type GameState, type Vec } from './types';
+import {
+  CELL,
+  COLS,
+  H,
+  ROWS,
+  W,
+  type Cell,
+  type Fx,
+  type GameState,
+  type Tower,
+  type Vec,
+} from './types';
 
 export interface RenderView {
   hoverCell: Cell | null;
@@ -297,7 +309,8 @@ export const render = (
           : getBuildingDef(view.placing.defId);
       const radius =
         view.placing.kind === 'tower'
-          ? getTowerDef(view.placing.defId).base.range
+          ? getTowerDef(view.placing.defId).base.range *
+            (1 + getAuraBonus(state, { pos: c } as Tower).range)
           : getBuildingDef(view.placing.defId).base.auraRange;
       circle(ctx, c.x, c.y, radius, stroke, fill);
       ctx.globalAlpha = 0.7;
@@ -312,7 +325,10 @@ export const render = (
           ? state.towers.find((t) => t.id === view.selection!.id)
           : state.buildings.find((b) => b.id === view.selection!.id);
       if (sel) {
-        const radius = 'range' in sel.stats ? sel.stats.range : sel.stats.auraRange;
+        const radius =
+          'range' in sel.stats
+            ? effectiveTowerStats(state, sel as Tower).range
+            : sel.stats.auraRange;
         circle(ctx, sel.pos.x, sel.pos.y, radius, '#ffffff', 'rgba(255,255,255,0.05)');
         ctx.strokeStyle = '#ffffff';
         ctx.strokeRect(sel.cell.col * CELL + 1.5, sel.cell.row * CELL + 1.5, CELL - 3, CELL - 3);

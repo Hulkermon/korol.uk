@@ -22,6 +22,7 @@
     entity: Tower | Building | null;
     kind: 'tower' | 'building' | null;
     credits: number;
+    effectiveStats?: TowerStats | null;
   }>();
 
   const emit = defineEmits<{
@@ -77,7 +78,7 @@
     if (!props.entity || !props.kind) return [];
     const out: [string, string][] = [];
     if (props.kind === 'tower') {
-      const s = (props.entity as Tower).stats;
+      const s = props.effectiveStats ?? (props.entity as Tower).stats;
       out.push(
         ['Damage', fmt(s.damage)],
         ['Range', fmt(s.range)],

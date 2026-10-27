@@ -105,3 +105,18 @@ describe('InspectPanel', () => {
     expect(w.emitted('target-mode')![0]).toEqual(['strongest']);
   });
 });
+
+describe('InspectPanel effective stats', () => {
+  it('shows aura-boosted stats for a tower when provided', () => {
+    const tower = makeTower();
+    const wrapper = mount(InspectPanel, {
+      props: {
+        entity: tower,
+        kind: 'tower',
+        credits: 0,
+        effectiveStats: { ...tower.stats, range: 1234 },
+      },
+    });
+    expect(wrapper.text()).toContain('1234');
+  });
+});

@@ -58,6 +58,7 @@
           :entity="selectedEntity"
           :kind="selection?.kind ?? null"
           :credits="credits"
+          :effective-stats="effectiveStats"
           @upgrade="upgrade"
           @sell="sell"
           @target-mode="setTargetMode"
@@ -100,6 +101,8 @@
   import { useFirewallGame } from '@/composables/firewall/useFirewallGame';
   import { useFirewallScores } from '@/composables/firewall/useFirewallScores';
   import { isAbilityUnlocked } from '@/composables/firewall/engine/abilities';
+  import { effectiveTowerStats } from '@/composables/firewall/engine/buildings';
+  import type { Tower } from '@/composables/firewall/engine/types';
   import { computeScore } from '@/composables/firewall/engine/score';
   import { TOWER_DEFS } from '@/composables/firewall/data/towers';
   import { BUILDING_DEFS } from '@/composables/firewall/data/buildings';
@@ -140,11 +143,11 @@
 
   const credits = computed(() => (tick.value, state.value.credits));
   const integrity = computed(() => (tick.value, state.value.integrity));
+  const speed = computed(() => (tick.value, state.value.speed));
+  const paused = computed(() => (tick.value, state.value.paused));
   const displayWave = computed(() => {
     tick.value;
     const s = state.value;
-  const speed = computed(() => (tick.value, state.value.speed));
-  const paused = computed(() => (tick.value, state.value.paused));
     // state.wave is the 0-based index of the current (wave phase) or next (build phase) wave
     return Math.min(s.wave + 1, totalWaves);
   });
@@ -155,7 +158,16 @@
     const sel = selection.value;
     if (!sel) return null;
     const list = sel.kind === 'tower' ? state.value.towers : state.value.buildings;
-    return list.find((e) => e.id === sel.id) ?? null;
+    const found = list.find((e) => e.id === sel.id);
+    // copy (incl. the purchased array, which the engine pushes to) so the panel sees changes
+    return found ? { ...found, purchased: [...found.purchased] } : null;
+  });
+
+  const effectiveStats = computed(() => {
+    const e = selectedEntity.value;
+    return e && selection.value?.kind === 'tower'
+      ? effectiveTowerStats(state.value, e as Tower)
+      : null;
   });
 
   // clear a selection whose entity no longer exists (sold)
