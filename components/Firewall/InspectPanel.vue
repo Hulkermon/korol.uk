@@ -2,9 +2,11 @@
   import { computed } from 'vue';
   import type {
     Building,
+    BuildingDef,
     BuildingStats,
     TargetMode,
     Tower,
+    TowerDef,
     TowerStats,
     UpgradeNode,
   } from '@/composables/firewall/engine/types';
@@ -13,6 +15,12 @@
   import { getTowerDef } from '@/composables/firewall/data/towers';
   import { getBuildingDef } from '@/composables/firewall/data/buildings';
   import { ABILITY_DEFS } from '@/composables/firewall/data/abilities';
+  import {
+    BUILDING_STAT_FORMATS,
+    TOWER_STAT_FORMATS,
+    describeUpgrade,
+    statRows,
+  } from '@/composables/firewall/engine/describe';
   import Win98Window from './Win98Window.vue';
 
   type AnyNode = UpgradeNode<TowerStats> | UpgradeNode<BuildingStats>;
@@ -72,36 +80,31 @@
     return forks.length > 1 && forks.every((n) => stateOf(n) === 'available');
   });
 
-  const fmt = (n: number) => String(Math.round(n * 100) / 100);
-
   const rows = computed<[string, string][]>(() => {
     if (!props.entity || !props.kind) return [];
-    const out: [string, string][] = [];
     if (props.kind === 'tower') {
       const s = props.effectiveStats ?? (props.entity as Tower).stats;
-      out.push(
-        ['Damage', fmt(s.damage)],
-        ['Range', fmt(s.range)],
-        ['Rate', fmt(1 / s.cooldown) + '/s'],
-      );
-      if (s.slowFactor < 1) out.push(['Slow', fmt((1 - s.slowFactor) * 100) + '%']);
-      if (s.stunDuration > 0) out.push(['Stun', fmt(s.stunDuration) + 's']);
-      if (s.dotDps > 0) out.push(['DoT', fmt(s.dotDps) + '/s']);
-      if (s.chainCount > 0) out.push(['Chain', fmt(s.chainCount)]);
-      if (s.splashRadius > 0) out.push(['Splash', fmt(s.splashRadius)]);
-      if (s.armorPierce > 0) out.push(['Pierce', fmt(s.armorPierce * 100) + '%']);
-    } else {
-      const s = (props.entity as Building).stats;
-      if (s.auraRange > 0) out.push(['Aura range', fmt(s.auraRange)]);
-      if (s.fireRateBonus > 0) out.push(['Fire rate', '+' + fmt(s.fireRateBonus * 100) + '%']);
-      if (s.rangeBonus > 0) out.push(['Range', '+' + fmt(s.rangeBonus * 100) + '%']);
-      if (s.damageBonus > 0) out.push(['Damage', '+' + fmt(s.damageBonus * 100) + '%']);
-      if (s.incomePerWave > 0) out.push(['Income', '$' + fmt(s.incomePerWave) + '/wave']);
-      if (s.healPerWave > 0) out.push(['Heal', fmt(s.healPerWave) + '/wave']);
-      if (s.bountyBonus > 0) out.push(['Bounty', '+' + fmt(s.bountyBonus * 100) + '%']);
+      return statRows(s, TOWER_STAT_FORMATS);
     }
-    return out;
+    return statRows((props.entity as Building).stats, BUILDING_STAT_FORMATS);
   });
+
+  const describe = (node: AnyNode): string[] => {
+    if (!def.value) return [];
+    return props.kind === 'tower'
+      ? describeUpgrade(
+          (def.value as TowerDef).base,
+          tree.value as UpgradeNode<TowerStats>[],
+          node as UpgradeNode<TowerStats>,
+          TOWER_STAT_FORMATS,
+        )
+      : describeUpgrade(
+          (def.value as BuildingDef).base,
+          tree.value as UpgradeNode<BuildingStats>[],
+          node as UpgradeNode<BuildingStats>,
+          BUILDING_STAT_FORMATS,
+        );
+  };
 
   const abilities = computed(() => {
     if (props.kind !== 'building' || !def.value) return [];
@@ -165,7 +168,9 @@
               :disabled="credits < root.cost"
               @click="onNode(root)">
               <b>{{ root.name }}</b>
-              <small>{{ root.blurb }}</small>
+              <small v-for="line in describe(root)" :key="line" data-testid="desc">{{
+                line
+              }}</small>
               <small>${{ root.cost }}</small>
               <small v-if="credits < root.cost" class="fw-ip-need">need ${{ root.cost }}</small>
             </button>
@@ -176,7 +181,9 @@
               :data-testid="'node-' + root.id"
               :data-state="stateOf(root)">
               <b>{{ root.name }}</b>
-              <small>{{ root.blurb }}</small>
+              <small v-for="line in describe(root)" :key="line" data-testid="desc">{{
+                line
+              }}</small>
             </div>
           </div>
           <div v-if="forkOpen" class="fw-ip-fork fw-blink" data-testid="fork">CHOOSE A PATH</div>
@@ -191,7 +198,9 @@
                   :disabled="credits < node.cost"
                   @click="onNode(node)">
                   <b>{{ node.name }}</b>
-                  <small>{{ node.blurb }}</small>
+                  <small v-for="line in describe(node)" :key="line" data-testid="desc">{{
+                    line
+                  }}</small>
                   <small>${{ node.cost }}</small>
                   <small v-if="credits < node.cost" class="fw-ip-need">need ${{ node.cost }}</small>
                 </button>
@@ -202,7 +211,9 @@
                   :data-testid="'node-' + node.id"
                   :data-state="stateOf(node)">
                   <b>{{ node.name }}</b>
-                  <small>{{ node.blurb }}</small>
+                  <small v-for="line in describe(node)" :key="line" data-testid="desc">{{
+                    line
+                  }}</small>
                 </div>
               </template>
             </div>

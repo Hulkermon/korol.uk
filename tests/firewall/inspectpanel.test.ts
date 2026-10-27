@@ -120,3 +120,10 @@ describe('InspectPanel effective stats', () => {
     expect(wrapper.text()).toContain('1234');
   });
 });
+
+describe('InspectPanel upgrade descriptions', () => {
+  it('describes upgrades by their stat changes', () => {
+    const w = mountTower([]);
+    expect(w.find('[data-testid="node-n2"]').text()).toContain('Damage 9 → 12.6');
+  });
+});
