@@ -52,6 +52,20 @@ export const useDb = async () => {
       `);
 
       await connection.query(`
+        CREATE TABLE IF NOT EXISTS firewall_scores (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          player_name VARCHAR(24) NOT NULL,
+          score INT NOT NULL,
+          wave_reached INT NOT NULL,
+          won TINYINT(1) NOT NULL DEFAULT 0,
+          kills INT NOT NULL,
+          integrity INT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_firewall_scores_score (score)
+        )
+      `);
+
+      await connection.query(`
         CREATE TABLE IF NOT EXISTS visitor_counter (
           name VARCHAR(50) PRIMARY KEY,
           count BIGINT DEFAULT 0
