@@ -65,11 +65,11 @@ There are no test files yet. `vitest.config.ts` imports `@vitejs/plugin-vue`, wh
 
 ### Tasks bigger than one commit
 
-These run as a manager/sub-agent setup. The point is better output and faster work while keeping token use low.
+These run as a manager/sub-agent setup. The point is better output and faster work while keeping token use low. The main session is the manager.
 
-1. **Plan.** The main session is the manager. It works out the approach first and splits it into an ordered list of small tasks, each one commit.
-2. **Delegate.** Each commit-sized task goes to a sub-agent (Agent tool) with a self-contained brief: the goal, the files to touch, the relevant context, and how to know it's done. Hand over only the context that task needs, so sub-agents don't have to re-explore the repo. Pass `effort: "lower"` for mechanical tasks.
-3. **Oversee.** The manager checks each sub-agent's result against the plan, makes sure the commit stays within the 1–5 file limit, and fixes or re-delegates anything that went wrong. It also tracks progress across the whole task. Run tasks in parallel only if they're independent and don't touch the same files.
+1. **Plan** with the `impl-plan` skill. It splits the work into commit-sized tasks, each with its files, its dependencies and a self-contained brief, and saves the plan to `.claude/plans/<slug>.md` (gitignored). Then it waits for the user's approval.
+2. **Implement** with the `implement` skill. It works on a branch named after the slug. As soon as a task's dependencies are committed, it starts an `implementer` sub-agent (`.claude/agents/implementer.md`) for that task. Up to 3 run at once, and never two on the same file. The manager reviews each diff and makes the commit itself. The branch finishes with `pnpm build` and a browser check.
+3. **Never push.** Pushing `main` deploys, so the user merges and pushes.
 
 ## Misc
 
