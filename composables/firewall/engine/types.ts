@@ -56,7 +56,6 @@ export interface StatMod<S> {
 export interface UpgradeNode<S> {
   id: string;
   name: string;
-  blurb: string;
   cost: number;
   parent: string | null;
   mods: StatMod<S>[];

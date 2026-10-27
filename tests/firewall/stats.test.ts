@@ -16,7 +16,6 @@ describe('computeStats', () => {
       {
         id: 'x',
         name: 'x',
-        blurb: '',
         cost: 1,
         parent: null,
         mods: [
@@ -27,7 +26,6 @@ describe('computeStats', () => {
       {
         id: 'y',
         name: 'y',
-        blurb: '',
         cost: 1,
         parent: 'x',
         mods: [{ stat: 'a', op: 'add', value: 100 }],

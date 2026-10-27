@@ -27,7 +27,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n2',
         name: 'Jumbo Frames',
-        blurb: 'Bigger packets: damage x1.4.',
         cost: 60,
         parent: null,
         mods: [{ stat: 'damage', op: 'mul', value: 1.4 }],
@@ -35,7 +34,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3a',
         name: 'Flood Ping',
-        blurb: 'ping -f: fires 1.67x faster.',
         cost: 100,
         parent: 'n2',
         branch: 'A',
@@ -44,7 +42,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4a',
         name: 'Packet Storm',
-        blurb: 'Even faster fire: cooldown x0.7.',
         cost: 140,
         parent: 'n3a',
         branch: 'A',
@@ -53,7 +50,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5a',
         name: 'DDoS',
-        blurb: 'Fire rate way up and +20 range.',
         cost: 200,
         parent: 'n4a',
         branch: 'A',
@@ -65,7 +61,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3b',
         name: 'Ping of Death',
-        blurb: 'Oversized packet: damage x1.6, pierces half armor.',
         cost: 100,
         parent: 'n2',
         branch: 'B',
@@ -77,7 +72,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4b',
         name: 'Buffer Overflow',
-        blurb: 'Hits splash everything within +30 px.',
         cost: 140,
         parent: 'n3b',
         branch: 'B',
@@ -86,7 +80,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5b',
         name: 'Kernel Panic',
-        blurb: 'Damage x1.5 and stuns targets for 0.4s.',
         cost: 200,
         parent: 'n4b',
         branch: 'B',
@@ -123,7 +116,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n2',
         name: 'Nmap -T4',
-        blurb: 'Aggressive timing: damage x1.3.',
         cost: 110,
         parent: null,
         mods: [{ stat: 'damage', op: 'mul', value: 1.3 }],
@@ -131,7 +123,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3a',
         name: 'Deep Scan',
-        blurb: 'Damage x1.8, armor pierce up to 60%.',
         cost: 170,
         parent: 'n2',
         branch: 'A',
@@ -143,7 +134,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4a',
         name: 'Zero-Day Probe',
-        blurb: 'Ignores all armor, +30 range, damage x1.25.',
         cost: 240,
         parent: 'n3a',
         branch: 'A',
@@ -156,7 +146,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5a',
         name: 'Root Exploit',
-        blurb: 'Damage x1.5, cooldown x0.85.',
         cost: 340,
         parent: 'n4a',
         branch: 'A',
@@ -168,7 +157,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3b',
         name: 'Multi-Port Scan',
-        blurb: 'Scans 1.43x faster and slows targets by 30%.',
         cost: 170,
         parent: 'n2',
         branch: 'B',
@@ -181,7 +169,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4b',
         name: 'SYN Flood',
-        blurb: 'Cooldown x0.8 and damage x1.3.',
         cost: 240,
         parent: 'n3b',
         branch: 'B',
@@ -193,7 +180,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5b',
         name: 'Port Knocking',
-        blurb: 'Cooldown x0.8, damage x1.3, +20 range.',
         cost: 340,
         parent: 'n4b',
         branch: 'B',
@@ -231,7 +217,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n2',
         name: 'Tesla Coil',
-        blurb: 'More juice: damage x1.3, +10 range.',
         cost: 150,
         parent: null,
         mods: [
@@ -242,7 +227,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3a',
         name: 'Overvoltage',
-        blurb: 'Chains to 2 more targets. Damage x1.5.',
         cost: 250,
         parent: 'n2',
         branch: 'A',
@@ -254,7 +238,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4a',
         name: 'Surge Protector',
-        blurb: 'Chains to 3 more targets.',
         cost: 350,
         parent: 'n3a',
         branch: 'A',
@@ -263,7 +246,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5a',
         name: 'Lightning Rod',
-        blurb: 'Damage x1.5 on the whole chain.',
         cost: 500,
         parent: 'n4a',
         branch: 'A',
@@ -272,7 +254,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3b',
         name: 'Static Discharge',
-        blurb: 'Freezes targets 0.6s, fires 1.33x faster, dmg x1.15.',
         cost: 250,
         parent: 'n2',
         branch: 'B',
@@ -285,7 +266,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4b',
         name: 'Short Circuit',
-        blurb: 'Stun lasts 1.0s and damage x1.2.',
         cost: 350,
         parent: 'n3b',
         branch: 'B',
@@ -297,7 +277,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5b',
         name: 'Blue Screen',
-        blurb: 'Stun lasts 1.4s. Damage x1.3.',
         cost: 500,
         parent: 'n4b',
         branch: 'B',
@@ -334,7 +313,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n2',
         name: 'Cold Boot',
-        blurb: 'Slow lasts 1.5s instead of 1s.',
         cost: 90,
         parent: null,
         mods: [{ stat: 'slowDuration', op: 'add', value: 0.5 }],
@@ -342,7 +320,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3a',
         name: 'Deep Freeze',
-        blurb: 'Slows enemies to 45% speed.',
         cost: 150,
         parent: 'n2',
         branch: 'A',
@@ -351,7 +328,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4a',
         name: 'Absolute Zero',
-        blurb: 'Slows enemies to 35% speed. +25 range.',
         cost: 210,
         parent: 'n3a',
         branch: 'A',
@@ -363,7 +339,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5a',
         name: 'Cryo Lock',
-        blurb: 'Every hit also stuns for 0.6s.',
         cost: 300,
         parent: 'n4a',
         branch: 'A',
@@ -372,7 +347,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3b',
         name: 'Black ICE',
-        blurb: 'Burns targets for 14 dmg/s over 3s.',
         cost: 150,
         parent: 'n2',
         branch: 'B',
@@ -384,7 +358,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4b',
         name: 'Neural Feedback',
-        blurb: 'Burn damage x2.5.',
         cost: 210,
         parent: 'n3b',
         branch: 'B',
@@ -393,7 +366,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5b',
         name: 'Flatline',
-        blurb: 'Burn damage x2 and +20 range.',
         cost: 300,
         parent: 'n4b',
         branch: 'B',
@@ -430,7 +402,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n2',
         name: 'Bigger Payload',
-        blurb: 'More boom: damage x1.3.',
         cost: 180,
         parent: null,
         mods: [{ stat: 'damage', op: 'mul', value: 1.3 }],
@@ -438,7 +409,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3a',
         name: 'Fork Bomb',
-        blurb: 'Splash +20 px, fires 1.43x faster.',
         cost: 300,
         parent: 'n2',
         branch: 'A',
@@ -450,7 +420,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4a',
         name: 'Recursive Spawn',
-        blurb: 'Cooldown x0.65, damage x1.2. Boom boom boom.',
         cost: 420,
         parent: 'n3a',
         branch: 'A',
@@ -462,7 +431,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5a',
         name: 'Stack Overflow',
-        blurb: 'Splash +25 px and damage x1.7.',
         cost: 600,
         parent: 'n4a',
         branch: 'A',
@@ -474,7 +442,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n3b',
         name: 'Time Bomb',
-        blurb: 'Damage x1.8 and burns 12 dmg/s for 4s.',
         cost: 300,
         parent: 'n2',
         branch: 'B',
@@ -487,7 +454,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n4b',
         name: 'Slow Burn',
-        blurb: 'Burn damage x2.',
         cost: 420,
         parent: 'n3b',
         branch: 'B',
@@ -496,7 +462,6 @@ export const TOWER_DEFS: TowerDef[] = [
       {
         id: 'n5b',
         name: 'Y2K Detonator',
-        blurb: 'Damage x2 and splash +20 px.',
         cost: 600,
         parent: 'n4b',
         branch: 'B',
