@@ -28,8 +28,8 @@
             :max-integrity="state.maxIntegrity"
             :wave="displayWave"
             :total-waves="totalWaves"
-            :speed="state.speed"
-            :paused="state.paused"
+            :speed="speed"
+            :paused="paused"
             :can-start-wave="canStartWave"
             @start-wave="startWave"
             @toggle-pause="togglePause"
@@ -143,6 +143,8 @@
   const displayWave = computed(() => {
     tick.value;
     const s = state.value;
+  const speed = computed(() => (tick.value, state.value.speed));
+  const paused = computed(() => (tick.value, state.value.paused));
     // state.wave is the 0-based index of the current (wave phase) or next (build phase) wave
     return Math.min(s.wave + 1, totalWaves);
   });
