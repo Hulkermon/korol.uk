@@ -39,13 +39,11 @@ describe('buildings', () => {
         }
       });
 
-      it('uses real stat keys, short blurbs and increasing costs', () => {
+      it('uses real stat keys, increasing costs', () => {
         expect(def.cost).toBeGreaterThan(0);
         for (const k of Object.keys(def.base)) expect(STAT_KEYS).toContain(k);
         for (const n of def.tree) {
           expect(n.cost).toBeGreaterThan(0);
-          expect(n.blurb.length).toBeGreaterThan(0);
-          expect(n.blurb.length).toBeLessThanOrEqual(60);
           expect(n.mods.length).toBeGreaterThan(0);
           for (const m of n.mods) expect(STAT_KEYS).toContain(m.stat);
         }

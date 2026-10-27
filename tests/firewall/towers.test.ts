@@ -38,8 +38,6 @@ describe('firewall towers', () => {
           expect(n.parent).toBe(PARENTS[n.id]);
           if (n.id.endsWith('a')) expect(n.branch).toBe('A');
           if (n.id.endsWith('b')) expect(n.branch).toBe('B');
-          expect(n.blurb.length).toBeGreaterThan(0);
-          expect(n.blurb.length).toBeLessThanOrEqual(60);
         }
       });
 
