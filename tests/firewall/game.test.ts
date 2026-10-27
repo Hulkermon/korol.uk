@@ -19,7 +19,14 @@ const defended = (speed: 1 | 2 | 3 = 1) => {
   beginRun(s);
   s.speed = speed;
   s.credits = 2000;
-  for (const col of [3, 5, 7, 9]) expect(placeTower(s, 'ping', { col, row: 2 }).ok).toBe(true);
+  for (const [col, row] of [
+    [5, 5],
+    [5, 7],
+    [9, 5],
+    [9, 7],
+  ]) {
+    expect(placeTower(s, 'ping', { col, row }).ok).toBe(true);
+  }
   return s;
 };
 

@@ -73,31 +73,32 @@ const building = (def: string, col: number, row: number, key: string): Step => (
 
 /**
  * Fixed purchase priority list. The bot buys the first unfinished step as soon as it can afford
- * it, and saves up while it can't. Towers hug the two corridors between the bus rows.
+ * it, and saves up while it can't. Towers fill the pockets inside the left spiral and the narrow
+ * corridors of the comb on the right, where one tower sees two or three runs of the path.
  */
 const buildPlan = (opts: BotOptions): Step[] => {
   const b = (key: string): Branch => opts.branches?.[key] ?? opts.branch ?? 'A';
   const plan: Step[] = [
-    tower('ping', 6, 3, 'ping1'),
-    tower('ping', 10, 3, 'ping2'),
-    building('farm', 4, 2, 'farm'),
-    tower('ice', 8, 2, 'ice1'),
-    tower('arc', 8, 5, 'arc1'),
-    building('rack', 8, 3, 'rack'),
+    tower('ping', 9, 4, 'ping1'),
+    tower('ping', 3, 8, 'ping2'),
+    building('farm', 17, 10, 'farm'),
+    tower('ice', 13, 4, 'ice1'),
+    tower('arc', 12, 3, 'arc1'),
+    building('rack', 11, 6, 'rack'),
     ...chain('farm', 2, b('farm')),
-    tower('bomb', 5, 5, 'bomb1'),
-    building('antenna', 7, 6, 'antenna'),
+    tower('bomb', 11, 5, 'bomb1'),
+    building('antenna', 8, 5, 'antenna'),
     ...chain('antenna', 2, b('antenna')),
     ...chain('rack', 3, b('rack')),
     ...chain('ping1', 3, b('ping1')),
     ...chain('arc1', 3, b('arc1')),
-    tower('scanner', 11, 5, 'scan1'),
+    tower('scanner', 5, 3, 'scan1'),
     ...chain('ice1', 3, b('ice1')),
     ...chain('bomb1', 3, b('bomb1')),
     ...chain('ping2', 3, b('ping2')),
-    tower('arc', 11, 3, 'arc2'),
+    tower('arc', 9, 7, 'arc2'),
     ...chain('scan1', 3, b('scan1')),
-    tower('bomb', 12, 6, 'bomb2'),
+    tower('bomb', 11, 9, 'bomb2'),
     ...chain('farm', 4, b('farm'), 3),
     ...chain('rack', 5, b('rack'), 4),
     ...chain('arc2', 3, b('arc2')),
@@ -114,14 +115,14 @@ const buildPlan = (opts: BotOptions): Step[] => {
   ];
   if (opts.extras) {
     plan.push(
-      tower('scanner', 6, 2, 'scan2'),
-      tower('bomb', 10, 5, 'bomb3'),
+      tower('scanner', 6, 3, 'scan2'),
+      tower('bomb', 8, 8, 'bomb3'),
       ...chain('scan2', 3, b('scan2')),
-      tower('arc', 4, 5, 'arc3'),
-      tower('ping', 13, 3, 'ping3'),
+      tower('arc', 11, 7, 'arc3'),
+      tower('ping', 13, 5, 'ping3'),
       ...chain('bomb3', 3, b('bomb3')),
       ...chain('arc3', 3, b('arc3')),
-      tower('scanner', 13, 5, 'scan3'),
+      tower('scanner', 5, 7, 'scan3'),
       ...chain('ping3', 3, b('ping3')),
       ...chain('scan2', 5, b('scan2'), 4),
       ...chain('scan3', 3, b('scan3')),

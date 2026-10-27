@@ -34,6 +34,28 @@ describe('path', () => {
     expect(getPathLength()).toBeCloseTo(sum);
   });
 
+  it('keeps the path length in the balanced band with enough turns', () => {
+    expect(getPathLength()).toBeGreaterThanOrEqual(1950);
+    expect(getPathLength()).toBeLessThanOrEqual(2290);
+    expect(WAYPOINTS.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('has long vertical runs and tight hairpins, not just horizontal sweeps', () => {
+    const segs = WAYPOINTS.slice(1).map((b, i) => ({ a: WAYPOINTS[i], b }));
+    const vertical = segs.filter(({ a, b }) => a.col === b.col && Math.abs(b.row - a.row) >= 4);
+    expect(vertical.length).toBeGreaterThanOrEqual(3);
+    // a hairpin: two runs in opposite directions joined by a short crossing
+    let hairpins = 0;
+    for (let i = 2; i < segs.length; i++) {
+      const [s1, s2, s3] = [segs[i - 2], segs[i - 1], segs[i]];
+      const d1 = Math.sign(s1.b.col - s1.a.col + (s1.b.row - s1.a.row));
+      const d3 = Math.sign(s3.b.col - s3.a.col + (s3.b.row - s3.a.row));
+      const gap = Math.abs(s2.b.col - s2.a.col) + Math.abs(s2.b.row - s2.a.row);
+      if (d1 === -d3 && gap <= 3) hairpins++;
+    }
+    expect(hairpins).toBeGreaterThanOrEqual(2);
+  });
+
   it('interpolates along the first segment', () => {
     const start = getPathPoints()[0];
     const p = posAtDist(100);
