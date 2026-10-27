@@ -83,7 +83,9 @@ export const useFirewallGame = () => {
     if (!cell) return;
     if (placing.value) {
       const { kind, defId } = placing.value;
-      report(kind === 'tower' ? placeTower(s, defId, cell) : placeBuilding(s, defId, cell));
+      const result = kind === 'tower' ? placeTower(s, defId, cell) : placeBuilding(s, defId, cell);
+      report(result);
+      if (result.ok) placing.value = null;
       bump();
       return;
     }

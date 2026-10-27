@@ -33,19 +33,22 @@ describe('useFirewallGame', () => {
     expect(game.placing.value).toBeNull();
   });
 
-  it('places a tower on click and keeps placing active', () => {
+  it('places a tower on click and leaves placing mode', () => {
     game.beginPlacing('tower', 'ping');
     click(canvas, 0, 0);
     expect(game.state.value.towers).toHaveLength(1);
-    expect(game.placing.value).not.toBeNull();
+    expect(game.placing.value).toBeNull();
   });
 
   it('reports failed placement in the news', () => {
     game.beginPlacing('tower', 'ping');
     click(canvas, 0, 0);
+    game.beginPlacing('tower', 'ping');
     click(canvas, 0, 0);
     expect(game.state.value.towers).toHaveLength(1);
     expect(game.state.value.news.at(-1)).toBe('Cell is occupied');
+    // a refused placement keeps the mode so the player can pick another cell
+    expect(game.placing.value).not.toBeNull();
   });
 
   it('selects by cell, clears on empty cell, and sell clears selection', () => {

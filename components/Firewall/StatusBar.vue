@@ -54,7 +54,6 @@
     <button
       type="button"
       class="fw-start"
-      :class="{ 'fw-blink': canStartWave }"
       :disabled="!canStartWave"
       @click="$emit('start-wave')">
       START WAVE
@@ -135,13 +134,5 @@
     background: #808080;
     color: #c0c0c0;
     cursor: default;
-  }
-  .fw-blink {
-    animation: fw-blink-anim 1s steps(2, start) infinite;
-  }
-  @keyframes fw-blink-anim {
-    to {
-      visibility: hidden;
-    }
   }
 </style>
