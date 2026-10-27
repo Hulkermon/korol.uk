@@ -12,7 +12,6 @@
 
 <template>
   <div class="fw-ticker">
-    <span class="fw-new fw-blink-new">NEW!</span>
     <div class="fw-track">
       <span :key="text" class="fw-scroll">{{ text || '*** all quiet on the network' }}</span>
     </div>
@@ -31,16 +30,6 @@
     font: 12px 'Courier New', monospace;
     color: #00fff0;
   }
-  .fw-new {
-    background: #ff3030;
-    color: #ffe600;
-    font-weight: bold;
-    padding: 0 4px;
-    flex: none;
-  }
-  .fw-blink-new {
-    animation: fw-blink-anim 1s steps(2, start) infinite;
-  }
   .fw-track {
     flex: 1;
     overflow: hidden;
@@ -54,11 +43,6 @@
   @keyframes fw-scroll-anim {
     to {
       transform: translateX(-100%);
-    }
-  }
-  @keyframes fw-blink-anim {
-    to {
-      visibility: hidden;
     }
   }
 </style>

@@ -1,10 +1,7 @@
 <template>
   <div class="fw-root fw-page">
     <header class="fw-banner">
-      <div class="fw-logo">
-        FIREWALL.EXE
-        <span class="fw-badge fw-blink">NEW!</span>
-      </div>
+      <div class="fw-logo">FIREWALL.EXE</div>
       <NewsTicker :items="state.news.slice(-6)" />
     </header>
 
