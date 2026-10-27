@@ -2,6 +2,7 @@ import { getAbilityDef } from '../data/abilities';
 import { getBuildingDef } from '../data/buildings';
 import { getEnemyDef } from '../data/enemies';
 import { getTowerDef } from '../data/towers';
+import { WAVE_COUNT } from '../data/waves';
 import { effectiveTowerStats, getAuraBonus } from './buildings';
 import { canPlace } from './economy';
 import { getPathLength, getPathPoints, cellCenter, posAtDist } from './path';
@@ -29,7 +30,6 @@ export interface RenderView {
 
 const ION_RADIUS = 90;
 const MAX_GLOW_ENEMIES = 60;
-const WAVE_COUNT = 20;
 
 let overlay: HTMLCanvasElement | null = null;
 

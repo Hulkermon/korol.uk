@@ -5,6 +5,7 @@ import { beginRun, createGame, update } from '../../composables/firewall/engine/
 import { getPathLength, isPathCell, posAtDist } from '../../composables/firewall/engine/path';
 import { startWave } from '../../composables/firewall/engine/waves';
 import { getTowerDef } from '../../composables/firewall/data/towers';
+import { WAVE_COUNT } from '../../composables/firewall/data/waves';
 import { getBuildingDef } from '../../composables/firewall/data/buildings';
 import { availableUpgrades, getLevel } from '../../composables/firewall/engine/stats';
 import { COLS, ROWS, type Cell, type GameState } from '../../composables/firewall/engine/types';
@@ -217,7 +218,7 @@ export const simulate = (s: Strategy, seed = 1337): SimResult => {
   beginRun(state);
   if (s.immortal) state.integrity = state.maxIntegrity = 100000;
   const startIntegrity = state.integrity;
-  const limit = s.untilWave ?? 20;
+  const limit = s.untilWave ?? WAVE_COUNT;
   const log: WaveLog[] = [];
   let min = state.integrity;
   while (state.phase === 'build' && state.wave < limit) {

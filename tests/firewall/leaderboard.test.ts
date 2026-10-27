@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import Leaderboard from '../../components/Firewall/Leaderboard.vue';
 import { useFirewallScores } from '../../composables/firewall/useFirewallScores';
 import type { ScoreEntry, ScoreSubmission } from '../../composables/firewall/engine/types';
+import { WAVE_COUNT } from '../../composables/firewall/data/waves';
 
 const entry = (id: number, over: Partial<ScoreEntry> = {}): ScoreEntry => ({
   id,
@@ -40,15 +41,15 @@ describe('Leaderboard', () => {
 
   it('renders rows with wave, trophy and highlight', () => {
     const w = mountLb({
-      entries: [entry(1, { won: true, wave: 20 }), entry(2)],
+      entries: [entry(1, { won: true, wave: WAVE_COUNT }), entry(2)],
       highlightId: 2,
     });
     const rows = w.findAll('[data-testid="row"]');
     expect(rows).toHaveLength(2);
     expect(rows[0].text()).toContain('hax1');
-    expect(rows[0].text()).toContain('20/20');
+    expect(rows[0].text()).toContain(`${WAVE_COUNT}/${WAVE_COUNT}`);
     expect(rows[0].find('[data-testid="trophy"]').exists()).toBe(true);
-    expect(rows[1].text()).toContain('12/20');
+    expect(rows[1].text()).toContain(`12/${WAVE_COUNT}`);
     expect(rows[1].find('[data-testid="trophy"]').exists()).toBe(false);
     expect(rows[0].attributes('data-highlight')).toBe('false');
     expect(rows[1].attributes('data-highlight')).toBe('true');

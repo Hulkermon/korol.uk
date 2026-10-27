@@ -5,6 +5,7 @@ import { beginRun, createGame, update } from '../../composables/firewall/engine/
 import { computeScore } from '../../composables/firewall/engine/score';
 import { startWave } from '../../composables/firewall/engine/waves';
 import type { GameState } from '../../composables/firewall/engine/types';
+import { WAVE_COUNT } from '../../composables/firewall/data/waves';
 
 export type Branch = 'A' | 'B';
 
@@ -203,7 +204,7 @@ export const playBot = (opts: BotOptions = {}): Outcome => {
     wealthAt: {},
     integrityAt: {},
   };
-  const limit = opts.untilWave ?? 20;
+  const limit = opts.untilWave ?? WAVE_COUNT;
 
   while (state.phase === 'build' && state.wave < limit) {
     outcome.creditsAt[state.wave] = state.credits;

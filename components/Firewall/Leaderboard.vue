@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import type { ScoreEntry } from '@/composables/firewall/engine/types';
+  import { WAVE_COUNT } from '@/composables/firewall/data/waves';
   import Win98Window from './Win98Window.vue';
 
   defineProps<{
@@ -43,7 +44,7 @@
             <td>{{ i + 1 }}</td>
             <td class="fw-lb-name">{{ e.name }}</td>
             <td>{{ e.score }}</td>
-            <td>{{ e.wave }}/20</td>
+            <td>{{ e.wave }}/{{ WAVE_COUNT }}</td>
             <td>
               <span v-if="e.won" data-testid="trophy" title="Won">&#127942;</span>
             </td>
