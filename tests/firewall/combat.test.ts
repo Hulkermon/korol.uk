@@ -218,6 +218,33 @@ describe('projectiles and status', () => {
     expect(s.time < e.slowUntil).toBe(false);
   });
 
+  it('stun cannot be chained: it needs a recovery gap, and bosses take half', () => {
+    const s = makeTestState();
+    addTower(s, { damage: 1, stunDuration: 1, cooldown: 100 });
+    const e = addEnemy(s, 'trojan', 10, 0, 10);
+    e.hp = e.maxHp = 1000;
+    updateCombat(s, 0.01);
+    expect(e.stunUntil).toBeCloseTo(1);
+    // still stunned, then inside the recovery window: a new hit does not extend it
+    for (const t of [0.5, 1.3]) {
+      s.time = t;
+      s.towers[0].cooldownLeft = 0;
+      updateCombat(s, 0.01);
+      expect(e.stunUntil).toBeCloseTo(1);
+    }
+    s.time = 1.7;
+    s.towers[0].cooldownLeft = 0;
+    updateCombat(s, 0.01);
+    expect(e.stunUntil).toBeCloseTo(2.7);
+
+    const b = addEnemy(s, 'y2k', 20, 0, 50);
+    b.hp = b.maxHp = 1e6;
+    b.stunUntil = 0;
+    s.towers[0].cooldownLeft = 0;
+    updateCombat(s, 0.01);
+    expect(b.stunUntil).toBeCloseTo(s.time + 0.5);
+  });
+
   it('DoT can kill and ages fx out', () => {
     const s = makeTestState({ credits: 0 });
     const e = addEnemy(s, 'popup', 10, 0);

@@ -8,6 +8,10 @@ import type { TowerStats, Vec } from './types';
 const CHAIN_RANGE = 80;
 const CHAIN_FALLOFF = 0.8;
 const HIT_RADIUS = 4;
+/** An enemy can't be stunned again until this long after its last stun ended (no stun-lock). */
+const STUN_RECOVERY = 0.6;
+/** Bosses only get this share of a stun's duration. */
+const BOSS_STUN_SHARE = 0.5;
 
 /** Most recent position of each projectile's target while it was alive. */
 const lastSeen = new WeakMap<Projectile, Vec>();
@@ -26,8 +30,9 @@ const applyStatus = (state: GameState, enemy: Enemy, s: HitStatus) => {
     enemy.slowFactor = Math.min(active, s.slowFactor);
     enemy.slowUntil = Math.max(enemy.slowUntil, state.time + s.slowDuration);
   }
-  if (s.stunDuration > 0) {
-    enemy.stunUntil = Math.max(enemy.stunUntil, state.time + s.stunDuration);
+  if (s.stunDuration > 0 && (enemy.stunUntil <= 0 || state.time >= enemy.stunUntil + STUN_RECOVERY)) {
+    const share = getEnemyDef(enemy.defId).boss ? BOSS_STUN_SHARE : 1;
+    enemy.stunUntil = state.time + s.stunDuration * share;
   }
   if (s.dotDps > 0 && s.dotDuration > 0) {
     enemy.dotDps = s.dotDps;
