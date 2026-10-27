@@ -39,32 +39,39 @@ Repeat until every task is `committed`:
 2. **Scope.** In `git status --short`, every changed path must belong to this task or to a task that is still running. If something else changed, have the implementer undo it, or check that the change is only the implementer's and run `git restore` on it yourself.
 3. **Diff.** Run `git diff -- <task files>` and read any new files in full. Check the diff against:
    - the brief's **Done when** items;
+   - tests: a task that changes logic must include its tests (see step 4);
    - CLAUDE.md: sub-project isolation, scoped styles, no imports across sub-projects, parameterized SQL, prettier style;
    - the idiom of the surrounding code.
 
    Look out for unrequested refactors, debug leftovers, styles that leak globally, and secrets.
-4. **Fix.** Fix small problems yourself, since that's cheaper than a round trip. For bigger problems, send specific feedback to the same implementer with SendMessage, which keeps its context. If it still isn't right after two rounds, do it yourself or re-plan the task.
-5. Add one line to the plan's **Log** for the outcome.
+4. **Tests must pass.** This is a hard gate: a task is not approved, and not committed, until its tests pass.
+   - Run `pnpm vitest run <the task's test files>` yourself. Don't rely on the implementer's report.
+   - Then run `pnpm test`. Failures in test files that belong to a task that is still `running` are expected (half-written work in the same tree) and are ignored. Any other failure blocks the commit, including a regression in an earlier task's tests.
+   - A `logic` task with no test file, or tests that don't really exercise the new behavior (empty, skipped with `.skip`/`.todo`, or asserting nothing), is sent back. A `content` or `mechanical` task needs tests only where the brief lists them. Never weaken, skip or delete a test to get green. Fix the code, or fix the test if the test is wrong, and say which in the log.
+   - A failing test goes back to the same implementer with the failure output, or you fix it yourself if it's small. After two rounds, do it yourself or re-plan.
+5. **Fix.** Fix small problems yourself, since that's cheaper than a round trip. For bigger problems, send specific feedback to the same implementer with SendMessage, which keeps its context. If it still isn't right after two rounds, do it yourself or re-plan the task.
+6. Add one line to the plan's **Log** for the outcome, including the test result.
 
 ## 5. Commit
 
 1. Run `git add -- <exact task files>`, including deleted files. Never use `git add -A`, `.` or `-u`, because other implementers' unfinished work is in the same tree.
-2. Run `git diff --cached --stat` and confirm the staged changes are exactly this task's files, 1–5 of them.
-3. Run `git commit -m "<commit message from the plan>"`. The message is one line with no body and no trailers, so no `Co-Authored-By`.
-4. In the plan, mark the task `committed`, record the short hash, and add a line to the log.
+2. Run `pnpm vitest run <the task's test files>` once more if you changed anything after the test gate in step 4.
+3. Run `git diff --cached --stat` and confirm the staged changes are exactly this task's files, 1–5 of them.
+4. Run `git commit -m "<commit message from the plan>"`. The message is one line with no body and no trailers, so no `Co-Authored-By`.
+5. In the plan, mark the task `committed`, record the short hash, and add a line to the log.
 
 ## 6. Verify the branch
 
 After the last commit, set **Status** to `verifying`.
 
-1. Run `pnpm build`. If it fails, fix the cause in a new focused `fix:` commit. Do it yourself if it's small, or write a brief for an implementer. Never amend or rewrite earlier commits.
+1. Run `pnpm test` (the whole suite must pass, with nothing skipped to get there), then `pnpm build`. If either fails, fix the cause in a new focused `fix:` commit. Do it yourself if it's small, or write a brief for an implementer. Never amend or rewrite earlier commits.
 2. **Browser check.** For each route in the plan's **Verification** section, use the `run` skill to start the app (`pnpm dev` on port 3000), then open the route. Check the behavior the plan lists and look at the console for errors. Routes that call `/api/*` need the `db` MySQL service (`MYSQL_HOST=db` in the devcontainer). If no browser can be driven here, say so and list what the user should check by hand.
 3. Fix whatever turns up as new commits, then run the build again.
 4. Set **Status** to `done`.
 
 ## 7. Report
 
-Report the branch, every commit (short hash and message), what was verified (the build, the routes checked, and anything you couldn't check), and any open concerns. Finish by reminding the user that nothing has been pushed, and that merging and pushing to `main` deploys.
+Report the branch, every commit (short hash and message), what was verified (the test count and result, the build, the routes checked, and anything you couldn't check), and any open concerns. Finish by reminding the user that nothing has been pushed, and that merging and pushing to `main` deploys.
 
 ## Keeping token use low
 

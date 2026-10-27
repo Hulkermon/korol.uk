@@ -55,7 +55,7 @@ The brief is the only thing the implementer sees, so it must stand on its own wi
 - **Files:** each path, marked create, modify or delete, with what changes in it.
 - **Context:** the facts the implementer would otherwise go looking for. Include existing function signatures and types, table schemas, the conventions to match, which other files to read (with line ranges) and why, and what earlier tasks provide (exports, routes, columns). Quote short snippets. Point to long ones.
 - **Constraints:** what not to touch, the style to match, and edge cases to handle.
-- **Done when:** concrete items that can be checked from the diff, not "works correctly".
+- **Done when:** concrete items that can be checked from the diff, not "works correctly". For a task that changes logic, the test files are listed in **Files**, the brief says which behaviors they must cover, and **Done when** includes `pnpm vitest run <test files>` passing. The manager won't approve or commit the task until those tests pass.
 
 ### 5. Verification
 
