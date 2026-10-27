@@ -1,4 +1,5 @@
 import type { ScoreSubmission } from './types';
+import { WAVE_COUNT } from '../data/waves';
 
 export interface ScoreParts {
   wave: number;
@@ -15,13 +16,11 @@ function clampInt(v: number, min: number, max: number): number {
 }
 
 export function computeScore(p: ScoreParts): number {
-  const wave = clampInt(p.wave, 0, 20);
+  const wave = clampInt(p.wave, 0, WAVE_COUNT);
   const kills = clampInt(p.kills, 0, 5000);
   const integrity = clampInt(p.integrity, 0, 100);
   const credits = clampInt(p.credits, 0, 1000000);
-  return (
-    wave * 1000 + kills * 10 + integrity * 25 + Math.floor(credits / 2) + (p.won ? 10000 : 0)
-  );
+  return wave * 1000 + kills * 10 + integrity * 25 + Math.floor(credits / 2) + (p.won ? 10000 : 0);
 }
 
 type ValidationResult = { ok: true; value: ScoreSubmission } | { ok: false; reason: string };
@@ -44,13 +43,13 @@ export function validateSubmission(body: unknown): ValidationResult {
   if (name.length < 1 || name.length > 24) {
     return { ok: false, reason: 'Name must be 1-24 characters' };
   }
-  if (!intIn(b.wave, 0, 20)) return { ok: false, reason: 'Invalid wave' };
+  if (!intIn(b.wave, 0, WAVE_COUNT)) return { ok: false, reason: 'Invalid wave' };
   if (typeof b.won !== 'boolean') return { ok: false, reason: 'Invalid won flag' };
   if (!intIn(b.integrity, 0, 100)) return { ok: false, reason: 'Invalid integrity' };
   if (!intIn(b.kills, 0, 5000)) return { ok: false, reason: 'Invalid kills' };
   if (!intIn(b.credits, 0, 1000000)) return { ok: false, reason: 'Invalid credits' };
   if (b.won) {
-    if (b.wave !== 20 || b.integrity <= 0) return { ok: false, reason: 'Invalid win' };
+    if (b.wave !== WAVE_COUNT || b.integrity <= 0) return { ok: false, reason: 'Invalid win' };
   } else if (b.integrity !== 0) {
     return { ok: false, reason: 'A loss requires zero integrity' };
   }

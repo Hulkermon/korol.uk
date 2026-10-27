@@ -107,3 +107,5 @@ export const WAVES: WaveDef[] = BASE.map((w, i) => ({
   groups: w.groups,
   bonus: 50 + 7 * i,
 }));
+
+export const WAVE_COUNT = WAVES.length;
