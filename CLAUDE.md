@@ -73,5 +73,4 @@ These run as a manager/sub-agent setup. The point is better output and faster wo
 
 ## Misc
 
-- `scripts/ralph.sh` and `skills/{prd,ralph}` belong to an autonomous agent-loop ("Ralph") workflow. They aren't part of the site. Its working files (`prd.json`, `progress.txt`, `.last-branch`) are gitignored.
 - `assets/css/skizualizer.css` isn't referenced anywhere. It's probably left over from a removed sub-project.
