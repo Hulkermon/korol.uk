@@ -1,6 +1,7 @@
 import type { SpawnGroup, WaveDef } from '../engine/types';
 
-export const hpScaleForWave = (waveIndex: number): number => 1 + 0.14 * waveIndex;
+export const hpScaleForWave = (waveIndex: number): number =>
+  1 + 0.12 * waveIndex + 0.003 * waveIndex * waveIndex;
 
 const g = (enemyId: string, count: number, interval: number, delay = 0): SpawnGroup => ({
   enemyId,
@@ -103,5 +104,5 @@ const BASE: { name: string; groups: SpawnGroup[] }[] = [
 export const WAVES: WaveDef[] = BASE.map((w, i) => ({
   name: `Wave ${i + 1}: ${w.name}`,
   groups: w.groups,
-  bonus: 40 + 6 * i,
+  bonus: 50 + 7 * i,
 }));
