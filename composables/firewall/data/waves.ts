@@ -1,8 +1,14 @@
 import type { SpawnGroup, WaveDef } from '../engine/types';
 
-/** Enemy HP multiplier. The extra slope after wave 10 keeps the late waves from going slack. */
-export const hpScaleForWave = (waveIndex: number): number =>
+const baseHpScale = (waveIndex: number): number =>
   1 + 0.12 * waveIndex + 0.003 * waveIndex * waveIndex + 0.18 * Math.max(0, waveIndex - 10);
+
+/**
+ * Enemy HP multiplier. The extra slope after wave 10 keeps the late waves from going slack; past
+ * wave 20 it flattens, because the waves themselves keep growing.
+ */
+export const hpScaleForWave = (waveIndex: number): number =>
+  waveIndex < 20 ? baseHpScale(waveIndex) : baseHpScale(19) + 0.1 * (waveIndex - 19);
 
 const g = (enemyId: string, count: number, interval: number, delay = 0): SpawnGroup => ({
   enemyId,
@@ -98,6 +104,103 @@ const BASE: { name: string; groups: SpawnGroup[] }[] = [
       g('hydra', 16, 0.6, 10),
       g('trojan', 10, 0.8, 18),
       g('spyware', 24, 0.3, 26),
+    ],
+  },
+  {
+    name: 'Service Pack Zero',
+    groups: [
+      g('rootkit', 14, 1),
+      g('trojan', 14, 0.8, 4),
+      g('hydra', 18, 0.6, 12),
+      g('spyware', 26, 0.3, 24),
+    ],
+  },
+  {
+    name: 'Registry Cleaner',
+    groups: [
+      g('spyware', 32, 0.25),
+      g('rootkit', 14, 1, 6),
+      g('hydra', 20, 0.6, 14),
+      g('trojan', 14, 0.8, 26),
+    ],
+  },
+  {
+    name: 'Drive-By Download',
+    groups: [
+      g('worm', 34, 0.25),
+      g('hydra', 20, 0.6, 4),
+      g('rootkit', 16, 0.9, 12),
+      g('trojan', 16, 0.7, 24),
+    ],
+  },
+  {
+    name: 'Zero-Day Special',
+    groups: [
+      g('rootkit', 18, 0.9),
+      g('trojan', 16, 0.7, 4),
+      g('hydra', 22, 0.5, 12),
+      g('spyware', 24, 0.25, 22),
+      g('worm', 20, 0.25, 30),
+    ],
+  },
+  {
+    name: 'Rootkit Convention',
+    groups: [
+      g('rootkit', 32, 0.7),
+      g('hydra', 24, 0.5, 6),
+      g('trojan', 20, 0.65, 14),
+      g('spyware', 30, 0.25, 26),
+    ],
+  },
+  {
+    name: 'Botnet Uprising',
+    groups: [
+      g('worm', 30, 0.25),
+      g('spyware', 26, 0.25, 6),
+      g('hydra', 22, 0.5, 14),
+      g('rootkit', 20, 0.75, 22),
+      g('trojan', 16, 0.65, 32),
+    ],
+  },
+  {
+    name: 'Ransom Note',
+    groups: [
+      g('trojan', 24, 0.65),
+      g('rootkit', 24, 0.75, 4),
+      g('hydra', 28, 0.5, 14),
+      g('spyware', 34, 0.25, 26),
+      g('worm', 12, 0.25, 38),
+    ],
+  },
+  {
+    name: 'Cascade Failure',
+    groups: [
+      g('rootkit', 24, 0.75),
+      g('hydra', 28, 0.5, 4),
+      g('trojan', 22, 0.6, 12),
+      g('worm', 34, 0.25, 22),
+      g('spyware', 32, 0.25, 32),
+    ],
+  },
+  {
+    name: 'Last Dance of the Mainframe',
+    groups: [
+      g('rootkit', 26, 0.7),
+      g('hydra', 30, 0.45, 6),
+      g('trojan', 24, 0.6, 14),
+      g('spyware', 34, 0.25, 26),
+      g('worm', 36, 0.25, 36),
+    ],
+  },
+  {
+    name: 'Blue Screen of Death II: The Reckoning',
+    groups: [
+      g('bsod', 1, 1),
+      g('rootkit', 20, 0.9, 4),
+      g('hydra', 24, 0.55, 10),
+      g('bsod', 1, 1, 20),
+      g('trojan', 18, 0.65, 26),
+      g('spyware', 28, 0.25, 36),
     ],
   },
 ];

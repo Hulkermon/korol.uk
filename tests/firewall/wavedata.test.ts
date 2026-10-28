@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMY_DEFS, getEnemyDef } from '../../composables/firewall/data/enemies';
-import { WAVES, hpScaleForWave } from '../../composables/firewall/data/waves';
+import { WAVES, WAVE_COUNT, hpScaleForWave } from '../../composables/firewall/data/waves';
 
 const total = (i: number) => WAVES[i].groups.reduce((n, grp) => n + grp.count, 0);
 const hasBoss = (i: number) => WAVES[i].groups.some((grp) => getEnemyDef(grp.enemyId).boss);
@@ -19,18 +19,20 @@ describe('enemy data', () => {
 });
 
 describe('wave data', () => {
-  it('has 20 waves referencing existing enemies', () => {
-    expect(WAVES).toHaveLength(20);
+  it('has 30 waves referencing existing enemies', () => {
+    expect(WAVE_COUNT).toBe(30);
+    expect(WAVES).toHaveLength(30);
     for (const w of WAVES)
       for (const grp of w.groups) expect(() => getEnemyDef(grp.enemyId)).not.toThrow();
   });
 
-  it('has bosses only in waves 10 and 20', () => {
-    WAVES.forEach((_, i) => expect(hasBoss(i)).toBe(i === 9 || i === 19));
+  it('has bosses only in waves 10, 20 and 30', () => {
+    WAVES.forEach((_, i) => expect(hasBoss(i)).toBe(i === 9 || i === 19 || i === 29));
   });
 
   it('hpScaleForWave is strictly increasing', () => {
-    for (let i = 1; i < 20; i++) expect(hpScaleForWave(i)).toBeGreaterThan(hpScaleForWave(i - 1));
+    for (let i = 1; i < WAVE_COUNT; i++)
+      expect(hpScaleForWave(i)).toBeGreaterThan(hpScaleForWave(i - 1));
   });
 
   it('late waves are bigger than early waves', () => {
@@ -40,6 +42,7 @@ describe('wave data', () => {
       return s / (b - a);
     };
     expect(avg(15, 20)).toBeGreaterThan(avg(0, 5));
+    expect(avg(24, 30)).toBeGreaterThan(avg(14, 20));
     expect(total(0)).toBeLessThanOrEqual(10);
   });
 });

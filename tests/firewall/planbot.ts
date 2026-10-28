@@ -24,7 +24,7 @@ export interface BotOptions {
   /** stop playing after this many cleared waves */
   untilWave?: number;
   seed?: number;
-  /** keep investing surplus credits in extra towers once the core plan is done */
+  /** keep investing surplus credits in extra towers once the core plan is done (default on) */
   extras?: boolean;
   /** 0..1: share of the plan a weaker player never gets around to (whole towers, then upgrade tails) */
   sloppy?: number;
@@ -113,7 +113,7 @@ const buildPlan = (opts: BotOptions): Step[] => {
     ...chain('arc2', 5, b('arc2'), 4),
     ...chain('bomb2', 5, b('bomb2'), 4),
   ];
-  if (opts.extras) {
+  if (opts.extras !== false) {
     plan.push(
       tower('scanner', 6, 3, 'scan2'),
       tower('bomb', 8, 8, 'bomb3'),
@@ -130,6 +130,18 @@ const buildPlan = (opts: BotOptions): Step[] => {
       ...chain('arc3', 5, b('arc3'), 4),
       ...chain('ping3', 5, b('ping3'), 4),
       ...chain('scan3', 5, b('scan3'), 4),
+      tower('arc', 13, 6, 'arc4'),
+      tower('bomb', 9, 6, 'bomb4'),
+      ...chain('arc4', 3, b('arc4')),
+      ...chain('bomb4', 3, b('bomb4')),
+      tower('ping', 13, 7, 'ping4'),
+      tower('scanner', 11, 8, 'scan4'),
+      ...chain('ping4', 3, b('ping4')),
+      ...chain('scan4', 3, b('scan4')),
+      ...chain('arc4', 5, b('arc4'), 4),
+      ...chain('bomb4', 5, b('bomb4'), 4),
+      ...chain('ping4', 5, b('ping4'), 4),
+      ...chain('scan4', 5, b('scan4'), 4),
     );
   }
   const sloppy = opts.sloppy ?? 0;

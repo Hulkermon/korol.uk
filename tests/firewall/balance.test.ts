@@ -165,7 +165,7 @@ describe('naive bot (spends evenly, saves for the next item)', () => {
     for (const only of ['arc', 'bomb', 'ice']) {
       expect(mixed).toBeLessThan(leak([only]));
     }
-  });
+  }, 20_000);
 });
 
 describe('tower value for money', () => {
