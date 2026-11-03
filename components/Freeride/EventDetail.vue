@@ -44,7 +44,19 @@
       </p>
       <ul v-else class="fr-riders">
         <li v-for="(rider, i) in division.riders" :key="i" class="fr-rider">
-          <span class="fr-rider-name">{{ rider.name }}</span>
+          <button
+            type="button"
+            class="fr-star"
+            :class="{ on: isHomie(rider.name) }"
+            :aria-pressed="isHomie(rider.name)"
+            :aria-label="starLabel(rider.name)"
+            :title="starLabel(rider.name)"
+            @click="emit('toggle-homie', rider.name)">
+            {{ isHomie(rider.name) ? '★' : '☆' }}
+          </button>
+          <span class="fr-rider-name" :class="{ 'fr-rider-name--homie': isHomie(rider.name) }">{{
+            rider.name
+          }}</span>
           <template v-if="rider.nationality">
             <img
               v-if="flagFor(rider.nationality)"
@@ -68,17 +80,33 @@
   import { computed } from 'vue';
   import type { FreerideEvent, Tier } from '@/composables/freeride/types';
   import { countryCode, flagUrl } from '@/composables/freeride/countries';
+  import { riderKey } from '@/composables/freeride/homies';
 
-  const props = defineProps<{
-    event: FreerideEvent;
-    planned: boolean;
-    planning: boolean;
-  }>();
+  const props = withDefaults(
+    defineProps<{
+      event: FreerideEvent;
+      planned: boolean;
+      planning: boolean;
+      homieKeys?: string[];
+    }>(),
+    { homieKeys: () => [] },
+  );
 
   const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'toggle-plan', id: string): void;
+    (e: 'toggle-homie', name: string): void;
   }>();
+
+  const homieSet = computed(() => new Set(props.homieKeys));
+
+  function isHomie(name: string): boolean {
+    return homieSet.value.has(riderKey(name));
+  }
+
+  function starLabel(name: string): string {
+    return isHomie(name) ? `Remove ${name} from homies` : `Add ${name} to homies`;
+  }
 
   const MONTHS = [
     'Jan',
@@ -267,8 +295,23 @@
     padding: 0.15rem 0;
     font-size: 0.9rem;
   }
+  .fr-star {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 1rem;
+    line-height: 1;
+    color: #a0abb8;
+    cursor: pointer;
+  }
+  .fr-star.on {
+    color: #f5a524;
+  }
   .fr-rider-name {
     flex: 1;
+  }
+  .fr-rider-name--homie {
+    font-weight: 700;
   }
   .fr-rider-nat {
     color: var(--fr-muted);

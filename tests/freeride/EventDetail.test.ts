@@ -166,6 +166,36 @@ describe('EventDetail', () => {
     expect(w.find('.fr-rider-nat').exists()).toBe(false);
   });
 
+  it('renders an off star for every rider by default', () => {
+    const stars = render(makeEvent()).findAll('.fr-star');
+    expect(stars).toHaveLength(2);
+    for (const s of stars) {
+      expect(s.classes()).not.toContain('on');
+      expect(s.attributes('aria-pressed')).toBe('false');
+      expect(s.text()).toBe('☆');
+    }
+  });
+
+  it('emits toggle-homie with the rider name', async () => {
+    const w = render(makeEvent());
+    await w.findAll('.fr-star')[1].trigger('click');
+    expect(w.emitted('toggle-homie')![0]).toEqual(['B Rider']);
+  });
+
+  it('bolds homies and marks their star on', () => {
+    const w = mount(EventDetail, {
+      props: { event: makeEvent(), planned: false, planning: false, homieKeys: ['a rider'] },
+    });
+    const names = w.findAll('.fr-rider-name');
+    const stars = w.findAll('.fr-star');
+    expect(names[0].classes()).toContain('fr-rider-name--homie');
+    expect(stars[0].classes()).toContain('on');
+    expect(stars[0].attributes('aria-pressed')).toBe('true');
+    expect(stars[0].text()).toBe('★');
+    expect(names[1].classes()).not.toContain('fr-rider-name--homie');
+    expect(stars[1].classes()).not.toContain('on');
+  });
+
   it('falls back to text for unknown nationality and renders nothing for null', () => {
     const unknown = render(
       makeEvent({
