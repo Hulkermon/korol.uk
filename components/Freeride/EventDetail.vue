@@ -45,7 +45,18 @@
       <ul v-else class="fr-riders">
         <li v-for="(rider, i) in division.riders" :key="i" class="fr-rider">
           <span class="fr-rider-name">{{ rider.name }}</span>
-          <span v-if="rider.nationality" class="fr-rider-nat">{{ rider.nationality }}</span>
+          <template v-if="rider.nationality">
+            <img
+              v-if="flagFor(rider.nationality)"
+              class="fr-flag"
+              :src="flagFor(rider.nationality)!"
+              :alt="rider.nationality"
+              :title="rider.nationality"
+              width="20"
+              height="15"
+              loading="lazy" />
+            <span v-else class="fr-rider-nat">{{ rider.nationality }}</span>
+          </template>
           <span class="fr-pill" :class="pillClass(rider.status)">{{ rider.status }}</span>
         </li>
       </ul>
@@ -56,6 +67,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import type { FreerideEvent, Tier } from '@/composables/freeride/types';
+  import { countryCode, flagUrl } from '@/composables/freeride/countries';
 
   const props = defineProps<{
     event: FreerideEvent;
@@ -116,6 +128,10 @@
     if (mode === 'waitlist') return 'Waitlist registration';
     if (mode === 'open') return 'Registration open';
     return mode;
+  }
+
+  function flagFor(nationality: string | null): string | null {
+    return flagUrl(countryCode(nationality));
   }
 
   function pillClass(status: string) {
@@ -256,6 +272,13 @@
   }
   .fr-rider-nat {
     color: var(--fr-muted);
+  }
+  .fr-flag {
+    width: 20px;
+    height: 15px;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(31, 42, 55, 0.15);
+    vertical-align: middle;
   }
   .fr-pill {
     padding: 0 0.5rem;

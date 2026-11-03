@@ -145,4 +145,54 @@ describe('EventDetail', () => {
     expect(render(makeEvent(), false).find('.fr-plan').text()).toBe('Add to plan');
     expect(render(makeEvent(), true).find('.fr-plan').text()).toBe('Remove from plan');
   });
+
+  it('renders a flag image for a known nationality', () => {
+    const w = render(
+      makeEvent({
+        divisions: [
+          {
+            name: 'X',
+            entryCount: 1,
+            riders: [{ name: 'R', nationality: 'Sweden', status: 'confirmed' }],
+          },
+        ],
+      }),
+    );
+    const img = w.find('img.fr-flag');
+    expect(img.exists()).toBe(true);
+    expect(img.attributes('title')).toBe('Sweden');
+    expect(img.attributes('alt')).toBe('Sweden');
+    expect(img.attributes('src')).toBeTruthy();
+    expect(w.find('.fr-rider-nat').exists()).toBe(false);
+  });
+
+  it('falls back to text for unknown nationality and renders nothing for null', () => {
+    const unknown = render(
+      makeEvent({
+        divisions: [
+          {
+            name: 'X',
+            entryCount: 1,
+            riders: [{ name: 'R', nationality: 'Atlantis', status: 'confirmed' }],
+          },
+        ],
+      }),
+    );
+    expect(unknown.find('img.fr-flag').exists()).toBe(false);
+    expect(unknown.find('.fr-rider-nat').text()).toBe('Atlantis');
+
+    const none = render(
+      makeEvent({
+        divisions: [
+          {
+            name: 'X',
+            entryCount: 1,
+            riders: [{ name: 'R', nationality: null, status: 'confirmed' }],
+          },
+        ],
+      }),
+    );
+    expect(none.find('img.fr-flag').exists()).toBe(false);
+    expect(none.find('.fr-rider-nat').exists()).toBe(false);
+  });
 });
