@@ -54,6 +54,12 @@
           <div v-if="pickingHome" class="fr-hint">
             Click the map to set your homebase · Esc to cancel
           </div>
+          <div v-else-if="focusedName" class="fr-hint fr-hint--homie">
+            Showing {{ focusedName }}'s events
+            <button type="button" aria-label="Show all events" @click="focusedHomie = null">
+              ✕
+            </button>
+          </div>
         </div>
         <div class="fr-slider">
           <DateRangeSlider v-model="range" :min="bounds.from" :max="bounds.to" />
@@ -66,36 +72,66 @@
           :event="selectedEvent"
           :planned="plannedIds.includes(selectedEvent.id)"
           :planning="planning"
+          :homie-keys="homieKeys"
           @close="selectedId = null"
-          @toggle-plan="onTogglePlan" />
-        <PlanPanel
-          v-else-if="planning"
-          :stops="stops"
-          :legs="legs"
-          :conflicts="conflicts"
-          :home="home"
-          :options="planOptions"
-          :loading="loading"
-          @remove="removePlanned"
-          @select="selectedId = $event"
-          @update:options="planOptions = $event"
-          @set-home="startPicking"
-          @clear="clearPlan" />
-        <div v-else class="fr-list">
-          <h2>{{ visible.length }} events in range</h2>
-          <button
-            v-for="e in visible"
-            :key="e.id"
-            type="button"
-            class="fr-row"
-            @click="selectedId = e.id">
-            <span class="fr-dot" :style="{ background: TIER_COLORS[e.tier] }"></span>
-            <span class="fr-row-text">
-              <span class="fr-row-date">{{ formatRange(e.start, e.end) }}</span>
-              <span class="fr-row-name">{{ e.name }}</span>
-            </span>
-          </button>
-        </div>
+          @toggle-plan="onTogglePlan"
+          @toggle-homie="toggleHomie" />
+        <template v-else>
+          <div class="fr-tabs" role="tablist" aria-label="Side panel">
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="sideTab === 'list'"
+              :class="{ active: sideTab === 'list' }"
+              @click="sideTab = 'list'">
+              {{ planning ? 'Plan' : 'Events' }}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="sideTab === 'homies'"
+              :class="{ active: sideTab === 'homies' }"
+              @click="sideTab = 'homies'">
+              The Homies ({{ homies.length }})
+            </button>
+          </div>
+          <HomiesPanel
+            v-if="sideTab === 'homies'"
+            :homies="homies"
+            :events="events"
+            :focused-key="focusedHomie"
+            @focus="focusedHomie = $event"
+            @select="selectedId = $event"
+            @toggle-homie="toggleHomie" />
+          <PlanPanel
+            v-else-if="planning"
+            :stops="stops"
+            :legs="legs"
+            :conflicts="conflicts"
+            :home="home"
+            :options="planOptions"
+            :loading="loading"
+            @remove="removePlanned"
+            @select="selectedId = $event"
+            @update:options="planOptions = $event"
+            @set-home="startPicking"
+            @clear="clearPlan" />
+          <div v-else class="fr-list">
+            <h2>{{ visible.length }} events in range</h2>
+            <button
+              v-for="e in visible"
+              :key="e.id"
+              type="button"
+              class="fr-row"
+              @click="selectedId = e.id">
+              <span class="fr-dot" :style="{ background: TIER_COLORS[e.tier] }"></span>
+              <span class="fr-row-text">
+                <span class="fr-row-date">{{ formatRange(e.start, e.end) }}</span>
+                <span class="fr-row-name">{{ e.name }}</span>
+              </span>
+            </button>
+          </div>
+        </template>
       </aside>
     </div>
   </div>
@@ -126,6 +162,8 @@
   import MapLegend from '@/components/Freeride/MapLegend.vue';
   import EventDetail from '@/components/Freeride/EventDetail.vue';
   import PlanPanel from '@/components/Freeride/PlanPanel.vue';
+  import HomiesPanel from '@/components/Freeride/HomiesPanel.vue';
+  import { allRiders, homieEventIds, useHomies } from '@/composables/freeride/homies';
 
   useHead({
     title: 'Freeride Planner',
@@ -175,6 +213,24 @@
 
   const selectedId = ref<string | null>(null);
   pruneMissing();
+
+  const { homies, toggleHomie } = useHomies();
+  const homieKeys = computed(() => homies.value.map((h) => h.key));
+  const sideTab = ref<'list' | 'homies'>('list');
+  // Rider whose events the map is narrowed to (any rider key, not only homies)
+  const focusedHomie = ref<string | null>(null);
+  watch(sideTab, (tab) => {
+    if (tab !== 'homies') focusedHomie.value = null;
+  });
+  const focusedName = computed(() => {
+    const key = focusedHomie.value;
+    if (!key) return null;
+    return (
+      homies.value.find((h) => h.key === key)?.name ??
+      allRiders(events.value).find((r) => r.key === key)?.name ??
+      null
+    );
+  });
   const pickingHome = ref(false);
   const notice = ref('');
   let noticeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -221,7 +277,12 @@
   );
   const mapEvents = computed(() => {
     const planned = new Set(plannedIds.value);
-    const vis = new Set(visible.value.map((e) => e.id));
+    // A focused rider overrides the legend and date filters: show all their events
+    const vis = new Set(
+      focusedHomie.value
+        ? homieEventIds(events.value, focusedHomie.value)
+        : visible.value.map((e) => e.id),
+    );
     return events.value.filter((e) => vis.has(e.id) || planned.has(e.id));
   });
   const selectedEvent = computed(() =>
@@ -510,6 +571,45 @@
     border-radius: 6px;
     font-size: 14px;
     pointer-events: none;
+  }
+  .fr-hint--homie {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    white-space: nowrap;
+  }
+  .fr-hint--homie button {
+    border: 0;
+    background: none;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+  .fr-tabs {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
+    border-bottom: 1px solid #dde3ea;
+  }
+  .fr-tabs button {
+    flex: 1;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: none;
+    padding: 10px 8px 7px;
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--fr-muted);
+    cursor: pointer;
+  }
+  .fr-tabs button.active {
+    color: var(--fr-slate);
+    border-bottom-color: var(--fr-signal);
   }
   .fr-slider {
     background: #fff;
