@@ -222,6 +222,23 @@
       700 9px/1 system-ui,
       sans-serif;
     white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  :deep(.fr-pin__row) {
+    display: block;
+    text-align: center;
+  }
+
+  :deep(.fr-pin--rows2 .fr-pin__label) {
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  :deep(.fr-pin--light .fr-pin__label) {
+    color: #1f2a37;
   }
 
   :deep(.fr-pin__order) {

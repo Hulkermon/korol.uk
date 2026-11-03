@@ -18,7 +18,10 @@
               :checked="modelValue.tiers[row.tier]"
               :aria-label="row.label"
               @change="toggleTier(row.tier)" />
-            <span class="swatch" :style="{ background: TIER_COLORS[row.tier] }"></span>
+            <span
+              class="swatch"
+              :style="{ background: swatchBg(row.tier) }"
+              title="1★ light → 4★ dark"></span>
             <span class="name">{{ row.label }}</span>
           </label>
           <span class="count">{{ row.count }}</span>
@@ -49,7 +52,7 @@
     countByTier,
     type LegendFilter,
   } from '@/composables/freeride/filters';
-  import { TIER_COLORS } from '@/composables/freeride/pins';
+  import { TIER_COLORS, TIER_SHADES } from '@/composables/freeride/pins';
   import type { FreerideEvent, Stars, Tier } from '@/composables/freeride/types';
 
   const props = defineProps<{
@@ -74,6 +77,11 @@
     { tier: 'qualifier', label: 'Qualifier (FWQ)' },
     { tier: 'junior', label: 'Junior' },
   ];
+  function swatchBg(t: Tier): string {
+    if (t === 'pro') return TIER_COLORS.pro;
+    const [a, b, c, d] = TIER_SHADES[t];
+    return `linear-gradient(90deg, ${a} 0 25%, ${b} 25% 50%, ${c} 50% 75%, ${d} 75%)`;
+  }
   const STAR_LIST: Stars[] = [1, 2, 3, 4];
 
   const tierCounts = computed(() => countByTier(props.events));
@@ -158,10 +166,9 @@
     cursor: pointer;
   }
   .swatch {
-    width: 12px;
-    height: 12px;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
+    width: 24px;
+    height: 10px;
+    border-radius: 2px;
     flex: none;
   }
   .count {
