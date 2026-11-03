@@ -55,7 +55,7 @@ Vitest works (`@vitejs/plugin-vue` is a devDependency). `vitest.config.ts` only 
 ## Dev environment and deployment
 
 - The devcontainer (`.devcontainer/`) runs the app container next to a `db` MySQL service. Both read the root `.env`, so set `MYSQL_HOST=db`.
-- When you push to `main`, `.github/workflows/deploy.yml` builds the app, pushes `ghcr.io/hulkermon/koroluk-app:latest` (the `Dockerfile` only copies the prebuilt `.output`), and copies `.output/public` to the VPS web root. Coolify on the VPS runs the root `docker-compose.yml` (app + MySQL behind Traefik). This means every commit to `main` ships to production.
+- When you push to `main`, `.github/workflows/deploy.yml` builds the app, and pushes `ghcr.io/hulkermon/koroluk-app:latest` (the `Dockerfile` only copies the prebuilt `.output`). Coolify on the VPS runs the root `docker-compose.yml` (app + MySQL behind Traefik). This means every commit to `main` ships to production.
 
 ## Workflow
 
