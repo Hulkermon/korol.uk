@@ -73,6 +73,18 @@ describe('pinHtml', () => {
     );
   });
 
+  it('has no leader without an offset', () => {
+    expect(pinHtml(ev('pro'), idle)).not.toContain('fr-pin__leader');
+    expect(pinHtml(ev('pro'), idle, { dx: 0, dy: 0 })).not.toContain('fr-pin__leader');
+  });
+
+  it('draws a leader back to the true location when offset', () => {
+    const html = pinHtml(ev('pro'), idle, { dx: 20, dy: -10 });
+    expect(html).toContain('fr-pin__leader');
+    expect(html).toContain('x1="15" y1="40" x2="-5" y2="50"');
+    expect(html).toContain('<circle cx="-5" cy="50" r="3"');
+  });
+
   it('does not contain event names', () => {
     const e = { ...ev('pro'), name: '<script>x</script>' };
     expect(pinHtml(e, idle)).not.toContain('script');

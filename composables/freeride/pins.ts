@@ -52,7 +52,19 @@ export function pinRows(e: PinEvent): string[] {
   }
 }
 
-export function pinHtml(e: PinEvent, state: PinState): string {
+function leaderSvg(offset: { dx: number; dy: number }): string {
+  const x1 = 15;
+  const y1 = 40;
+  const x2 = Number((x1 - offset.dx).toFixed(1));
+  const y2 = Number((y1 - offset.dy).toFixed(1));
+  return (
+    `<svg class="fr-pin__leader" width="1" height="1" style="overflow: visible" aria-hidden="true">` +
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />` +
+    `<circle cx="${x2}" cy="${y2}" r="3" /></svg>`
+  );
+}
+
+export function pinHtml(e: PinEvent, state: PinState, offset?: { dx: number; dy: number }): string {
   const color = pinColor(e);
   const rows = pinRows(e)
     .map((r) => `<span class="fr-pin__row">${escapeHtml(r)}</span>`)
@@ -61,9 +73,10 @@ export function pinHtml(e: PinEvent, state: PinState): string {
     state.planned && state.order !== null
       ? `<span class="fr-pin__order">${escapeHtml(String(state.order))}</span>`
       : '';
+  const leader = offset && (offset.dx !== 0 || offset.dy !== 0) ? leaderSvg(offset) : '';
   return (
     `<div class="fr-pin__body" style="--pin-color: ${color}">` +
-    `<span class="fr-pin__label">${rows}</span>${badge}</div>`
+    `<span class="fr-pin__label">${rows}</span>${badge}</div>${leader}`
   );
 }
 

@@ -7,6 +7,7 @@
   import type { Map as LMap, Marker, Polyline } from 'leaflet';
   import type { FreerideEvent } from '@/composables/freeride/types';
   import { pinHtml, pinClass } from '@/composables/freeride/pins';
+  import { spreadOffsets } from '@/composables/freeride/spread';
 
   const props = defineProps<{
     events: FreerideEvent[];
@@ -49,13 +50,16 @@
   function syncEvents() {
     if (!map || !L) return;
     const seen = new Set<string>();
-    const coordCount = new Map<string, number>();
+
+    const offsets = spreadOffsets(
+      props.events.map((e) => {
+        const p = map!.latLngToContainerPoint([e.lat, e.lng]);
+        return { id: e.id, x: p.x, y: p.y };
+      }),
+    );
 
     for (const e of props.events) {
       seen.add(e.id);
-      const coord = `${e.lat},${e.lng}`;
-      const dupIndex = coordCount.get(coord) ?? 0;
-      coordCount.set(coord, dupIndex + 1);
 
       const planIdx = props.plannedIds.indexOf(e.id);
       const state = {
@@ -63,20 +67,22 @@
         planned: planIdx !== -1,
         order: planIdx !== -1 ? planIdx + 1 : null,
       };
-      // Offset events sharing coordinates so each stays clickable
-      const anchor: [number, number] = [15 - dupIndex * 8, 40 - dupIndex * 4];
-      const key = `${pinClass(e, state)}|${pinHtml(e, state)}|${anchor.join(',')}`;
+      // Overlapping pins are fanned out around their true location
+      const offset = offsets.get(e.id) ?? { dx: 0, dy: 0 };
+      const key = `${pinClass(e, state)}|${pinHtml(e, state, offset)}|${offset.dx},${offset.dy}`;
 
       const existing = markers.get(e.id);
       if (existing) {
         if (existing.key !== key) {
-          existing.marker.setIcon(makeIcon(e, state, anchor));
+          existing.marker.setIcon(makeIcon(e, state, offset));
+          existing.marker.unbindTooltip();
+          bindTip(existing.marker, e, offset);
           existing.key = key;
         }
         continue;
       }
-      const marker = L.marker([e.lat, e.lng], { icon: makeIcon(e, state, anchor) });
-      marker.bindTooltip(tooltipHtml(e), { direction: 'top', offset: [0, -40] });
+      const marker = L.marker([e.lat, e.lng], { icon: makeIcon(e, state, offset) });
+      bindTip(marker, e, offset);
       marker.on('click', () => emit('select', e.id));
       marker.addTo(map);
       markers.set(e.id, { marker, key });
@@ -101,13 +107,20 @@
   function makeIcon(
     e: FreerideEvent,
     state: { selected: boolean; planned: boolean; order: number | null },
-    anchor: [number, number],
+    offset: { dx: number; dy: number },
   ) {
     return L.divIcon({
-      html: pinHtml(e, state),
+      html: pinHtml(e, state, offset),
       className: pinClass(e, state),
       iconSize: [30, 40],
-      iconAnchor: anchor,
+      iconAnchor: [15 - offset.dx, 40 - offset.dy],
+    });
+  }
+
+  function bindTip(marker: Marker, e: FreerideEvent, offset: { dx: number; dy: number }) {
+    marker.bindTooltip(tooltipHtml(e), {
+      direction: 'top',
+      offset: [offset.dx, offset.dy - 40],
     });
   }
 
@@ -154,6 +167,8 @@
     map!.on('click', (ev: any) => {
       if (props.pickingHome) emit('pick-home', { lat: ev.latlng.lat, lng: ev.latlng.lng });
     });
+
+    map!.on('zoomend', syncEvents);
 
     resizeObserver = new ResizeObserver(() => map?.invalidateSize());
     resizeObserver.observe(root.value);
@@ -213,6 +228,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  :deep(.fr-pin__leader) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  :deep(.fr-pin__leader line) {
+    stroke: #1f2a37;
+    stroke-opacity: 0.55;
+    stroke-width: 1.5;
+  }
+
+  :deep(.fr-pin__leader circle) {
+    fill: #fff;
+    stroke: #1f2a37;
+    stroke-width: 1.5;
   }
 
   :deep(.fr-pin__label) {
