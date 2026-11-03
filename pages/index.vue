@@ -50,6 +50,14 @@
             <div class="card-cta">TOWER DEFENSE!</div>
           </div>
         </NuxtLink>
+
+        <NuxtLink to="/freeride" class="nav-card">
+          <div class="card-inner">
+            <div class="card-title">FREERIDE PLANNER</div>
+            <div class="card-desc">Plan your winter of big mountain lines!</div>
+            <div class="card-cta">DROP IN!</div>
+          </div>
+        </NuxtLink>
       </div>
     </div>
 
