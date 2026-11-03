@@ -17,7 +17,23 @@
       </button>
       <button type="button" class="fr-btn" @click="useMyLocation">📍 Use my location</button>
       <span v-if="notice" class="fr-notice">{{ notice }}</span>
-      <span class="fr-data">Data from Liveheats · as of {{ fetchedAtText }}</span>
+      <span class="fr-data">
+        Data from Liveheats · as of {{ fetchedAtText }}
+        <button
+          type="button"
+          class="fr-refresh"
+          :class="{ spinning: refreshing }"
+          :disabled="refreshing"
+          :title="
+            refreshing
+              ? 'Fetching fresh data from Liveheats…'
+              : `Refresh data (fetched ${snapshot.fetchedAt})`
+          "
+          aria-label="Refresh data from Liveheats"
+          @click="onRefresh">
+          ↻
+        </button>
+      </span>
     </header>
 
     <div class="fr-main">
@@ -87,9 +103,15 @@
 
 <script setup lang="ts">
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-  import snapshot from '@/composables/freeride/data/events.json';
-  import type { EventSnapshot } from '@/composables/freeride/types';
-  import { filterEvents, overlapsRange, seasonBounds } from '@/composables/freeride/filters';
+  import bundledSnapshot from '@/composables/freeride/data/events.json';
+  import type { EventSnapshot, FreerideEvent } from '@/composables/freeride/types';
+  import {
+    filterEvents,
+    overlapsRange,
+    rebaseRange,
+    seasonBounds,
+  } from '@/composables/freeride/filters';
+  import { useSnapshot } from '@/composables/freeride/useSnapshot';
   import { usePlannerState } from '@/composables/freeride/usePlannerState';
   import {
     buildStops,
@@ -123,9 +145,11 @@
     '--fr-muted': '#6b7a8a',
   };
 
-  const data = snapshot as unknown as EventSnapshot;
-  const events = data.events;
-  const bounds = seasonBounds(events);
+  const { snapshot, refreshing, refresh } = useSnapshot(
+    bundledSnapshot as unknown as EventSnapshot,
+  );
+  const events = computed(() => snapshot.value.events);
+  const bounds = computed(() => seasonBounds(events.value));
 
   const {
     legend,
@@ -138,15 +162,19 @@
     removePlanned,
     clearPlan,
     setHome,
-  } = usePlannerState(bounds);
+  } = usePlannerState(bounds.value);
 
   // Drop planned ids that no longer exist in the snapshot
-  const knownIds = new Set(events.map((e) => e.id));
-  if (plannedIds.value.some((id) => !knownIds.has(id))) {
-    plannedIds.value = plannedIds.value.filter((id) => knownIds.has(id));
+  function pruneMissing() {
+    const knownIds = new Set(events.value.map((e) => e.id));
+    if (plannedIds.value.some((id) => !knownIds.has(id))) {
+      plannedIds.value = plannedIds.value.filter((id) => knownIds.has(id));
+    }
+    if (selectedId.value && !knownIds.has(selectedId.value)) selectedId.value = null;
   }
 
   const selectedId = ref<string | null>(null);
+  pruneMissing();
   const pickingHome = ref(false);
   const notice = ref('');
   let noticeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -174,8 +202,8 @@
   }
 
   const fetchedAtText = computed(() => {
-    const d = new Date(data.fetchedAt);
-    if (Number.isNaN(d.getTime())) return data.fetchedAt;
+    const d = new Date(snapshot.value.fetchedAt);
+    if (Number.isNaN(d.getTime())) return snapshot.value.fetchedAt;
     return d.toLocaleDateString('en-GB', {
       day: 'numeric',
       month: 'short',
@@ -184,20 +212,20 @@
     });
   });
 
-  const visible = computed(() => filterEvents(events, legend.value, range.value));
-  const rangeEvents = computed(() => events.filter((e) => overlapsRange(e, range.value)));
+  const visible = computed(() => filterEvents(events.value, legend.value, range.value));
+  const rangeEvents = computed(() => events.value.filter((e) => overlapsRange(e, range.value)));
   const plannedEvents = computed(() =>
     plannedIds.value
-      .map((id) => events.find((e) => e.id === id))
-      .filter((e): e is (typeof events)[number] => !!e),
+      .map((id) => events.value.find((e) => e.id === id))
+      .filter((e): e is FreerideEvent => !!e),
   );
   const mapEvents = computed(() => {
     const planned = new Set(plannedIds.value);
     const vis = new Set(visible.value.map((e) => e.id));
-    return events.filter((e) => vis.has(e.id) || planned.has(e.id));
+    return events.value.filter((e) => vis.has(e.id) || planned.has(e.id));
   });
   const selectedEvent = computed(() =>
-    selectedId.value ? (events.find((e) => e.id === selectedId.value) ?? null) : null,
+    selectedId.value ? (events.value.find((e) => e.id === selectedId.value) ?? null) : null,
   );
 
   const stops = computed(() => {
@@ -279,6 +307,18 @@
   function onPickHome(pos: { lat: number; lng: number }) {
     setHome({ lat: pos.lat, lng: pos.lng, label: 'Homebase' });
     pickingHome.value = false;
+  }
+
+  async function onRefresh() {
+    const oldBounds = bounds.value;
+    const ok = await refresh();
+    if (!ok) {
+      showNotice('Refresh failed, showing the previous data');
+      return;
+    }
+    range.value = rebaseRange(range.value, oldBounds, bounds.value);
+    pruneMissing();
+    showNotice(`Updated · ${events.value.length} events`);
   }
 
   function showNotice(msg: string) {
@@ -406,6 +446,35 @@
     margin-left: auto;
     font-size: 12px;
     color: var(--fr-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fr-refresh {
+    width: 26px;
+    height: 26px;
+    border: 1px solid #dde3ea;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--fr-slate);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .fr-refresh:hover:not(:disabled) {
+    border-color: var(--fr-signal);
+    color: var(--fr-signal);
+  }
+  .fr-refresh:disabled {
+    cursor: progress;
+  }
+  .fr-refresh.spinning {
+    animation: fr-spin 0.9s linear infinite;
+  }
+  @keyframes fr-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
   .fr-main {
     flex: 1;
