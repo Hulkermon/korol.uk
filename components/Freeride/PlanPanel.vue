@@ -142,6 +142,7 @@
   }
 
   const totalsText = computed(() => {
+    if (props.stops.length < 2) return 'Add another stop or a homebase to see the route';
     if (props.loading) return 'routing…';
     const t = totals(props.legs);
     if (t.hours == null) return `~${fmtKm(t.km)} km straight-line`;

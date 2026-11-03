@@ -135,6 +135,13 @@ describe('PlanPanel', () => {
     ).toBe('20 km · ~30 min');
   });
 
+  it('prompts for a second stop instead of zero totals with a single stop', () => {
+    const w = make({ stops: [eventStop(A)], legs: [] });
+    const text = w.find('[data-test="totals"]').text();
+    expect(text).toBe('Add another stop or a homebase to see the route');
+    expect(text).not.toContain('km');
+  });
+
   it('shows routing… while loading', () => {
     const w = make({ loading: true });
     expect(w.find('[data-test="totals"]').text()).toBe('routing…');
