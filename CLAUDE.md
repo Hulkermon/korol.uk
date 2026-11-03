@@ -27,6 +27,7 @@ Current sub-projects:
 | `/3D` | `pages/3D/index.vue` | Three.js, all in one file |
 | `/stoned-benches` | `pages/stoned-benches/`, `server/api/stoner-benches/` | Seeded map where users place benches. The page route is `stoned-benches`, but the API path and DB table still use `stoner-benches`/`stoner_benches` |
 | `/firewall` | `pages/firewall/`, `components/Firewall/`, `composables/firewall/`, `server/api/firewall/`, `assets/css/firewall.css`, `tests/firewall/` | Canvas tower defense. Pure-TS engine in `composables/firewall/engine/`, data-driven defs in `composables/firewall/data/`, leaderboard in table `firewall_scores` |
+| `/freeride` | `pages/freeride/`, `components/Freeride/`, `composables/freeride/`, `scripts/freeride/`, `tests/freeride/` | Leaflet map of FWT/FWQ Europe events. Static season snapshot `composables/freeride/data/events.json` from the Liveheats public GraphQL API, regenerated with `node --experimental-strip-types scripts/freeride/fetch-events.ts`. Routing uses the public OSRM demo server. User state lives in localStorage (`freeride-planner:v1`). No DB tables |
 
 ## Commands
 
