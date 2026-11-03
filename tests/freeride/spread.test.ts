@@ -27,20 +27,45 @@ describe('spreadOffsets', () => {
     const offsets = spreadOffsets(pts);
     expect(offsets.size).toBe(3);
     const out = displaced(pts);
-    for (const d of out) expect(dist(d, pts[0])).toBeGreaterThanOrEqual(22 - 0.2);
+    for (const d of out) expect(dist(d, pts[0])).toBeGreaterThanOrEqual(10);
     for (let i = 0; i < out.length; i++)
       for (let j = i + 1; j < out.length; j++)
-        expect(dist(out[i], out[j])).toBeGreaterThanOrEqual(24);
+        expect(dist(out[i], out[j])).toBeGreaterThanOrEqual(27.9);
   });
 
-  it('groups transitively', () => {
+  it('resolves a chain of overlapping points', () => {
     const pts = [
       { id: 'a', x: 0, y: 0 },
-      { id: 'b', x: 25, y: 0 },
-      { id: 'c', x: 50, y: 0 },
+      { id: 'b', x: 20, y: 0 },
+      { id: 'c', x: 40, y: 0 },
     ];
-    expect(dist(pts[0], pts[2])).toBeGreaterThan(30);
-    expect([...spreadOffsets(pts).keys()].sort()).toEqual(['a', 'b', 'c']);
+    const offsets = spreadOffsets(pts);
+    const final = pts.map((p) => {
+      const o = offsets.get(p.id) ?? { dx: 0, dy: 0 };
+      return { x: p.x + o.dx, y: p.y + o.dy };
+    });
+    expect(dist(final[0], final[1])).toBeGreaterThanOrEqual(27.9);
+    expect(dist(final[1], final[2])).toBeGreaterThanOrEqual(27.9);
+  });
+
+  it('keeps a crowded area compact instead of one giant circle', () => {
+    // 25 pins crammed into a 60x60 px box (like the Alps at zoom 5)
+    const pts = Array.from({ length: 25 }, (_, i) => ({
+      id: `p${i}`,
+      x: 200 + (i % 5) * 12 + (i % 3),
+      y: 200 + Math.floor(i / 5) * 12,
+    }));
+    const offsets = spreadOffsets(pts);
+    const final = pts.map((p) => {
+      const o = offsets.get(p.id) ?? { dx: 0, dy: 0 };
+      return { x: p.x + o.dx, y: p.y + o.dy };
+    });
+    for (let i = 0; i < final.length; i++)
+      for (let j = i + 1; j < final.length; j++)
+        expect(dist(final[i], final[j])).toBeGreaterThanOrEqual(27.5);
+    const maxShift = Math.max(...[...offsets.values()].map((o) => Math.hypot(o.dx, o.dy)));
+    // a single circle for 25 pins would need r = 175 px
+    expect(maxShift).toBeLessThan(120);
   });
 
   it('is deterministic', () => {
@@ -59,7 +84,7 @@ describe('spreadOffsets', () => {
       { id: 'b', x: 105, y: 103 },
     ];
     const out = displaced(pts);
-    expect(dist(out[0], out[1])).toBeGreaterThanOrEqual(24);
+    expect(dist(out[0], out[1])).toBeGreaterThanOrEqual(27.9);
   });
 
   it('leaves singletons next to a group untouched', () => {
