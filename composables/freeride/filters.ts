@@ -76,3 +76,11 @@ export function clampRange(r: DateRange, bounds: DateRange): DateRange {
   const b = clamp(r.to);
   return a <= b ? { from: a, to: b } : { from: b, to: a };
 }
+
+// Re-fit a date range after the season bounds change (e.g. after a data refresh):
+// a range that covered the whole old season keeps covering the whole new one.
+export function rebaseRange(r: DateRange, oldBounds: DateRange, newBounds: DateRange): DateRange {
+  if (r.from === oldBounds.from && r.to === oldBounds.to) return { ...newBounds };
+  if (r.to < newBounds.from || r.from > newBounds.to) return { ...newBounds };
+  return clampRange(r, newBounds);
+}

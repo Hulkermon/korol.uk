@@ -9,6 +9,7 @@ import {
   numToDay,
   overlapsRange,
   passesLegend,
+  rebaseRange,
   seasonBounds,
 } from '@/composables/freeride/filters';
 import type { LegendFilter } from '@/composables/freeride/filters';
@@ -165,5 +166,26 @@ describe('clampRange', () => {
   it('leaves valid range alone', () => {
     const r = { from: '2027-01-01', to: '2027-01-05' };
     expect(clampRange(r, bounds)).toEqual(r);
+  });
+});
+
+describe('rebaseRange', () => {
+  const oldB = { from: '2026-12-01', to: '2027-04-30' };
+  const newB = { from: '2026-12-15', to: '2027-05-10' };
+  it('keeps a full range full', () => {
+    expect(rebaseRange({ ...oldB }, oldB, newB)).toEqual(newB);
+  });
+  it('clamps a partial range into the new bounds', () => {
+    expect(rebaseRange({ from: '2026-12-02', to: '2027-02-01' }, oldB, newB)).toEqual({
+      from: '2026-12-15',
+      to: '2027-02-01',
+    });
+  });
+  it('leaves a partial range inside the new bounds alone', () => {
+    const r = { from: '2027-01-10', to: '2027-02-01' };
+    expect(rebaseRange(r, oldB, newB)).toEqual(r);
+  });
+  it('falls back to the new bounds when the range is fully outside', () => {
+    expect(rebaseRange({ from: '2026-12-01', to: '2026-12-05' }, oldB, newB)).toEqual(newB);
   });
 });
