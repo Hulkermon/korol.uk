@@ -66,7 +66,7 @@
 
     <div class="footer">
       <p>Best viewed in Netscape Navigator 4.0 or Internet Explorer 5.5</p>
-      <p>© 2026 KOROL.UK - Last updated: Jan 21, 2026</p>
+      <p>© 2026 KOROL.UK - Last updated: Nov 3, 2026</p>
     </div>
   </div>
 </template>
