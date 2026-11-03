@@ -11,7 +11,7 @@ import {
   toDay,
 } from '../../composables/freeride/classify.ts';
 import type { EventSnapshot, FreerideEvent } from '../../composables/freeride/types.ts';
-import { resolveVenue } from './venues.ts';
+import { resolveVenue } from '../../composables/freeride/venues.ts';
 
 const API = 'https://liveheats.com/api/graphql';
 const OUT_DIR = new URL('../../composables/freeride/data/', import.meta.url);

@@ -1,5 +1,5 @@
 // Venue coordinate overrides. Pro events report the FWT HQ (Lausanne) as their location.
-// Plain TS only (no enums, no extensionless value imports) so Node type stripping can run it.
+// Plain TS only so it runs in Node, Nitro and Vitest.
 
 export interface Venue {
   place: string;

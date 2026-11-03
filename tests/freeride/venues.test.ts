@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveVenue } from '../../scripts/freeride/venues';
+import { resolveVenue } from '../../composables/freeride/venues';
 
 const lausanne = { place: 'Lausanne, Switzerland', countryCode: 'CH', lat: 46.52, lng: 6.63 };
 
