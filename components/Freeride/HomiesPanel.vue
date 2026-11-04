@@ -71,6 +71,18 @@
               MEDALS[medal - 1].icon
             }}</span>
             {{ h.name }}
+            <template v-if="nationalityFor(h.key)">
+              <img
+                v-if="flagFor(nationalityFor(h.key))"
+                class="fr-flag"
+                :src="flagFor(nationalityFor(h.key))!"
+                :alt="nationalityFor(h.key)!"
+                :title="nationalityFor(h.key)!"
+                width="20"
+                height="15"
+                loading="lazy" />
+              <span v-else class="fr-rider-nat">{{ nationalityFor(h.key) }}</span>
+            </template>
           </span>
           <span class="fr-homie-count">{{ countText(countFor(h.key)) }}</span>
           <span v-if="pointsText(h.key)" class="fr-homie-points">{{ pointsText(h.key) }}</span>
@@ -174,6 +186,9 @@
   const riders = computed(() => allRiders(props.events));
   const counts = computed(() => new Map(riders.value.map((r) => [r.key, r.eventCount])));
   const countFor = (key: string) => counts.value.get(key) ?? 0;
+  const nationalities = computed(() => new Map(riders.value.map((r) => [r.key, r.nationality])));
+  const nationalityFor = (key: string): string | null =>
+    nationalities.value.get(key) ?? props.athletes[key]?.nationality ?? null;
 
   const focused = computed(() => {
     const key = props.focusedKey;

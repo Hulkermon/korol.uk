@@ -90,6 +90,32 @@ describe('HomiesPanel list view', () => {
     expect(rows[2].text()).not.toContain('1 events');
   });
 
+  describe('flags', () => {
+    it('shows the flag for a homie found in events', () => {
+      const w = make({ homies: [ANN] });
+      const img = w.find('.fr-homie img.fr-flag');
+      expect(img.exists()).toBe(true);
+      expect(img.attributes('alt')).toBe('Switzerland');
+    });
+
+    it('shows a text fallback for an unknown country', () => {
+      const w = make({ homies: [{ key: 'zoe moxon', name: 'Zoë Moxon' }] });
+      expect(w.find('.fr-homie img.fr-flag').exists()).toBe(false);
+      expect(w.find('.fr-homie .fr-rider-nat').text()).toBe('Atlantis');
+    });
+
+    it('uses athletes for a homie not in events', () => {
+      const w = make({ homies: [{ key: '123', name: 'Ann Lee' }], events: [], athletes });
+      expect(w.find('.fr-homie img.fr-flag').exists()).toBe(true);
+    });
+
+    it('renders nothing without a nationality', () => {
+      const w = make({ homies: [NONE] });
+      expect(w.find('.fr-homie img.fr-flag').exists()).toBe(false);
+      expect(w.find('.fr-homie .fr-rider-nat').exists()).toBe(false);
+    });
+  });
+
   it('emits focus when a row is clicked', async () => {
     const w = make({ homies: [ANN] });
     await w.find('.fr-homie-open').trigger('click');
