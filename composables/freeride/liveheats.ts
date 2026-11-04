@@ -1,7 +1,7 @@
 // Builds the 2026/27 FWT/FWQ/Junior European event snapshot from the Liveheats public API.
 // Plain TS, no Node/Vue APIs: runs in Node (script), Nitro (server route) and Vitest.
 import { classifyName, endDay, inSeason, isInEurope, isTrustedOrg, toDay } from './classify';
-import type { EventSnapshot, FreerideEvent } from './types';
+import type { Athlete, EventSnapshot, FreerideEvent, RiderRanking, Tier } from './types';
 import { resolveVenue } from './venues';
 
 export const LIVEHEATS_URL = 'https://liveheats.com/api/graphql';
@@ -24,6 +24,14 @@ export const SEARCH_TERMS = [
   '2027 FWQ',
 ];
 
+// Official season ranking series, matched by name among the events' `Ranking`-type series
+export const RANKING_SERIES: { tier: Tier; pattern: RegExp }[] = [
+  { tier: 'pro', pattern: /^FWT Pro Tour 2027$/ },
+  { tier: 'challenger', pattern: /^FWT Challenger(?!.*Qualifying).*2027$/ },
+  { tier: 'qualifier', pattern: /^FWT Qualifier Region 1 .*2027$/ },
+  { tier: 'junior', pattern: /^FWT Junior Region 1 .*2027$/ },
+];
+
 const BATCH_SIZE = 20;
 const MAX_IN_FLIGHT = 2;
 
@@ -38,6 +46,7 @@ export interface BuildResult {
 }
 
 const EVENT_FIELDS = `id name date daysWindow status organisationId hideEntries
+  series { id name type }
   location { formattedAddress countryCode location { lat lng } }
   registrationOptions { mode }
   paymentOptions { currency defaultDivisionPrice }
@@ -116,6 +125,7 @@ export async function buildSnapshot(
   await Promise.all(Array.from({ length: Math.min(MAX_IN_FLIGHT, batches.length) }, worker));
 
   const events: FreerideEvent[] = [];
+  const seriesFound = new Map<string, { name: string; tier: Tier }>();
   for (const ev of details) {
     const label = `${ev.id} ${ev.name}`;
     if (!isTrustedOrg(String(ev.organisationId))) {
@@ -140,6 +150,11 @@ export async function buildSnapshot(
     if (!isInEurope(venue.lat, venue.lng)) {
       drop('outside-europe', `${label} (${venue.place})`);
       continue;
+    }
+    for (const s of ev.series ?? []) {
+      if (s?.type !== 'Ranking' || seriesFound.has(String(s.id))) continue;
+      const match = RANKING_SERIES.find((r) => r.pattern.test(s.name ?? ''));
+      if (match) seriesFound.set(String(s.id), { name: s.name, tier: match.tier });
     }
     const start = toDay(ev.date);
     const price = ev.paymentOptions?.defaultDivisionPrice
@@ -194,12 +209,100 @@ export async function buildSnapshot(
 
   events.sort((a, b) => a.start.localeCompare(b.start) || a.name.localeCompare(b.name));
 
+  // Athletes that appear in the snapshot
+  const athletes: Record<string, Athlete> = {};
+  const seen = (id: string | null, name: string, nationality: string | null) => {
+    if (id == null || athletes[id]) return;
+    athletes[id] = { id, name, nationality, image: null, rankings: [] };
+  };
+  for (const e of events)
+    for (const d of e.divisions) {
+      for (const r of d.riders) seen(r.athleteId, r.name, r.nationality);
+      for (const r of d.results) seen(r.athleteId, r.name, r.nationality);
+    }
+
+  // Rankings: two requests per series (division list, then one aliased query for all divisions)
+  const seriesList = [...seriesFound.entries()].filter(([id]) => /^\d+$/.test(id));
+  let nextSeries = 0;
+  const seriesWorker = async () => {
+    while (nextSeries < seriesList.length) {
+      const [id, info] = seriesList[nextSeries++];
+      try {
+        const meta = await gql(
+          fetchFn,
+          `{ series(id: "${id}") { name rankingsDivisions { id name } } }`,
+        );
+        const divs = (meta?.series?.rankingsDivisions ?? []).filter((d: any) =>
+          /^\d+$/.test(String(d.id)),
+        );
+        if (!divs.length) continue;
+        const query = `{ series(id: "${id}") { ${divs
+          .map(
+            (d: any, i: number) =>
+              `d${i}: rankings(divisionId: "${d.id}") { place points athlete { id name nationality image } results { place points dropped eventDivision { event { id name date } } } }`,
+          )
+          .join('\n')} } }`;
+        const data = await gql(fetchFn, query);
+        divs.forEach((d: any, i: number) => {
+          for (const row of data?.series?.[`d${i}`] ?? []) {
+            const a = row?.athlete;
+            if (a?.id == null) continue;
+            const aid = String(a.id);
+            const target = athletes[aid];
+            if (!target) continue;
+            target.name = a.name ?? target.name;
+            target.nationality = a.nationality ?? target.nationality;
+            target.image = a.image ?? target.image;
+            const ranking: RiderRanking = {
+              seriesId: id,
+              series: info.name,
+              tier: info.tier,
+              division: d.name ?? '',
+              place: row.place,
+              points: row.points,
+              results: (row.results ?? [])
+                .filter((r: any) => r?.eventDivision?.event?.id != null)
+                .map((r: any) => ({
+                  eventId: String(r.eventDivision.event.id),
+                  eventName: r.eventDivision.event.name ?? '',
+                  date: r.eventDivision.event.date ? toDay(r.eventDivision.event.date) : '',
+                  place: r.place,
+                  points: r.points,
+                  dropped: r.dropped === true,
+                })),
+            };
+            target.rankings.push(ranking);
+          }
+        });
+      } catch (err) {
+        log?.warn(`WARN: ranking series ${id} failed: ${(err as Error).message}`);
+        dropped['ranking-failed'] = (dropped['ranking-failed'] ?? 0) + 1;
+      }
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(MAX_IN_FLIGHT, seriesList.length) }, seriesWorker),
+  );
+
+  // Join ranking points into event results
+  for (const e of events)
+    for (const d of e.divisions)
+      for (const r of d.results) {
+        if (r.athleteId == null) continue;
+        const rankings = athletes[r.athleteId]?.rankings ?? [];
+        const pick = (list: RiderRanking[]) =>
+          list.flatMap((rk) => rk.results).find((x) => x.eventId === e.id);
+        const hit = pick(rankings.filter((rk) => rk.tier === e.tier)) ?? pick(rankings);
+        r.points = hit ? hit.points : null;
+      }
+
   return {
     snapshot: {
       fetchedAt: now().toISOString(),
       season: '2026/27',
       source: 'Liveheats public API (liveheats.com)',
       events,
+      athletes,
     },
     dropped,
   };

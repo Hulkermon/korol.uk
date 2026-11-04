@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildSnapshot, SEARCH_TERMS } from '../../composables/freeride/liveheats';
+import { buildSnapshot, RANKING_SERIES, SEARCH_TERMS } from '../../composables/freeride/liveheats';
 
 const res = (data: any) => ({ ok: true, status: 200, json: async () => ({ data }) });
 const gqlError = () => ({
@@ -46,12 +46,27 @@ const stub = (
   discovery: (term: string) => any[],
   details: Record<string, any> = {},
   failDetail?: (ids: string[]) => boolean,
+  // series id -> { divisions: [{id,name}], rankings: { [divisionId]: rows } | Error }
+  seriesData: Record<string, { divisions: any[]; rankings: Record<string, any[]> } | 'fail'> = {},
 ) => {
   const fn = vi.fn(async (_url: any, init: any) => {
     const query: string = JSON.parse(init.body).query;
     if (query.includes('eventsByName')) {
       const term = JSON.parse(/search: ("[^"]*")/.exec(query)![1]);
       return res({ eventsByName: discovery(term) });
+    }
+    if (query.includes('series(id:') && !query.includes('event(id:')) {
+      const sid = /series\(id: "([^"]*)"\)/.exec(query)![1];
+      const sd = seriesData[sid];
+      if (!sd || sd === 'fail') return { ok: false, status: 500, json: async () => ({}) };
+      if (query.includes('rankingsDivisions')) {
+        return res({ series: { name: sid, rankingsDivisions: sd.divisions } });
+      }
+      const out: Record<string, any> = {};
+      [...query.matchAll(/(d\d+): rankings\(divisionId: "([^"]*)"\)/g)].forEach((m) => {
+        out[m[1]] = sd.rankings[m[2]] ?? [];
+      });
+      return res({ series: out });
     }
     const ids = [...query.matchAll(/e\d+: event\(id: "([^"]*)"\)/g)].map((m) => m[1]);
     if (failDetail?.(ids)) return { ok: false, status: 500, json: async () => ({}) };
@@ -67,7 +82,7 @@ const run = (fn: any, now?: () => Date) =>
 const detailCalls = (fn: any) =>
   fn.mock.calls
     .map((c: any) => JSON.parse(c[1].body).query)
-    .filter((q: string) => !q.includes('eventsByName'));
+    .filter((q: string) => !q.includes('eventsByName') && q.includes('event(id:'));
 const cand = (
   id: string,
   name = `2027 Nendaz Freeride Qualifier 2* ${id}`,
@@ -249,5 +264,224 @@ describe('buildSnapshot', () => {
     const { snapshot } = await run(fn, () => new Date('2026-11-03T10:00:00Z'));
     expect(snapshot.fetchedAt).toBe('2026-11-03T10:00:00.000Z');
     expect(snapshot.season).toBe('2026/27');
+  });
+
+  describe('rankings', () => {
+    const ser = (id: string, name: string, type = 'Ranking') => ({ id, name, type });
+    const row = (aid: any, place: number, points: number, results: any[], image: any = null) => ({
+      place,
+      points,
+      athlete: { id: aid, name: `R${aid}`, nationality: 'FR', image },
+      results,
+    });
+    const res1 = (id: string, place: number, points: number, dropped: any = null) => ({
+      place,
+      points,
+      dropped,
+      eventDivision: { event: { id, name: `E${id}`, date: '2027-01-20T08:00:00Z' } },
+    });
+    const evWith = (id: string, athletes: any[], series: any[], over: any = {}) =>
+      detail(id, {
+        series,
+        eventDivisions: [
+          {
+            entryCount: 1,
+            division: { name: 'Men Ski' },
+            entries: [{ status: 'confirmed', athlete: athletes[0] }],
+            ranking: athletes.map((a, i) => ({ place: i + 1, competitor: { athlete: a } })),
+          },
+        ],
+        ...over,
+      });
+    const A = { id: 7, name: 'A B', nationality: 'CH' };
+    const B = { id: 8, name: 'C D', nationality: 'FR' };
+
+    it('picks ranking series by pattern, ignoring other names and types', async () => {
+      const series = [
+        ser('1', 'FWT Qualifier Region 1 Europe-Asia-Oceania 2027'),
+        ser('2', 'FWT Qualifier National Rankings 2027'),
+        ser('3', '2028 FWT Challenger Qualifying Ranking - Region 1'),
+        ser('4', 'FWT Junior Region 1 Europe-Asia-Oceania 2027', 'Membership'),
+        ser('5', 'FWT Challenger Region 1 Europe-Asia-Oceania Ranking 2027'),
+        ser('6', 'FWT Challenger Qualifying Ranking 2027'),
+        ser('7', 'FWT Pro Tour 2027'),
+      ];
+      const fn = stub((t) => (t === SEARCH_TERMS[0] ? [cand('1')] : []), {
+        '1': evWith('1', [A], series),
+      });
+      await run(fn);
+      const seriesCalls = fn.mock.calls
+        .map((c: any) => JSON.parse(c[1].body).query)
+        .filter((q: string) => q.startsWith('{ series('));
+      const ids = new Set(seriesCalls.map((q: string) => /series\(id: "(\d+)"/.exec(q)![1]));
+      expect(ids).toEqual(new Set(['1', '5', '7']));
+      expect(RANKING_SERIES.map((r) => r.tier)).toEqual([
+        'pro',
+        'challenger',
+        'qualifier',
+        'junior',
+      ]);
+    });
+
+    it('builds athletes only for snapshot athletes and maps rankings and points', async () => {
+      const series = [ser('1', 'FWT Qualifier Region 1 Europe-Asia-Oceania 2027')];
+      const fn = stub(
+        (t) => (t === SEARCH_TERMS[0] ? [cand('1'), cand('2')] : []),
+        { '1': evWith('1', [A, B], series), '2': evWith('2', [A], series) },
+        undefined,
+        {
+          '1': {
+            divisions: [{ id: '167931', name: 'Men Ski' }],
+            rankings: {
+              '167931': [
+                row(7, 1, 900, [res1('1', 2, 400, true), res1('2', 1, 500)], 'http://img/7.jpg'),
+                row(99, 2, 100, [res1('1', 5, 100)]),
+              ],
+            },
+          },
+        },
+      );
+      const { snapshot } = await run(fn);
+      expect(Object.keys(snapshot.athletes).sort()).toEqual(['7', '8']);
+      expect(snapshot.athletes['7']).toMatchObject({
+        id: '7',
+        name: 'R7',
+        nationality: 'FR',
+        image: 'http://img/7.jpg',
+      });
+      expect(snapshot.athletes['7'].rankings).toEqual([
+        {
+          seriesId: '1',
+          series: 'FWT Qualifier Region 1 Europe-Asia-Oceania 2027',
+          tier: 'qualifier',
+          division: 'Men Ski',
+          place: 1,
+          points: 900,
+          results: [
+            {
+              eventId: '1',
+              eventName: 'E1',
+              date: '2027-01-20',
+              place: 2,
+              points: 400,
+              dropped: true,
+            },
+            {
+              eventId: '2',
+              eventName: 'E2',
+              date: '2027-01-20',
+              place: 1,
+              points: 500,
+              dropped: false,
+            },
+          ],
+        },
+      ]);
+      expect(snapshot.athletes['8']).toEqual({
+        id: '8',
+        name: 'C D',
+        nationality: 'FR',
+        image: null,
+        rankings: [],
+      });
+      const [e1, e2] = snapshot.events;
+      expect(e1.divisions[0].results.map((r) => r.points)).toEqual([400, null]);
+      expect(e2.divisions[0].results.map((r) => r.points)).toEqual([500]);
+    });
+
+    it('prefers the ranking of the event tier, falling back to any ranking', async () => {
+      const series = [
+        ser('1', 'FWT Junior Region 1 Europe-Asia-Oceania 2027'),
+        ser('2', 'FWT Pro Tour 2027'),
+      ];
+      const fn = stub(
+        (t) => (t === SEARCH_TERMS[0] ? [cand('1'), cand('2')] : []),
+        { '1': evWith('1', [A], series), '2': evWith('2', [A], [series[0]]) },
+        undefined,
+        {
+          '1': {
+            divisions: [{ id: '10', name: 'Men Ski' }],
+            rankings: { '10': [row(7, 1, 10, [res1('1', 1, 11)])] },
+          },
+          '2': {
+            divisions: [{ id: '20', name: 'Men Ski' }],
+            rankings: { '20': [row(7, 1, 20, [res1('1', 1, 22), res1('2', 1, 33)])] },
+          },
+        },
+      );
+      const { snapshot } = await run(fn);
+      // events are qualifier tier: no ranking of that tier, so the first ranking with the event wins
+      expect(snapshot.events[0].tier).toBe('qualifier');
+      expect(snapshot.events[0].divisions[0].results[0].points).toBe(11);
+      expect(snapshot.events[1].divisions[0].results[0].points).toBe(33);
+    });
+
+    it('uses the same-tier ranking when several rankings have the event', async () => {
+      const series = [
+        ser('1', 'FWT Pro Tour 2027'),
+        ser('2', 'FWT Qualifier Region 1 Europe 2027'),
+      ];
+      const fn = stub(
+        (t) => (t === SEARCH_TERMS[0] ? [cand('1')] : []),
+        { '1': evWith('1', [A], series) },
+        undefined,
+        {
+          '1': {
+            divisions: [{ id: '10', name: 'Men Ski' }],
+            rankings: { '10': [row(7, 1, 10, [res1('1', 1, 11)])] },
+          },
+          '2': {
+            divisions: [{ id: '20', name: 'Men Ski' }],
+            rankings: { '20': [row(7, 1, 20, [res1('1', 1, 22)])] },
+          },
+        },
+      );
+      const { snapshot } = await run(fn);
+      expect(snapshot.athletes['7'].rankings).toHaveLength(2);
+      expect(snapshot.events[0].divisions[0].results[0].points).toBe(22);
+    });
+
+    it('treats a failed series as non-fatal and counts it', async () => {
+      const series = [
+        ser('1', 'FWT Pro Tour 2027'),
+        ser('2', 'FWT Qualifier Region 1 Europe 2027'),
+      ];
+      const warn = vi.fn();
+      const fn = stub(
+        (t) => (t === SEARCH_TERMS[0] ? [cand('1')] : []),
+        { '1': evWith('1', [A], series) },
+        undefined,
+        {
+          '1': 'fail',
+          '2': {
+            divisions: [{ id: '20', name: 'Men Ski' }],
+            rankings: { '20': [row(7, 1, 20, [res1('1', 1, 22)])] },
+          },
+        },
+      );
+      const { snapshot, dropped } = await buildSnapshot(fn as unknown as typeof fetch, {
+        info: () => {},
+        warn,
+      });
+      expect(dropped['ranking-failed']).toBe(1);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(snapshot.athletes['7'].rankings).toHaveLength(1);
+      expect(snapshot.events[0].divisions[0].results[0].points).toBe(22);
+    });
+
+    it('has an empty athletes map for results when no series match', async () => {
+      const fn = stub(() => []);
+      const { snapshot } = await run(fn);
+      expect(snapshot.athletes).toEqual({});
+    });
+
+    it('has athletes without rankings when no series match', async () => {
+      const fn = stub((t) => (t === SEARCH_TERMS[0] ? [cand('1')] : []), {
+        '1': evWith('1', [A], []),
+      });
+      const { snapshot } = await run(fn);
+      expect(snapshot.athletes['7'].rankings).toEqual([]);
+      expect(snapshot.events[0].divisions[0].results[0].points).toBeNull();
+    });
   });
 });

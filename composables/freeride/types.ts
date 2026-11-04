@@ -43,9 +43,37 @@ export interface FreerideEvent {
   divisions: Division[];
 }
 
+export interface RankingResult {
+  eventId: string;
+  eventName: string;
+  date: string; // 'YYYY-MM-DD'
+  place: number;
+  points: number;
+  dropped: boolean;
+}
+
+export interface RiderRanking {
+  seriesId: string;
+  series: string;
+  tier: Tier;
+  division: string;
+  place: number;
+  points: number;
+  results: RankingResult[];
+}
+
+export interface Athlete {
+  id: string;
+  name: string;
+  nationality: string | null;
+  image: string | null;
+  rankings: RiderRanking[];
+}
+
 export interface EventSnapshot {
   fetchedAt: string;
   season: string;
   source: string;
   events: FreerideEvent[];
+  athletes: Record<string, Athlete>;
 }
