@@ -872,7 +872,7 @@
     }
     .fr-top {
       flex-wrap: nowrap;
-      gap: 8px 10px;
+      gap: 8px;
       padding: 6px 10px;
     }
     .fr-back {
@@ -886,7 +886,7 @@
       flex: none;
     }
     .fr-toggle button {
-      padding: 6px 10px;
+      padding: 6px 7px;
     }
     .fr-home-btn {
       flex: none;
