@@ -237,6 +237,55 @@ describe('HomiesPanel points and profiles', () => {
     expect(rows[1].find('.fr-homie-points').exists()).toBe(false);
   });
 
+  describe('ranking', () => {
+    const rank = (id: string, points: number) =>
+      ({
+        id,
+        name: id,
+        nationality: null,
+        image: null,
+        rankings: [{ series: 'FWT', tier: 'pro', place: 1, points, results: [] }],
+      }) as unknown as Athlete;
+    const hs: Homie[] = [
+      { key: '1', name: 'Dan' },
+      { key: '2', name: 'Cat' },
+      { key: '3', name: 'Bob' },
+      { key: '4', name: 'Eve' },
+      { key: 'nobody', name: 'Abe' },
+    ];
+    const ranked = {
+      '1': rank('1', 400),
+      '2': rank('2', 300),
+      '3': rank('3', 200),
+      '4': rank('4', 100),
+    };
+
+    it('orders rows by rank with medals on the first three ranked', () => {
+      const w = make({ homies: hs, athletes: ranked });
+      const rows = w.findAll('.fr-homie');
+      expect(rows.map((r) => r.find('.fr-homie-name').text())).toEqual([
+        '🥇 Dan',
+        '🥈 Cat',
+        '🥉 Bob',
+        'Eve',
+        'Abe',
+      ]);
+      expect(rows[0].find('.fr-medal').attributes('aria-label')).toBe('1st');
+      expect(rows[1].find('.fr-medal').attributes('aria-label')).toBe('2nd');
+      expect(rows[2].find('.fr-medal').attributes('aria-label')).toBe('3rd');
+      expect(rows[3].find('.fr-medal').exists()).toBe(false);
+      expect(rows[4].find('.fr-medal').exists()).toBe(false);
+    });
+
+    it('keeps the original medal when a search filters the list', async () => {
+      const w = make({ homies: hs, athletes: ranked });
+      await w.find('.fr-homies-search').setValue('bob');
+      const rows = w.findAll('.fr-homie:not(.fr-rider-result)');
+      expect(rows).toHaveLength(1);
+      expect(rows[0].find('.fr-medal').text()).toBe('🥉');
+    });
+  });
+
   it('shows points on search results', async () => {
     const w = make({ athletes: { ...athletes, 'bob ray': athletes['123'] } });
     await w.find('.fr-homies-search').setValue('bob');

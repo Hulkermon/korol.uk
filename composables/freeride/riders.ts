@@ -42,6 +42,31 @@ export function riderPoints(
   return { points: r.points, place: r.place, series: r.series, tier: r.tier };
 }
 
+/** Orders homies like a leaderboard: ranked by tier then points, unranked last by name. */
+export function rankHomies<H extends { key: string; name: string }>(
+  homies: H[],
+  athletes: Record<string, Athlete>,
+): { homie: H; medal: 1 | 2 | 3 | null }[] {
+  const ranked: { homie: H; tier: number; points: number }[] = [];
+  const unranked: H[] = [];
+  for (const homie of homies) {
+    const p = riderPoints(athletes, homie.key);
+    if (p) ranked.push({ homie, tier: TIER_ORDER.indexOf(p.tier), points: p.points });
+    else unranked.push(homie);
+  }
+  ranked.sort(
+    (a, b) => a.tier - b.tier || b.points - a.points || a.homie.name.localeCompare(b.homie.name),
+  );
+  unranked.sort((a, b) => a.name.localeCompare(b.name));
+  return [
+    ...ranked.map((r, i) => ({
+      homie: r.homie,
+      medal: i < 3 ? ((i + 1) as 1 | 2 | 3) : null,
+    })),
+    ...unranked.map((homie) => ({ homie, medal: null })),
+  ];
+}
+
 export interface ProfileEntry {
   event: FreerideEvent;
   division: string;
@@ -99,7 +124,8 @@ export function riderProfile(snapshot: EventSnapshot, athleteId: string): RiderP
   if (!athlete && entries.length === 0) return null;
 
   entries.sort(
-    (a, b) => a.event.start.localeCompare(b.event.start) || a.event.name.localeCompare(b.event.name),
+    (a, b) =>
+      a.event.start.localeCompare(b.event.start) || a.event.name.localeCompare(b.event.name),
   );
 
   const eventIds = new Set(snapshot.events.map((e) => e.id));

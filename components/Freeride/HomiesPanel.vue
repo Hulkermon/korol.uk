@@ -57,9 +57,14 @@
       </p>
       <p v-else-if="homies.length && !homieRows.length" class="fr-homies-none">No homies match</p>
 
-      <div v-for="h in homieRows" :key="h.key" class="fr-homie">
+      <div v-for="{ homie: h, medal } in homieRows" :key="h.key" class="fr-homie">
         <button type="button" class="fr-homie-open" @click="emit('focus', h.key)">
-          <span class="fr-homie-name">{{ h.name }}</span>
+          <span class="fr-homie-name">
+            <span v-if="medal" class="fr-medal" :aria-label="MEDALS[medal - 1].label">{{
+              MEDALS[medal - 1].icon
+            }}</span>
+            {{ h.name }}
+          </span>
           <span class="fr-homie-count">{{ countText(countFor(h.key)) }}</span>
           <span v-if="pointsText(h.key)" class="fr-homie-points">{{ pointsText(h.key) }}</span>
         </button>
@@ -114,7 +119,7 @@
   import { allRiders, homieEntries, matchesQuery } from '@/composables/freeride/homies';
   import { TIER_COLORS } from '@/composables/freeride/pins';
   import type { Athlete, FreerideEvent } from '@/composables/freeride/types';
-  import { formatPoints, isFinished, riderPoints } from '@/composables/freeride/riders';
+  import { formatPoints, isFinished, rankHomies, riderPoints } from '@/composables/freeride/riders';
   import { countryCode, flagUrl } from '@/composables/freeride/countries';
 
   const props = withDefaults(
@@ -173,7 +178,15 @@
     focused.value ? homieEntries(props.events, focused.value.key) : [],
   );
 
-  const homieRows = computed(() => props.homies.filter((h) => matchesQuery(h.name, query.value)));
+  const MEDALS = [
+    { icon: '🥇', label: '1st' },
+    { icon: '🥈', label: '2nd' },
+    { icon: '🥉', label: '3rd' },
+  ];
+  const rankedHomies = computed(() => rankHomies(props.homies, props.athletes));
+  const homieRows = computed(() =>
+    rankedHomies.value.filter((r) => matchesQuery(r.homie.name, query.value)),
+  );
   const searching = computed(() => query.value.trim().length >= 2);
   const otherRows = computed(() => {
     const keys = new Set(props.homies.map((h) => h.key));

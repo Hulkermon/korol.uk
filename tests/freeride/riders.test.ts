@@ -3,6 +3,7 @@ import {
   formatPoints,
   isFinished,
   primaryRanking,
+  rankHomies,
   riderPoints,
   riderProfile,
 } from '@/composables/freeride/riders';
@@ -93,6 +94,58 @@ describe('primaryRanking / riderPoints', () => {
   });
 });
 
+describe('rankHomies', () => {
+  const ath = (id: string, tier: RiderRanking['tier'], points: number): Athlete => ({
+    id,
+    name: id,
+    nationality: null,
+    image: null,
+    rankings: [rk(tier, points)],
+  });
+  const h = (key: string, name = key) => ({ key, name });
+  const keys = (r: { homie: { key: string } }[]) => r.map((x) => x.homie.key);
+
+  it('returns an empty list for no homies', () => {
+    expect(rankHomies([], {})).toEqual([]);
+  });
+
+  it('puts a pro with fewer points above a qualifier with more', () => {
+    const athletes = { p: ath('p', 'pro', 10), q: ath('q', 'qualifier', 9000) };
+    expect(keys(rankHomies([h('q'), h('p')], athletes))).toEqual(['p', 'q']);
+  });
+
+  it('sorts by points descending within a tier', () => {
+    const athletes = { a: ath('a', 'pro', 100), b: ath('b', 'pro', 300), c: ath('c', 'pro', 200) };
+    expect(keys(rankHomies([h('a'), h('b'), h('c')], athletes))).toEqual(['b', 'c', 'a']);
+  });
+
+  it('breaks ties by name', () => {
+    const athletes = { a: ath('a', 'pro', 100), b: ath('b', 'pro', 100) };
+    const r = rankHomies([h('b', 'Zed'), h('a', 'Amy')], athletes);
+    expect(keys(r)).toEqual(['a', 'b']);
+  });
+
+  it('puts unranked last, alphabetical, without medals', () => {
+    const athletes = { a: ath('a', 'junior', 1) };
+    const r = rankHomies([h('z', 'Zed'), h('y', 'Amy'), h('a', 'Ann')], athletes);
+    expect(keys(r)).toEqual(['a', 'y', 'z']);
+    expect(r.map((x) => x.medal)).toEqual([1, null, null]);
+  });
+
+  it('awards medals only to the first three ranked', () => {
+    const athletes = {
+      a: ath('a', 'pro', 4),
+      b: ath('b', 'pro', 3),
+      c: ath('c', 'pro', 2),
+      d: ath('d', 'pro', 1),
+    };
+    const r = rankHomies([h('d'), h('c'), h('b'), h('a')], athletes);
+    expect(r.map((x) => x.medal)).toEqual([1, 2, 3, null]);
+    const two = rankHomies([h('b'), h('a')], athletes);
+    expect(two.map((x) => x.medal)).toEqual([1, 2]);
+  });
+});
+
 describe('riderProfile', () => {
   it('builds sorted entries with dropped flag and other results', () => {
     const events = [
@@ -107,11 +160,32 @@ describe('riderProfile', () => {
       rankings: [
         rk('pro', 500, [
           { eventId: '1', eventName: 'E1', date: '', place: 2, points: 800, dropped: true },
-          { eventId: '9', eventName: 'E9', date: '2025-12-01', place: 1, points: 1, dropped: false },
+          {
+            eventId: '9',
+            eventName: 'E9',
+            date: '2025-12-01',
+            place: 1,
+            points: 1,
+            dropped: false,
+          },
         ]),
         rk('qualifier', 10, [
-          { eventId: '9', eventName: 'E9', date: '2025-12-01', place: 1, points: 1, dropped: false },
-          { eventId: '8', eventName: 'E8', date: '2025-11-01', place: 1, points: 1, dropped: false },
+          {
+            eventId: '9',
+            eventName: 'E9',
+            date: '2025-12-01',
+            place: 1,
+            points: 1,
+            dropped: false,
+          },
+          {
+            eventId: '8',
+            eventName: 'E8',
+            date: '2025-11-01',
+            place: 1,
+            points: 1,
+            dropped: false,
+          },
         ]),
       ],
     };
@@ -147,7 +221,9 @@ describe('riderProfile', () => {
   });
 
   it('returns null for unknown id', () => {
-    expect(riderProfile(snap([ev('1', '2026-02-01', [div({ riders: [rider] })])]), 'nope')).toBeNull();
+    expect(
+      riderProfile(snap([ev('1', '2026-02-01', [div({ riders: [rider] })])]), 'nope'),
+    ).toBeNull();
   });
 });
 
