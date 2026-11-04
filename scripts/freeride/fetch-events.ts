@@ -20,6 +20,18 @@ async function main() {
   console.log(`\nWrote ${snapshot.events.length} events`);
   console.log('Per tier:', perTier);
   console.log('Dropped:', dropped);
+
+  const athletes = Object.values(snapshot.athletes);
+  const series = new Set(athletes.flatMap((a) => a.rankings.map((r) => r.series)));
+  const results = snapshot.events.reduce(
+    (n, e) => n + e.divisions.reduce((m, d) => m + d.results.length, 0),
+    0,
+  );
+  console.log(
+    `Athletes: ${athletes.length} (${athletes.filter((a) => a.rankings.length).length} ranked)`,
+  );
+  console.log('Ranking series:', [...series]);
+  console.log(`Results: ${results}`);
 }
 
 main().catch((err) => {
