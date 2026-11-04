@@ -179,7 +179,9 @@
   import HomebasePicker from '@/components/Freeride/HomebasePicker.vue';
   import { reversePlace } from '@/composables/freeride/geocode';
   import { allRiders, homieEventIds, useHomies } from '@/composables/freeride/homies';
+  import { FREERIDE_PWA_HEAD, registerFreerideSw } from '@/composables/freeride/pwa';
 
+  useHead(FREERIDE_PWA_HEAD);
   useHead({
     title: 'Freeride Planner',
     link: [
@@ -511,6 +513,7 @@
   const router = useRouter();
 
   onMounted(() => {
+    registerFreerideSw(navigator, import.meta.dev);
     mobileMq = window.matchMedia?.(MOBILE_QUERY);
     if (mobileMq) {
       isMobile.value = mobileMq.matches;
@@ -542,6 +545,11 @@
 </script>
 
 <style scoped>
+  @media (display-mode: standalone) {
+    .fr-page {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
   .fr-page {
     display: flex;
     flex-direction: column;

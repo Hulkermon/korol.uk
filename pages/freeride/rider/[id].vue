@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
   import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+  import { FREERIDE_PWA_HEAD, registerFreerideSw } from '@/composables/freeride/pwa';
   import bundledSnapshot from '@/composables/freeride/data/events.json';
   import type { EventSnapshot, FreerideEvent } from '@/composables/freeride/types';
   import { timeAgo, useSnapshot } from '@/composables/freeride/useSnapshot';
@@ -60,6 +61,7 @@
   const profile = computed(() => riderProfile(snapshot.value, String(route.params.id)));
   const { isHomie, toggleHomie } = useHomies(undefined, events);
 
+  useHead(FREERIDE_PWA_HEAD);
   useHead({
     title: computed(() => `${profile.value?.name ?? 'Rider'} · Freeride Planner`),
     link: [
@@ -91,6 +93,7 @@
   }
 
   onMounted(() => {
+    registerFreerideSw(navigator, import.meta.dev);
     tickTimer = setInterval(() => (nowTick.value = Date.now()), 60000);
     sync();
   });
@@ -98,6 +101,11 @@
 </script>
 
 <style scoped>
+  @media (display-mode: standalone) {
+    .fr-page {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
   .fr-page {
     display: flex;
     flex-direction: column;
