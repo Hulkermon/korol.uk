@@ -1,8 +1,11 @@
 <template>
-  <div ref="root" class="fr-map" :class="{ 'fr-map--picking': pickingHome }"></div>
+  <div class="fr-map-wrap" :class="{ 'fr-map--picking': pickingHome }">
+    <div ref="root" class="fr-map"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
+  import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
   import 'leaflet/dist/leaflet.css';
   import type { Map as LMap, Marker, Polyline } from 'leaflet';
   import type { FreerideEvent } from '@/composables/freeride/types';
@@ -193,13 +196,18 @@
 </script>
 
 <style scoped>
+  .fr-map-wrap {
+    width: 100%;
+    height: 100%;
+  }
+
   .fr-map {
     width: 100%;
     height: 100%;
     min-height: 240px;
   }
 
-  .fr-map--picking,
+  .fr-map--picking :deep(.leaflet-container),
   .fr-map--picking :deep(.leaflet-grab),
   .fr-map--picking :deep(.leaflet-interactive) {
     cursor: crosshair;
