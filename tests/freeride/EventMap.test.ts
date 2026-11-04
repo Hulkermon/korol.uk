@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 
 const markerOpts: any[] = vi.hoisted(() => []);
+const lastMap: { current: any } = vi.hoisted(() => ({ current: null }));
 
 vi.mock('leaflet/dist/leaflet.css', () => ({}));
 vi.mock('leaflet', () => {
@@ -20,9 +21,12 @@ vi.mock('leaflet', () => {
         on: vi.fn(() => m),
         fitBounds: vi.fn(() => m),
         latLngToContainerPoint: vi.fn(() => ({ x: 0, y: 0 })),
+        getSize: vi.fn(() => ({ x: 400, y: 600 })),
+        panBy: vi.fn(),
         invalidateSize: vi.fn(),
         remove: vi.fn(),
       };
+      lastMap.current = m;
       return m;
     },
     tileLayer: () => layer(),
@@ -121,6 +125,44 @@ describe('EventMap', () => {
     expect(badge(0)).toBe('2');
     expect(badge(1)).toBe('1');
     expect(badge(2)).toBeNull();
+    wrapper.unmount();
+  });
+
+  const baseProps = {
+    events: [],
+    selectedId: null,
+    planOrder: {},
+    home: null,
+    routeLine: [],
+    pickingHome: false,
+  };
+  const stubRo = () =>
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+
+  it('centerOn pans so the point sits in the area above the inset', async () => {
+    stubRo();
+    const wrapper = mount(EventMap, { props: baseProps });
+    await flushPromises();
+    await flushPromises();
+    lastMap.current.latLngToContainerPoint.mockReturnValue({ x: 300, y: 100 });
+    (wrapper.vm as any).centerOn(1, 2, 100);
+    expect(lastMap.current.panBy).toHaveBeenCalledWith([100, -150], { animate: true });
+    wrapper.unmount();
+  });
+
+  it('applies a centerOn made before Leaflet resolves once after mount', async () => {
+    stubRo();
+    const wrapper = mount(EventMap, { props: baseProps });
+    (wrapper.vm as any).centerOn(1, 2, 0);
+    await flushPromises();
+    await flushPromises();
+    expect(lastMap.current.panBy).toHaveBeenCalledTimes(1);
     wrapper.unmount();
   });
 });

@@ -35,6 +35,7 @@
   let homeMarker: Marker | null = null;
   let fitted = false;
   let unmounted = false;
+  let pending: { lat: number; lng: number; bottomInset: number } | null = null;
   const markers = new Map<string, { marker: Marker; key: string }>();
 
   function escapeHtml(text: string): string {
@@ -156,6 +157,20 @@
     routeLayer = L.polyline(props.routeLine, { color: '#ff6b1a', weight: 4 }).addTo(map);
   }
 
+  // Pans so the point sits centred in the map area above `bottomInset` px; zoom is kept
+  function centerOn(lat: number, lng: number, bottomInset = 0) {
+    if (unmounted) return;
+    if (!map) {
+      pending = { lat, lng, bottomInset };
+      return;
+    }
+    const size = map.getSize();
+    const p = map.latLngToContainerPoint([lat, lng]);
+    map.panBy([p.x - size.x / 2, p.y - (size.y - bottomInset) / 2], { animate: true });
+  }
+
+  defineExpose({ centerOn });
+
   onMounted(async () => {
     const mod: any = await import('leaflet');
     L = mod.default ?? mod;
@@ -179,6 +194,12 @@
     syncEvents();
     syncHome();
     syncRoute();
+
+    if (pending) {
+      const { lat, lng, bottomInset } = pending;
+      pending = null;
+      centerOn(lat, lng, bottomInset);
+    }
   });
 
   watch(() => [props.events, props.selectedId, props.planOrder], syncEvents, { deep: true });

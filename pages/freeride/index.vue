@@ -41,6 +41,7 @@
       <div class="fr-mapcol">
         <div class="fr-mapwrap">
           <EventMap
+            ref="mapRef"
             :events="shownEvents"
             :selected-id="selectedId"
             :plan-order="planOrderMap"
@@ -108,7 +109,7 @@
             :athletes="snapshot.athletes"
             :focused-key="focusedHomie"
             @focus="focusedHomie = $event"
-            @select="selectedId = $event"
+            @select="pickEvent($event)"
             @toggle-homie="toggleHomie" />
           <PlanPanel
             v-else-if="planning"
@@ -119,7 +120,7 @@
             :options="planOptions"
             :loading="loading"
             @remove="removePlanned"
-            @select="selectedId = $event"
+            @select="pickEvent($event)"
             @update:options="planOptions = $event"
             @set-home="pickerOpen = true"
             @clear="clearPlan" />
@@ -130,7 +131,7 @@
               :key="e.id"
               type="button"
               class="fr-row"
-              @click="selectedId = e.id">
+              @click="pickEvent(e.id)">
               <span class="fr-dot" :style="{ background: TIER_COLORS[e.tier] }"></span>
               <span class="fr-row-text">
                 <span class="fr-row-date">{{ formatRange(e.start, e.end) }}</span>
@@ -149,7 +150,16 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+  import {
+    computed,
+    defineComponent,
+    h,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch,
+  } from 'vue';
   import bundledSnapshot from '@/composables/freeride/data/events.json';
   import type { EventSnapshot, FreerideEvent } from '@/composables/freeride/types';
   import {
@@ -177,7 +187,7 @@
   import PlanPanel from '@/components/Freeride/PlanPanel.vue';
   import HomiesPanel from '@/components/Freeride/HomiesPanel.vue';
   import BottomSheet from '@/components/Freeride/BottomSheet.vue';
-  import type { Snap } from '@/composables/freeride/sheet';
+  import { snapHeight, type Snap } from '@/composables/freeride/sheet';
   import HomebasePicker from '@/components/Freeride/HomebasePicker.vue';
   import { reversePlace } from '@/composables/freeride/geocode';
   import { allRiders, homieEventIds, useHomies } from '@/composables/freeride/homies';
@@ -412,6 +422,22 @@
     selectedId.value = id;
   }
 
+  const mapRef = ref<InstanceType<typeof EventMap> | null>(null);
+
+  // Selecting from a list pans the map to the event (pin clicks don't)
+  function pickEvent(id: string) {
+    selectedId.value = id;
+    nextTick(() => {
+      const e = events.value.find((x) => x.id === id);
+      if (!e) return;
+      mapRef.value?.centerOn(
+        e.lat,
+        e.lng,
+        isMobile.value ? snapHeight(sheet.value, window.innerHeight) : 0,
+      );
+    });
+  }
+
   const pickerOpen = ref(false);
   const homeBtn = ref<HTMLElement | null>(null);
   const pickerWrap = ref<HTMLElement | null>(null);
@@ -518,7 +544,7 @@
     const wanted = route.query.event;
     if (wanted !== undefined) {
       if (typeof wanted === 'string' && events.value.some((e) => e.id === wanted)) {
-        selectedId.value = wanted;
+        pickEvent(wanted);
       }
       router.replace({ query: {} });
     }
