@@ -67,6 +67,17 @@ After the last commit, set **Status** to `verifying`.
 
 1. Run `pnpm test` (the whole suite must pass, with nothing skipped to get there), then `pnpm build`. If either fails, fix the cause in a new focused `fix:` commit. Do it yourself if it's small, or write a brief for an implementer. Never amend or rewrite earlier commits.
 2. **Browser check.** For each route in the plan's **Verification** section, use the `run` skill to start the app (`pnpm dev` on port 3000), then open the route. Check the behavior the plan lists and look at the console for errors. Routes that call `/api/*` need the `db` MySQL service (`MYSQL_HOST=db` in the devcontainer). If no browser can be driven here, say so and list what the user should check by hand.
+
+   **How to drive the browser.** Inside the devcontainer, use the Playwright MCP tools (`mcp__playwright__*`, from `.mcp.json`). On the host, claude-in-chrome is fine instead.
+   - Start `pnpm dev` with `run_in_background` and wait until `http://localhost:3000` answers (e.g. `curl -sf localhost:3000 >/dev/null`).
+   - `browser_navigate` to `http://localhost:3000/<route>`.
+   - `browser_snapshot` returns the accessibility tree with element refs. Use it to check text and state, and pass its refs to `browser_click`, `browser_type`, `browser_select_option`. Prefer snapshots over screenshots, they're cheaper.
+   - `browser_take_screenshot` for visual checks (canvas, maps, layout). Files land in `.playwright-mcp/` (gitignored). Read the PNG to look at it.
+   - `browser_console_messages` for errors, `browser_network_requests` for failed `/api/*` calls.
+   - `browser_resize` to 390×844 for the mobile check, back to 1280×800 after.
+   - `browser_close` when done, and stop the dev server.
+   - If the tools are missing, run `/mcp`. If the browser fails to launch, the Dockerfile's Playwright version probably doesn't match `@playwright/mcp`; say so instead of working around it.
+
 3. Fix whatever turns up as new commits, then run the build again.
 4. Set **Status** to `done`.
 

@@ -62,7 +62,7 @@ The brief is the only thing the implementer sees, so it must stand on its own wi
 Plan for this at the end of the branch:
 
 - `pnpm build` passes.
-- A browser check of each route that is affected, saying what to look at. Note any route that needs the `db` service for API data.
+- A browser check of each route that is affected, saying what to look at. Note any route that needs the `db` service for API data. The manager runs these with the Playwright MCP server in the devcontainer, so write checks that a snapshot, screenshot or console read can confirm, and give a mobile width (e.g. 390×844) where layout matters.
 
 ### 6. Validate before showing
 

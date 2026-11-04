@@ -33,7 +33,7 @@ CLAUDE.md applies, especially these:
 1. Run `git status --short` and `git diff -- <your files>`, and read the full contents of any new files you created.
 2. Check the change against every "Done when" item in the brief.
 3. Check that you changed no file outside the brief.
-4. Run your tests one last time and note the result.
+4. Run `pnpm exec prettier --write <your files>`, then run your tests one last time and note the result.
 
 ## Report
 

@@ -41,9 +41,10 @@ pnpm preview          # serve the production build
 pnpm test             # vitest run (jsdom env, globals enabled)
 pnpm vitest run path/to/file.test.ts   # single test file
 pnpm vitest run -t "test name"         # single test by name
+pnpm format           # prettier --write . (pnpm format:check to only check)
 ```
 
-Vitest works (`@vitejs/plugin-vue` is a devDependency). `vitest.config.ts` only collects `*.test.ts`/`*.spec.ts` under `composables/`, `components/`, `server/`, `utils/`, `pages/` and `tests/`, so skill assets under `.claude/` are ignored. `pnpm test` exits non-zero when there are no test files. Nuxt auto-imports (`useDb`, `ref`, `$fetch`, ...) don't exist in the test environment: import `ref` etc. from `vue` explicitly, stub globals with `vi.stubGlobal`, and keep logic in pure modules that tests can import directly. There's no lint script. Formatting follows `.prettierrc`: 2 spaces, single quotes, width 100, `vueIndentScriptAndStyle`, `bracketSameLine`.
+Vitest works (`@vitejs/plugin-vue` is a devDependency). `vitest.config.ts` only collects `*.test.ts`/`*.spec.ts` under `composables/`, `components/`, `server/`, `utils/`, `pages/` and `tests/`, so skill assets under `.claude/` are ignored. `pnpm test` exits non-zero when there are no test files. Nuxt auto-imports (`useDb`, `ref`, `$fetch`, ...) don't exist in the test environment: import `ref` etc. from `vue` explicitly, stub globals with `vi.stubGlobal`, and keep logic in pure modules that tests can import directly. There's no lint script; prettier is the formatter (`.prettierignore` skips generated and vendored files). Formatting follows `.prettierrc`: 2 spaces, single quotes, width 100, `vueIndentScriptAndStyle`, `bracketSameLine`.
 
 ## Architecture
 
@@ -55,6 +56,7 @@ Vitest works (`@vitejs/plugin-vue` is a devDependency). `vitest.config.ts` only 
 ## Dev environment and deployment
 
 - The devcontainer (`.devcontainer/`) runs the app container next to a `db` MySQL service. Both read the root `.env`, so set `MYSQL_HOST=db`.
+- The devcontainer ships headless Chromium (in `/opt/playwright`) and the project registers a Playwright MCP server in `.mcp.json` (`@playwright/mcp`, headless, isolated). Claude inside the container uses it for browser checks; see the `implement` skill. The Playwright version pinned in `.devcontainer/Dockerfile` must equal the one `@playwright/mcp` depends on (`pnpm why playwright-core`), so bump them together and rebuild the container.
 - When you push to `main`, `.github/workflows/deploy.yml` builds the app, and pushes `ghcr.io/hulkermon/koroluk-app:latest` (the `Dockerfile` only copies the prebuilt `.output`). Coolify on the VPS runs the root `docker-compose.yml` (app + MySQL behind Traefik). This means every commit to `main` ships to production.
 
 ## Workflow
