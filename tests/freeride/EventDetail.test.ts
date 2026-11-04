@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount, RouterLinkStub } from '@vue/test-utils';
 import EventDetail from '@/components/Freeride/EventDetail.vue';
+import {
+  googleCalendarUrl,
+  outlookCalendarUrl,
+  icsFilename,
+} from '@/composables/freeride/calendarExport';
 import type { FreerideEvent } from '@/composables/freeride/types';
 
 function makeEvent(overrides: Partial<FreerideEvent> = {}): FreerideEvent {
@@ -355,5 +360,50 @@ describe('EventDetail', () => {
     expect(w.findAllComponents(RouterLinkStub)).toHaveLength(1);
     expect(w.find('.fr-link-register').exists()).toBe(true);
     expect(w.find('.fr-registration').exists()).toBe(true);
+  });
+});
+
+describe('EventDetail add to calendar', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('links to Google Calendar and Outlook.com', () => {
+    const event = makeEvent();
+    const w = render(event);
+    const google = w.find('.fr-cal-google');
+    const outlook = w.find('.fr-cal-outlook');
+    expect(google.attributes('href')).toBe(googleCalendarUrl(event));
+    expect(google.attributes('target')).toBe('_blank');
+    expect(outlook.attributes('href')).toBe(outlookCalendarUrl(event));
+    expect(outlook.attributes('target')).toBe('_blank');
+  });
+
+  it('shows the menu for finished events', () => {
+    const w = render(
+      makeEvent({ status: 'results_published', end: '2020-01-02', start: '2020-01-01' }),
+    );
+    expect(w.find('.fr-cal').exists()).toBe(true);
+  });
+
+  it('downloads an .ics file', async () => {
+    vi.useFakeTimers().setSystemTime(new Date('2027-01-01T00:00:00Z'));
+    const create = vi.fn(() => 'blob:x');
+    const revoke = vi.fn();
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke }));
+    const downloads: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloads.push(this.download);
+    });
+    const event = makeEvent();
+    await render(event).find('.fr-cal-ics').trigger('click');
+    expect(create).toHaveBeenCalledTimes(1);
+    expect((create.mock.calls[0] as unknown[])[0]).toBeInstanceOf(Blob);
+    expect(downloads).toEqual([icsFilename(event.name)]);
+    expect(revoke).toHaveBeenCalledWith('blob:x');
   });
 });

@@ -40,6 +40,31 @@
       {{ planned ? 'Remove from plan' : 'Add to plan' }}
     </button>
 
+    <details class="fr-cal">
+      <summary>📅 Add to calendar</summary>
+      <ul class="fr-cal-list">
+        <li>
+          <a class="fr-cal-google" :href="googleCalendarUrl(event)" target="_blank" rel="noopener">
+            Google Calendar
+          </a>
+        </li>
+        <li>
+          <a
+            class="fr-cal-outlook"
+            :href="outlookCalendarUrl(event)"
+            target="_blank"
+            rel="noopener">
+            Outlook.com
+          </a>
+        </li>
+        <li>
+          <button type="button" class="fr-cal-ics" @click="downloadIcs">
+            Apple / other (.ics)
+          </button>
+        </li>
+      </ul>
+    </details>
+
     <h3 class="fr-riders-title">{{ finished ? 'Results' : 'Riders' }}</h3>
     <p v-if="!event.divisions.length" class="fr-empty">No divisions published yet</p>
     <template v-if="finished">
@@ -158,6 +183,13 @@
   } from '@/composables/freeride/types';
   import { countryCode, flagUrl } from '@/composables/freeride/countries';
   import { riderId } from '@/composables/freeride/homies';
+  import {
+    downloadText,
+    eventsIcs,
+    googleCalendarUrl,
+    icsFilename,
+    outlookCalendarUrl,
+  } from '@/composables/freeride/calendarExport';
   import { formatPoints, isFinished } from '@/composables/freeride/riders';
 
   const props = withDefaults(
@@ -182,6 +214,10 @@
 
   function isHomie(rider: Pick<Rider, 'name' | 'athleteId'>): boolean {
     return homieSet.value.has(riderId(rider));
+  }
+
+  function downloadIcs() {
+    downloadText(icsFilename(props.event.name), eventsIcs([props.event], new Date()));
   }
 
   function sortedResults(division: Division): DivisionResult[] {
@@ -352,6 +388,32 @@
     background: var(--fr-signal);
     color: #fff;
     font-weight: 700;
+    cursor: pointer;
+  }
+  .fr-cal {
+    margin-top: 0.75rem;
+  }
+  .fr-cal summary {
+    cursor: pointer;
+    color: var(--fr-ice);
+    font-weight: 600;
+  }
+  .fr-cal-list {
+    margin: 0.4rem 0 0;
+    padding: 0 0 0 1.25rem;
+    list-style: none;
+  }
+  .fr-cal-list li {
+    padding: 0.2rem 0;
+  }
+  .fr-cal-list a,
+  .fr-cal-ics {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--fr-ice);
+    font: inherit;
+    font-weight: 600;
     cursor: pointer;
   }
   .fr-riders-title {
