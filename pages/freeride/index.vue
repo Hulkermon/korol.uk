@@ -12,6 +12,22 @@
         </button>
         <button type="button" :class="{ active: planning }" @click="planning = true">Plan</button>
       </div>
+      <div class="fr-toggle" role="group" aria-label="View">
+        <button
+          type="button"
+          :class="{ active: view === 'map' }"
+          aria-label="Map"
+          @click="view = 'map'">
+          {{ isMobile ? '🗺' : 'Map' }}
+        </button>
+        <button
+          type="button"
+          :class="{ active: view === 'calendar' }"
+          aria-label="Calendar"
+          @click="view = 'calendar'">
+          {{ isMobile ? '📅' : 'Calendar' }}
+        </button>
+      </div>
       <button
         ref="homeBtn"
         type="button"
@@ -41,6 +57,7 @@
       <div class="fr-mapcol">
         <div class="fr-mapwrap">
           <EventMap
+            v-show="view === 'map'"
             ref="mapRef"
             :events="shownEvents"
             :selected-id="selectedId"
@@ -50,20 +67,32 @@
             :picking-home="pickingHome"
             @select="onPinSelect"
             @pick-home="onPickHome" />
-          <div class="fr-legend">
+          <div v-show="view === 'map'" class="fr-legend">
             <MapLegend v-model="legend" :events="rangeEvents" :collapsed="isMobile" />
           </div>
-          <div v-if="pickingHome" class="fr-hint">
+          <div v-if="pickingHome" v-show="view === 'map'" class="fr-hint">
             Click the map to set your homebase · Esc to cancel
           </div>
-          <div v-else-if="focusedName" class="fr-hint fr-hint--homie">
+          <div v-else-if="focusedName" v-show="view === 'map'" class="fr-hint fr-hint--homie">
             Showing {{ focusedName }}'s events
             <button type="button" aria-label="Show all events" @click="focusedHomie = null">
               ✕
             </button>
           </div>
+          <EventCalendar
+            v-if="view === 'calendar'"
+            class="fr-calwrap"
+            :events="events"
+            :legend="legend"
+            :planned-ids="plannedIds"
+            :homie-keys="homieKeys"
+            :selected-id="selectedId"
+            :bounds="bounds"
+            :mobile="isMobile"
+            @select="onCalendarSelect"
+            @update:legend="legend = $event" />
         </div>
-        <div v-if="!isMobile" class="fr-slider">
+        <div v-if="!isMobile && view === 'map'" class="fr-slider">
           <DateRangeSlider v-model="range" :min="bounds.from" :max="bounds.to" />
         </div>
       </div>
@@ -89,7 +118,7 @@
             </button>
           </div>
         </template>
-        <div v-if="isMobile && !selectedEvent" class="fr-slider fr-slider--sheet">
+        <div v-if="isMobile && !selectedEvent && view === 'map'" class="fr-slider fr-slider--sheet">
           <DateRangeSlider v-model="range" :min="bounds.from" :max="bounds.to" />
         </div>
         <EventDetail
@@ -194,6 +223,7 @@
   } from '@/composables/freeride/planner';
   import { useRouting } from '@/composables/freeride/useRouting';
   import { TIER_COLORS } from '@/composables/freeride/pins';
+  import EventCalendar from '@/components/Freeride/EventCalendar.vue';
   import EventMap from '@/components/Freeride/EventMap.vue';
   import DateRangeSlider from '@/components/Freeride/DateRangeSlider.vue';
   import MapLegend from '@/components/Freeride/MapLegend.vue';
@@ -420,12 +450,14 @@
     openFromPlan(id);
   }
 
+  const view = ref<'map' | 'calendar'>('map');
   const mapRef = ref<InstanceType<typeof EventMap> | null>(null);
 
   // Selecting from a list pans the map to the event (pin clicks don't)
   function pickEvent(id: string) {
     fromPlan.value = false;
     selectedId.value = id;
+    if (view.value === 'calendar') return;
     nextTick(() => {
       const e = events.value.find((x) => x.id === id);
       if (!e) return;
@@ -435,6 +467,12 @@
         isMobile.value ? snapHeight(sheet.value, window.innerHeight) : 0,
       );
     });
+  }
+
+  // Calendar selections open the detail without panning the (hidden) map
+  function onCalendarSelect(id: string) {
+    fromPlan.value = false;
+    selectedId.value = id;
   }
 
   const pickerOpen = ref(false);
@@ -692,6 +730,10 @@
     position: relative;
     flex: 1;
     min-height: 0;
+  }
+  .fr-calwrap {
+    position: absolute;
+    inset: 0;
   }
   .fr-legend {
     position: absolute;
