@@ -25,3 +25,6 @@ logs
 
 # Claude implementation plans
 .claude/plans/
+
+# Playwright MCP screenshots and traces
+.playwright-mcp/

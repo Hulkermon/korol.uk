@@ -6,9 +6,11 @@ RUN apt update && export DEBIAN_FRONTEND=noninteractive \
         default-mysql-client \
     && apt clean -y && rm -rf /var/lib/apt/lists/*
 
-# Headless Chromium for visual checks (Playwright). --with-deps installs the system libraries.
+# Headless Chromium for the Playwright MCP server (.mcp.json). --with-deps installs the system libraries.
+# Keep this version equal to the playwright that @playwright/mcp depends on (`pnpm why playwright-core`),
+# otherwise the browser revision won't match. Bump both together.
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
-RUN npx --yes playwright@1.56.1 install --with-deps chromium \
+RUN npx --yes playwright@1.65.0-alpha-2026-10-30 install --with-deps chromium \
     && chmod -R a+rX /opt/playwright \
     && apt clean -y && rm -rf /var/lib/apt/lists/*
 
