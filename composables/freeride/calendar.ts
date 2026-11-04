@@ -87,8 +87,11 @@ export function seasonMonths(bounds: DateRange): string[] {
   return out;
 }
 
-export function initialMonth(months: string[], today: string): string {
+// Before the first shown event, open on that event's month rather than an empty one
+export function initialMonth(months: string[], today: string, firstEvent?: string): string {
   const current = today.slice(0, 7);
+  const first = firstEvent?.slice(0, 7);
+  if (first && months.includes(first) && current < first) return first;
   if (months.includes(current)) return current;
   if (months.length > 0 && current < months[0]) return months[0];
   return months[months.length - 1];

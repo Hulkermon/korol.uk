@@ -162,9 +162,6 @@
   const onlyHomies = ref(false);
 
   const months = computed(() => seasonMonths(props.bounds));
-  const month = ref(
-    initialMonth(seasonMonths(props.bounds), props.today ?? new Date().toISOString().slice(0, 10)),
-  );
   const monthIndex = computed(() => months.value.indexOf(month.value));
 
   function step(delta: number) {
@@ -180,6 +177,13 @@
       { legend: props.legend, onlyPlan: onlyPlan.value, onlyHomies: onlyHomies.value },
       props.plannedIds,
       props.homieKeys,
+    ),
+  );
+  const month = ref(
+    initialMonth(
+      months.value,
+      props.today ?? new Date().toISOString().slice(0, 10),
+      filtered.value[0]?.start,
     ),
   );
   const weeks = computed(() => monthGrid(month.value, filtered.value));

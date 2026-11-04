@@ -108,6 +108,14 @@ describe('season months', () => {
     expect(initialMonth(months, '2027-08-01')).toBe('2027-02');
   });
 
+  it('initialMonth skips to the first event month before it', () => {
+    const months = ['2026-12', '2027-01', '2027-02'];
+    expect(initialMonth(months, '2026-11-04', '2027-01-09')).toBe('2027-01');
+    expect(initialMonth(months, '2026-12-20', '2027-01-09')).toBe('2027-01');
+    expect(initialMonth(months, '2027-02-03', '2027-01-09')).toBe('2027-02');
+    expect(initialMonth(months, '2026-11-04', '2027-05-01')).toBe('2026-12');
+  });
+
   it('monthLabel', () => {
     expect(monthLabel('2026-12')).toBe('December 2026');
   });
