@@ -12,6 +12,12 @@ import type { FreerideEvent } from '../../composables/freeride/types';
 const ev = (tier: FreerideEvent['tier'], stars: FreerideEvent['stars'] = null) => ({
   tier,
   stars,
+  status: 'upcoming' as FreerideEvent['status'],
+  divisions: [] as FreerideEvent['divisions'],
+});
+const done = (tier: FreerideEvent['tier'] = 'pro') => ({
+  ...ev(tier),
+  status: 'finished' as FreerideEvent['status'],
 });
 const idle = { selected: false, planned: false, order: null };
 
@@ -109,5 +115,32 @@ describe('pinClass', () => {
       expect(c.includes('fr-pin--rows2')).toBe(s === 3 || s === 4);
     }
     expect(pinClass(ev('pro'), idle)).not.toContain('rows2');
+  });
+});
+
+describe('finished events', () => {
+  it('adds the class and badge only when finished', () => {
+    expect(pinClass(done(), idle)).toBe('fr-pin fr-pin--pro fr-pin--finished');
+    expect(pinClass(ev('pro'), idle)).not.toContain('finished');
+    expect(pinHtml(done(), idle)).toContain('<span class="fr-pin__done">🏁</span>');
+    expect(pinHtml(ev('pro'), idle)).not.toContain('fr-pin__done');
+  });
+
+  it('treats events with results as finished', () => {
+    const e = {
+      ...ev('pro'),
+      divisions: [{ results: [{}] }] as unknown as FreerideEvent['divisions'],
+    };
+    expect(pinClass(e, idle)).toContain('fr-pin--finished');
+  });
+
+  it('combines with planned and selected', () => {
+    const state = { selected: true, planned: true, order: 2 };
+    expect(pinClass(done(), state)).toBe(
+      'fr-pin fr-pin--pro fr-pin--selected fr-pin--planned fr-pin--finished',
+    );
+    const html = pinHtml(done(), state);
+    expect(html).toContain('fr-pin__order');
+    expect(html).toContain('fr-pin__done');
   });
 });

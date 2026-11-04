@@ -284,6 +284,26 @@
     color: #1f2a37;
   }
 
+  :deep(.fr-pin--finished .fr-pin__body) {
+    opacity: 0.55;
+    filter: saturate(0.4);
+  }
+
+  :deep(.fr-pin--finished.fr-pin--selected .fr-pin__body),
+  :deep(.fr-pin--finished.fr-pin--planned .fr-pin__body) {
+    opacity: 1;
+    filter: none;
+  }
+
+  :deep(.fr-pin__done) {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    transform: rotate(45deg);
+    font-size: 11px;
+    line-height: 1;
+  }
+
   :deep(.fr-pin__order) {
     position: absolute;
     top: -8px;

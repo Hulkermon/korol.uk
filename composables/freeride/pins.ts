@@ -1,4 +1,5 @@
 import type { FreerideEvent, Tier } from './types';
+import { isFinished } from './riders';
 
 export const TIER_COLORS: Record<Tier, string> = {
   pro: '#ff6b1a',
@@ -21,6 +22,7 @@ export interface PinState {
 }
 
 type PinEvent = Pick<FreerideEvent, 'tier' | 'stars'>;
+type PinStatusEvent = Pick<FreerideEvent, 'tier' | 'stars' | 'status' | 'divisions'>;
 
 function escapeHtml(text: string): string {
   return text
@@ -64,7 +66,11 @@ function leaderSvg(offset: { dx: number; dy: number }): string {
   );
 }
 
-export function pinHtml(e: PinEvent, state: PinState, offset?: { dx: number; dy: number }): string {
+export function pinHtml(
+  e: PinStatusEvent,
+  state: PinState,
+  offset?: { dx: number; dy: number },
+): string {
   const color = pinColor(e);
   const rows = pinRows(e)
     .map((r) => `<span class="fr-pin__row">${escapeHtml(r)}</span>`)
@@ -73,18 +79,20 @@ export function pinHtml(e: PinEvent, state: PinState, offset?: { dx: number; dy:
     state.planned && state.order !== null
       ? `<span class="fr-pin__order">${escapeHtml(String(state.order))}</span>`
       : '';
+  const done = isFinished(e as FreerideEvent) ? '<span class="fr-pin__done">🏁</span>' : '';
   const leader = offset && (offset.dx !== 0 || offset.dy !== 0) ? leaderSvg(offset) : '';
   return (
     `<div class="fr-pin__body" style="--pin-color: ${color}">` +
-    `<span class="fr-pin__label">${rows}</span>${badge}</div>${leader}`
+    `<span class="fr-pin__label">${rows}</span>${badge}${done}</div>${leader}`
   );
 }
 
-export function pinClass(e: PinEvent, state: PinState): string {
+export function pinClass(e: PinStatusEvent, state: PinState): string {
   const classes = ['fr-pin', `fr-pin--${e.tier}`];
   if (e.stars === 1) classes.push('fr-pin--light');
   if (pinRows(e).length === 2) classes.push('fr-pin--rows2');
   if (state.selected) classes.push('fr-pin--selected');
   if (state.planned) classes.push('fr-pin--planned');
+  if (isFinished(e as FreerideEvent)) classes.push('fr-pin--finished');
   return classes.join(' ');
 }
