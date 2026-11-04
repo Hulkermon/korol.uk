@@ -350,6 +350,9 @@
     background: #eef1f4;
   }
   .fr-homie-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-weight: 700;
   }
   .fr-homie-count,
