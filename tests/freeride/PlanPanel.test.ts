@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import PlanPanel from '@/components/Freeride/PlanPanel.vue';
 import type { Conflict, Leg, PlanOptions, Stop } from '@/composables/freeride/planner';
@@ -247,6 +247,48 @@ describe('PlanPanel', () => {
     await w.find('[data-test="return-home"]').setValue(true);
     expect(w.emitted('update:options')![1]).toEqual([{ ...opts, returnHome: true }]);
     expect(w.emitted('update:options')![0][0]).not.toBe(opts);
+  });
+
+  describe('export ics', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    it('is hidden with no events', () => {
+      const w = make({ stops: [], legs: [] });
+      expect(w.find('[data-test="export-ics"]').exists()).toBe(false);
+    });
+
+    it('downloads one VEVENT per event stop and no home entries', async () => {
+      const create = vi.fn(() => 'blob:plan');
+      vi.stubGlobal('URL', { createObjectURL: create, revokeObjectURL: vi.fn() });
+      const names: string[] = [];
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+        this: HTMLAnchorElement,
+      ) {
+        names.push(this.download);
+      });
+      const w = make({
+        stops: [homeStop('start'), eventStop(A), eventStop(B), homeStop('end')],
+        legs: [],
+        home,
+      });
+      const btn = w.find('[data-test="export-ics"]');
+      expect(btn.text()).toBe('📅 Export plan (.ics)');
+      await btn.trigger('click');
+      expect(names).toEqual(['freeride-plan.ics']);
+      const blob = (create.mock.calls[0] as unknown as [Blob])[0];
+      const text = await new Promise<string>((resolve) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result));
+        r.readAsText(blob);
+      });
+      expect(text.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+      expect(text).toContain('SUMMARY:Nendaz Freeride');
+      expect(text).toContain('SUMMARY:Verbier Pro');
+      expect(text).not.toContain('Zurich');
+    });
   });
 
   describe('home trips', () => {

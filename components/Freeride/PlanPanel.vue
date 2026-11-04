@@ -121,6 +121,14 @@
       <button
         v-if="eventCount > 0"
         type="button"
+        class="fr-plan__btn"
+        data-test="export-ics"
+        @click="exportIcs">
+        📅 Export plan (.ics)
+      </button>
+      <button
+        v-if="eventCount > 0"
+        type="button"
         class="fr-plan__btn fr-plan__btn--clear"
         data-test="clear"
         @click="emit('clear')">
@@ -135,6 +143,7 @@
   import type { Conflict, Homebase, Leg, PlanOptions, Stop } from '@/composables/freeride/planner';
   import { gapDays, homeTripOn, totals } from '@/composables/freeride/planner';
   import { TIER_COLORS } from '@/composables/freeride/pins';
+  import { downloadText, eventsIcs } from '@/composables/freeride/calendarExport';
   import type { FreerideEvent } from '@/composables/freeride/types';
 
   const props = defineProps<{
@@ -285,6 +294,11 @@
     }
     if (!prev || prev.kind !== 'event' || !next) return '';
     return `${gapDays(prev.event, next)} days at home`;
+  }
+
+  function exportIcs() {
+    const events = props.stops.flatMap((s) => (s.kind === 'event' ? [s.event] : []));
+    downloadText('freeride-plan.ics', eventsIcs(events, new Date()));
   }
 
   function setGapDays(raw: string) {
