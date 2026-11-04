@@ -12,15 +12,29 @@
         </button>
         <button type="button" :class="{ active: planning }" @click="planning = true">Plan</button>
       </div>
-      <button type="button" class="fr-btn" :class="{ active: pickingHome }" @click="startPicking">
-        🏠 Set homebase
+      <button
+        ref="homeBtn"
+        type="button"
+        class="fr-btn fr-home-btn"
+        :class="{ active: pickingHome || pickerOpen }"
+        :aria-expanded="pickerOpen"
+        @click="pickerOpen = !pickerOpen">
+        🏠 {{ home ? home.label : 'Homebase' }}
       </button>
-      <button type="button" class="fr-btn" @click="useMyLocation">📍 Use my location</button>
       <span v-if="notice" class="fr-notice">{{ notice }}</span>
       <span class="fr-data">
         Data from Liveheats ·
         <span :title="fetchedAtText">updated {{ timeAgo(snapshot.fetchedAt, nowTick) }}</span>
       </span>
+      <div v-if="pickerOpen" ref="pickerWrap" class="fr-picker">
+        <HomebasePicker
+          :home="home"
+          @set-home="onSetHome"
+          @pick-on-map="onPickOnMap"
+          @use-location="onUseLocation"
+          @clear-home="setHome(null)"
+          @close="pickerOpen = false" />
+      </div>
     </header>
 
     <div class="fr-main">
@@ -102,7 +116,7 @@
             @remove="removePlanned"
             @select="selectedId = $event"
             @update:options="planOptions = $event"
-            @set-home="startPicking"
+            @set-home="pickerOpen = true"
             @clear="clearPlan" />
           <div v-else class="fr-list">
             <h2>{{ visible.length }} events in range</h2>
@@ -151,6 +165,8 @@
   import EventDetail from '@/components/Freeride/EventDetail.vue';
   import PlanPanel from '@/components/Freeride/PlanPanel.vue';
   import HomiesPanel from '@/components/Freeride/HomiesPanel.vue';
+  import HomebasePicker from '@/components/Freeride/HomebasePicker.vue';
+  import { reversePlace } from '@/composables/freeride/geocode';
   import { allRiders, homieEventIds, useHomies } from '@/composables/freeride/homies';
 
   useHead({
@@ -349,13 +365,52 @@
     if (adding) planning.value = true;
   }
 
-  function startPicking() {
+  const pickerOpen = ref(false);
+  const homeBtn = ref<HTMLElement | null>(null);
+  const pickerWrap = ref<HTMLElement | null>(null);
+
+  function shortLabel(label: string): string {
+    return label
+      .split(',')
+      .slice(0, 2)
+      .map((s) => s.trim())
+      .join(', ');
+  }
+
+  function onSetHome(h: { lat: number; lng: number; label: string }) {
+    setHome(h);
+    pickerOpen.value = false;
+  }
+
+  function onPickOnMap() {
+    pickerOpen.value = false;
     pickingHome.value = true;
   }
 
-  function onPickHome(pos: { lat: number; lng: number }) {
-    setHome({ lat: pos.lat, lng: pos.lng, label: 'Homebase' });
+  function onUseLocation() {
+    pickerOpen.value = false;
+    useMyLocation();
+  }
+
+  async function onPickHome(pos: { lat: number; lng: number }) {
+    setHome({ lat: pos.lat, lng: pos.lng, label: 'Pinned location' });
     pickingHome.value = false;
+    try {
+      const place = await reversePlace(pos.lat, pos.lng);
+      const cur = home.value;
+      if (place && cur && cur.lat === pos.lat && cur.lng === pos.lng) {
+        setHome({ lat: pos.lat, lng: pos.lng, label: shortLabel(place.label) });
+      }
+    } catch {
+      // keep the generic label
+    }
+  }
+
+  function onDocPointer(e: Event) {
+    if (!pickerOpen.value) return;
+    const t = e.target as Node | null;
+    if (t && (pickerWrap.value?.contains(t) || homeBtn.value?.contains(t))) return;
+    pickerOpen.value = false;
   }
 
   async function runSync() {
@@ -398,7 +453,8 @@
 
   function onKey(e: KeyboardEvent) {
     if (e.key !== 'Escape') return;
-    if (pickingHome.value) pickingHome.value = false;
+    if (pickerOpen.value) pickerOpen.value = false;
+    else if (pickingHome.value) pickingHome.value = false;
     else selectedId.value = null;
   }
 
@@ -414,12 +470,14 @@
       router.replace({ query: {} });
     }
     window.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDocPointer);
     document.addEventListener('visibilitychange', onVisibility);
     tickTimer = setInterval(() => (nowTick.value = Date.now()), 60000);
     runSync();
   });
   onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKey);
+    document.removeEventListener('pointerdown', onDocPointer);
     document.removeEventListener('visibilitychange', onVisibility);
     clearInterval(tickTimer);
     clearTimeout(debounce);
@@ -444,6 +502,7 @@
       sans-serif;
   }
   .fr-top {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -509,6 +568,19 @@
   .fr-btn.active {
     border-color: var(--fr-signal);
     color: var(--fr-signal);
+  }
+  .fr-home-btn {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fr-picker {
+    position: absolute;
+    top: 100%;
+    left: 14px;
+    z-index: 1200;
+    margin-top: 4px;
   }
   .fr-notice {
     font-size: 13px;
@@ -665,6 +737,11 @@
     }
     .fr-data {
       margin-left: 0;
+    }
+    .fr-picker {
+      left: 0;
+      right: 0;
+      margin-top: 0;
     }
   }
 </style>
