@@ -41,7 +41,8 @@ const EVENT_FIELDS = `id name date daysWindow status organisationId hideEntries
   location { formattedAddress countryCode location { lat lng } }
   registrationOptions { mode }
   paymentOptions { currency defaultDivisionPrice }
-  eventDivisions { entryCount division { name } entries { status athlete { name nationality } } }`;
+  eventDivisions { entryCount division { name } entries { status athlete { id name nationality } }
+    ranking { place competitor { athlete { id name nationality } } } }`;
 
 async function gql(fetchFn: typeof fetch, query: string): Promise<any> {
   const res = await fetchFn(LIVEHEATS_URL, {
@@ -169,10 +170,24 @@ export async function buildSnapshot(
         riders: ev.hideEntries
           ? []
           : (d.entries ?? []).map((en: any) => ({
+              athleteId: en.athlete?.id != null ? String(en.athlete.id) : null,
               name: en.athlete?.name ?? '',
               nationality: en.athlete?.nationality ?? null,
               status: en.status,
             })),
+        results: (d.ranking ?? [])
+          .filter((r: any) => typeof r?.place === 'number')
+          .map((r: any) => {
+            const a = r.competitor?.athlete;
+            return {
+              place: r.place as number,
+              athleteId: a?.id != null ? String(a.id) : null,
+              name: a?.name ?? '',
+              nationality: a?.nationality ?? null,
+              points: null,
+            };
+          })
+          .sort((x: any, y: any) => x.place - y.place),
       })),
     });
   }

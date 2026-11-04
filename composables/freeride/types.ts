@@ -3,15 +3,25 @@ export type Stars = 1 | 2 | 3 | 4;
 export type EntryStatus = string; // Liveheats values seen: 'confirmed', 'waitlisted', 'denied', 'withdrawn' …
 
 export interface Rider {
+  athleteId: string | null;
   name: string;
   nationality: string | null;
   status: EntryStatus;
+}
+
+export interface DivisionResult {
+  place: number;
+  athleteId: string | null;
+  name: string;
+  nationality: string | null;
+  points: number | null;
 }
 
 export interface Division {
   name: string;
   entryCount: number;
   riders: Rider[];
+  results: DivisionResult[];
 }
 
 export interface FreerideEvent {

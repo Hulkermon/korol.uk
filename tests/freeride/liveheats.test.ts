@@ -159,6 +159,40 @@ describe('buildSnapshot', () => {
     expect(b.divisions[0].entryCount).toBe(1);
   });
 
+  it('maps athlete ids and sorted results, keeping results when entries are hidden', async () => {
+    const ranking = [
+      { place: 2, competitor: { athlete: { id: 8, name: 'C D', nationality: 'FR' } } },
+      { place: 1, competitor: { athlete: { id: '7', name: 'A B', nationality: null } } },
+      { place: null, competitor: { athlete: { id: 9, name: 'X', nationality: 'DE' } } },
+    ];
+    const div = (over: any) => ({
+      entryCount: 2,
+      division: { name: 'Men Ski' },
+      entries: [
+        { status: 'confirmed', athlete: { id: 7, name: 'A B', nationality: 'CH' } },
+        { status: 'confirmed', athlete: { name: 'No Id', nationality: 'CH' } },
+      ],
+      ...over,
+    });
+    const fn = stub((t) => (t === SEARCH_TERMS[0] ? [cand('1'), cand('2'), cand('3')] : []), {
+      '1': detail('1', { eventDivisions: [div({ ranking })] }),
+      '2': detail('2', { hideEntries: true, eventDivisions: [div({ ranking })] }),
+      '3': detail('3', { eventDivisions: [div({ ranking: [] }), div({})] }),
+    });
+    const { snapshot } = await run(fn);
+    const [a, b, c] = snapshot.events;
+    expect(a.divisions[0].riders.map((r) => r.athleteId)).toEqual(['7', null]);
+    expect(a.divisions[0].results).toEqual([
+      { place: 1, athleteId: '7', name: 'A B', nationality: null, points: null },
+      { place: 2, athleteId: '8', name: 'C D', nationality: 'FR', points: null },
+    ]);
+    expect(b.divisions[0].riders).toEqual([]);
+    expect(b.divisions[0].results).toHaveLength(2);
+    expect(c.divisions[0].results).toEqual([]);
+    expect(c.divisions[1].results).toEqual([]);
+    expect(detailCalls(fn)[0]).toContain('ranking');
+  });
+
   it('batches 45 ids into 3 detail requests with aliases', async () => {
     const list = Array.from({ length: 45 }, (_, i) => cand(String(1000 + i)));
     const details = Object.fromEntries(list.map((c) => [c.id, detail(c.id)]));
