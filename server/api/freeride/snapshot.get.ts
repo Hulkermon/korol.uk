@@ -1,30 +1,35 @@
-import { buildSnapshot } from '~/composables/freeride/liveheats';
-import type { EventSnapshot } from '~/composables/freeride/types';
+import { latestMeta, latestSnapshotJson } from '~/composables/freeride/snapshotStore';
 
-// Proxies a fresh Liveheats crawl for the freeride planner (Liveheats sends no CORS headers,
-// so the browser can't call it directly). Results are cached in memory and concurrent
-// requests share one crawl, so repeated clicks don't hammer Liveheats.
-const CACHE_MS = 10 * 60 * 1000;
+// Serves the snapshot stored by the freeride-sync plugin. Never calls Liveheats.
+// `?since=<fetchedAt>` returns 204 when the client already has the latest snapshot.
+let cache: { fetchedAt: string; json: string } | null = null;
 
-let cached: { at: number; snapshot: EventSnapshot } | null = null;
-let inFlight: Promise<EventSnapshot> | null = null;
+export default defineEventHandler(async (event) => {
+  const since = getQuery(event).since;
 
-export default defineEventHandler(async () => {
-  if (cached && Date.now() - cached.at < CACHE_MS) return cached.snapshot;
-  if (!inFlight) {
-    inFlight = buildSnapshot(fetch)
-      .then(({ snapshot }) => {
-        cached = { at: Date.now(), snapshot };
-        return snapshot;
-      })
-      .finally(() => {
-        inFlight = null;
-      });
-  }
+  let db;
   try {
-    return await inFlight;
+    db = await useDb();
   } catch (e) {
-    console.error('[freeride] snapshot refresh failed', e);
-    throw createError({ statusCode: 502, statusMessage: 'Liveheats refresh failed' });
+    console.error('[freeride] snapshot store unavailable', e);
+    throw createError({ statusCode: 503, statusMessage: 'Snapshot store unavailable' });
   }
+
+  const meta = await latestMeta(db);
+  if (!meta) throw createError({ statusCode: 503, statusMessage: 'No snapshot yet' });
+
+  if (since === meta.fetchedAt) {
+    setResponseStatus(event, 204);
+    return null;
+  }
+
+  if (!cache || cache.fetchedAt !== meta.fetchedAt) {
+    const row = await latestSnapshotJson(db);
+    if (!row) throw createError({ statusCode: 503, statusMessage: 'No snapshot yet' });
+    cache = row;
+  }
+
+  setHeader(event, 'content-type', 'application/json');
+  setHeader(event, 'cache-control', 'public, max-age=60');
+  return cache.json;
 });
