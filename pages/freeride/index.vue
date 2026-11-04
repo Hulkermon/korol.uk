@@ -1,10 +1,10 @@
 <template>
   <div class="fr-page" :style="rootStyle">
     <header class="fr-top">
-      <NuxtLink to="/" class="fr-back">← korol.uk</NuxtLink>
+      <NuxtLink to="/" class="fr-back">{{ isMobile ? '←' : '← korol.uk' }}</NuxtLink>
       <div class="fr-titles">
-        <h1>FREERIDE PLANNER</h1>
-        <span class="fr-sub">FWT &amp; FWQ Europe · 2026/27</span>
+        <h1>{{ isMobile ? 'FREERIDE' : 'FREERIDE PLANNER' }}</h1>
+        <span v-if="!isMobile" class="fr-sub">FWT &amp; FWQ Europe · 2026/27</span>
       </div>
       <div class="fr-toggle" role="group" aria-label="Mode">
         <button type="button" :class="{ active: !planning }" @click="planning = false">
@@ -19,10 +19,10 @@
         :class="{ active: pickingHome || pickerOpen }"
         :aria-expanded="pickerOpen"
         @click="pickerOpen = !pickerOpen">
-        🏠 {{ home ? home.label : 'Homebase' }}
+        🏠 {{ isMobile ? '' : home ? home.label : 'Homebase' }}
       </button>
       <span v-if="notice" class="fr-notice">{{ notice }}</span>
-      <span class="fr-data">
+      <span v-if="!isMobile" class="fr-data">
         Data from Liveheats ·
         <span :title="fetchedAtText">updated {{ timeAgo(snapshot.fetchedAt, nowTick) }}</span>
       </span>
@@ -50,7 +50,7 @@
             @select="onPinSelect"
             @pick-home="onPickHome" />
           <div class="fr-legend">
-            <MapLegend v-model="legend" :events="rangeEvents" />
+            <MapLegend v-model="legend" :events="rangeEvents" :collapsed="isMobile" />
           </div>
           <div v-if="pickingHome" class="fr-hint">
             Click the map to set your homebase · Esc to cancel
@@ -62,22 +62,13 @@
             </button>
           </div>
         </div>
-        <div class="fr-slider">
+        <div v-if="!isMobile" class="fr-slider">
           <DateRangeSlider v-model="range" :min="bounds.from" :max="bounds.to" />
         </div>
       </div>
 
-      <aside class="fr-side">
-        <EventDetail
-          v-if="selectedEvent"
-          :event="selectedEvent"
-          :planned="plannedIds.includes(selectedEvent.id)"
-          :planning="planning"
-          :homie-keys="homieKeys"
-          @close="selectedId = null"
-          @toggle-plan="onTogglePlan"
-          @toggle-homie="toggleHomie" />
-        <template v-else>
+      <component :is="SidePanel" v-bind="panelProps">
+        <template v-if="!selectedEvent" #header>
           <div class="fr-tabs" role="tablist" aria-label="Side panel">
             <button
               type="button"
@@ -96,6 +87,20 @@
               The Homies ({{ homies.length }})
             </button>
           </div>
+        </template>
+        <div v-if="isMobile && !selectedEvent" class="fr-slider fr-slider--sheet">
+          <DateRangeSlider v-model="range" :min="bounds.from" :max="bounds.to" />
+        </div>
+        <EventDetail
+          v-if="selectedEvent"
+          :event="selectedEvent"
+          :planned="plannedIds.includes(selectedEvent.id)"
+          :planning="planning"
+          :homie-keys="homieKeys"
+          @close="selectedId = null"
+          @toggle-plan="onTogglePlan"
+          @toggle-homie="toggleHomie" />
+        <template v-else>
           <HomiesPanel
             v-if="sideTab === 'homies'"
             :homies="homies"
@@ -134,13 +139,17 @@
             </button>
           </div>
         </template>
-      </aside>
+        <p v-if="isMobile" class="fr-data-m">
+          Data from Liveheats ·
+          <span :title="fetchedAtText">updated {{ timeAgo(snapshot.fetchedAt, nowTick) }}</span>
+        </p>
+      </component>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+  import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue';
   import bundledSnapshot from '@/composables/freeride/data/events.json';
   import type { EventSnapshot, FreerideEvent } from '@/composables/freeride/types';
   import {
@@ -165,6 +174,8 @@
   import EventDetail from '@/components/Freeride/EventDetail.vue';
   import PlanPanel from '@/components/Freeride/PlanPanel.vue';
   import HomiesPanel from '@/components/Freeride/HomiesPanel.vue';
+  import BottomSheet from '@/components/Freeride/BottomSheet.vue';
+  import type { Snap } from '@/composables/freeride/sheet';
   import HomebasePicker from '@/components/Freeride/HomebasePicker.vue';
   import { reversePlace } from '@/composables/freeride/geocode';
   import { allRiders, homieEventIds, useHomies } from '@/composables/freeride/homies';
@@ -215,7 +226,41 @@
     if (selectedId.value && !knownIds.has(selectedId.value)) selectedId.value = null;
   }
 
+  const MOBILE_QUERY = '(max-width: 767px)';
+  const isMobile = ref(
+    typeof window !== 'undefined' && !!window.matchMedia?.(MOBILE_QUERY).matches,
+  );
+  const sheet = ref<Snap>('peek');
+  let mobileMq: MediaQueryList | undefined;
+  function onMobileChange(e: MediaQueryListEvent) {
+    isMobile.value = e.matches;
+  }
+
+  // Desktop wrapper for the side panel: same header/default slots as BottomSheet
+  const SideAside = defineComponent({
+    setup(_, { slots }) {
+      return () => h('aside', { class: 'fr-side' }, [slots.header?.(), slots.default?.()]);
+    },
+  });
+  const SidePanel = computed(() => (isMobile.value ? BottomSheet : SideAside));
+  const panelProps = computed(() =>
+    isMobile.value
+      ? { modelValue: sheet.value, 'onUpdate:modelValue': (v: Snap) => (sheet.value = v) }
+      : {},
+  );
+
   const selectedId = ref<string | null>(null);
+  // Set when a selection change must not move the sheet (plan-mode pin clicks)
+  let keepSheet = false;
+  watch(selectedId, (id, prev) => {
+    if (keepSheet) {
+      keepSheet = false;
+      return;
+    }
+    if (!isMobile.value) return;
+    if (id) sheet.value = 'half';
+    else if (prev) sheet.value = 'peek';
+  });
   pruneMissing();
 
   const { homies, toggleHomie } = useHomies(undefined, events);
@@ -223,6 +268,9 @@
   const sideTab = ref<'list' | 'homies'>('list');
   // Rider whose events the map is narrowed to (any rider key, not only homies)
   const focusedHomie = ref<string | null>(null);
+  watch(sideTab, () => {
+    if (isMobile.value && sheet.value === 'peek') sheet.value = 'half';
+  });
   watch(sideTab, (tab) => {
     if (tab !== 'homies') focusedHomie.value = null;
   });
@@ -353,6 +401,7 @@
     // In plan mode a pin click only edits the route, so the stop list stays visible
     if (planning.value) {
       togglePlanned(id);
+      keepSheet = selectedId.value !== null;
       selectedId.value = null;
       return;
     }
@@ -462,6 +511,11 @@
   const router = useRouter();
 
   onMounted(() => {
+    mobileMq = window.matchMedia?.(MOBILE_QUERY);
+    if (mobileMq) {
+      isMobile.value = mobileMq.matches;
+      mobileMq.addEventListener?.('change', onMobileChange);
+    }
     const wanted = route.query.event;
     if (wanted !== undefined) {
       if (typeof wanted === 'string' && events.value.some((e) => e.id === wanted)) {
@@ -476,6 +530,7 @@
     runSync();
   });
   onBeforeUnmount(() => {
+    mobileMq?.removeEventListener?.('change', onMobileChange);
     window.removeEventListener('keydown', onKey);
     document.removeEventListener('pointerdown', onDocPointer);
     document.removeEventListener('visibilitychange', onVisibility);
@@ -729,14 +784,44 @@
     .fr-main {
       flex-direction: column;
     }
-    .fr-side {
-      width: auto;
-      max-height: 45dvh;
-      border-left: 0;
-      border-top: 1px solid #dde3ea;
+    .fr-top {
+      flex-wrap: nowrap;
+      gap: 8px 10px;
+      padding: 6px 10px;
     }
-    .fr-data {
-      margin-left: 0;
+    .fr-back {
+      font-size: 20px;
+      line-height: 1;
+    }
+    .fr-titles h1 {
+      font-size: 20px;
+    }
+    .fr-toggle button {
+      padding: 6px 10px;
+    }
+    .fr-notice {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .fr-hint {
+      top: 52px;
+      max-width: calc(100% - 20px);
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    .fr-slider--sheet {
+      border-top: 0;
+      border-bottom: 1px solid #dde3ea;
+      padding: 6px 14px;
+    }
+    .fr-data-m {
+      margin: 0;
+      padding: 10px 12px 14px;
+      font-size: 12px;
+      color: var(--fr-muted);
+      text-align: center;
     }
     .fr-picker {
       left: 0;

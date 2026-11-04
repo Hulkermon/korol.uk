@@ -58,10 +58,11 @@
   const props = defineProps<{
     modelValue: LegendFilter;
     events: FreerideEvent[];
+    collapsed?: boolean;
   }>();
   const emit = defineEmits<{ 'update:modelValue': [value: LegendFilter] }>();
 
-  const open = ref(true);
+  const open = ref(!props.collapsed);
 
   const rootStyle = {
     '--fr-snow': '#f7f9fb',

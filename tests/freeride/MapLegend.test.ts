@@ -100,4 +100,13 @@ describe('MapLegend', () => {
     expect(head.attributes('aria-expanded')).toBe('false');
     expect(w.find('.body').exists()).toBe(false);
   });
+
+  it('starts collapsed when the collapsed prop is set, and can be expanded', async () => {
+    const w = mount(MapLegend, { props: { modelValue: model(), events, collapsed: true } });
+    const head = w.find('button.head');
+    expect(head.attributes('aria-expanded')).toBe('false');
+    expect(w.find('.body').exists()).toBe(false);
+    await head.trigger('click');
+    expect(w.find('.body').exists()).toBe(true);
+  });
 });

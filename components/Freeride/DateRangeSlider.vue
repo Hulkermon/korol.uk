@@ -155,6 +155,7 @@
   .track-wrap {
     position: relative;
     height: 44px;
+    touch-action: none;
   }
   .track,
   .fill {
@@ -181,6 +182,7 @@
     margin: 0;
     background: none;
     pointer-events: none;
+    touch-action: none;
     appearance: none;
     -webkit-appearance: none;
   }
@@ -195,9 +197,10 @@
   .thumb::-webkit-slider-thumb {
     -webkit-appearance: none;
     pointer-events: auto;
-    width: 24px;
-    height: 24px;
-    margin-top: 10px;
+    box-sizing: border-box;
+    width: 28px;
+    height: 28px;
+    margin-top: 8px;
     border-radius: 50%;
     background: var(--fr-snow);
     border: 3px solid var(--fr-signal);
@@ -205,8 +208,9 @@
   }
   .thumb::-moz-range-thumb {
     pointer-events: auto;
-    width: 18px;
-    height: 18px;
+    box-sizing: border-box;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: var(--fr-snow);
     border: 3px solid var(--fr-signal);
