@@ -119,6 +119,9 @@
             :home="home"
             :options="planOptions"
             :loading="loading"
+            :calculated="calculated"
+            :stale="stale"
+            @calculate="calculate"
             @remove="removePlanned"
             @select="pickEvent($event)"
             @update:options="planOptions = $event"
@@ -171,14 +174,8 @@
   } from '@/composables/freeride/filters';
   import { timeAgo, useSnapshot } from '@/composables/freeride/useSnapshot';
   import { usePlannerState } from '@/composables/freeride/usePlannerState';
-  import {
-    buildStops,
-    fetchRoute,
-    findConflicts,
-    planOrder,
-    straightLegs,
-  } from '@/composables/freeride/planner';
-  import type { Leg } from '@/composables/freeride/planner';
+  import { buildStops, findConflicts, planOrder } from '@/composables/freeride/planner';
+  import { useRouting } from '@/composables/freeride/useRouting';
   import { TIER_COLORS } from '@/composables/freeride/pins';
   import EventMap from '@/components/Freeride/EventMap.vue';
   import DateRangeSlider from '@/components/Freeride/DateRangeSlider.vue';
@@ -360,56 +357,11 @@
     return evStops.some((s) => s.kind === 'event') ? evStops : [];
   });
 
-  const routeKey = computed(() =>
-    JSON.stringify([
-      stops.value.map((s) => [s.lat, s.lng]),
-      planOptions.value.startAtHome,
-      planOptions.value.returnHome,
-    ]),
+  const { legs, line: routeLine, loading, calculated, stale, calculate, cancel } = useRouting(
+    stops,
+    planOptions,
   );
-
-  const routed = ref<{ key: string; legs: Leg[]; line: [number, number][] } | null>(null);
-  const loading = ref(false);
-  let requestId = 0;
-  let debounce: ReturnType<typeof setTimeout> | undefined;
-
-  const legs = computed<Leg[]>(() =>
-    routed.value && routed.value.key === routeKey.value
-      ? routed.value.legs
-      : straightLegs(stops.value),
-  );
-  const routeLine = computed<[number, number][]>(() => {
-    if (stops.value.length < 2) return [];
-    if (routed.value && routed.value.key === routeKey.value) return routed.value.line;
-    return stops.value.map((s) => [s.lat, s.lng] as [number, number]);
-  });
   const conflicts = computed(() => findConflicts(stops.value, legs.value));
-
-  watch(
-    routeKey,
-    (key) => {
-      clearTimeout(debounce);
-      const id = ++requestId;
-      if (stops.value.length < 2) {
-        loading.value = false;
-        return;
-      }
-      loading.value = true;
-      const snap = stops.value;
-      debounce = setTimeout(async () => {
-        try {
-          const res = await fetchRoute(snap);
-          if (id !== requestId) return;
-          routed.value = { key, legs: res.legs, line: res.line };
-        } catch {
-          // keep the straight-line fallback
-        } finally {
-          if (id === requestId) loading.value = false;
-        }
-      }, 400);
-    },
-    { immediate: true },
-  );
 
   function onPinSelect(id: string) {
     // In plan mode a pin click only edits the route, so the stop list stays visible
@@ -560,9 +512,8 @@
     document.removeEventListener('pointerdown', onDocPointer);
     document.removeEventListener('visibilitychange', onVisibility);
     clearInterval(tickTimer);
-    clearTimeout(debounce);
     clearTimeout(noticeTimer);
-    requestId++;
+    cancel();
   });
 </script>
 

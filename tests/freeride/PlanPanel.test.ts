@@ -69,6 +69,8 @@ function make(props: Record<string, unknown> = {}) {
       home: null,
       options: opts,
       loading: false,
+      calculated: true,
+      stale: false,
       ...props,
     },
   });
@@ -159,6 +161,45 @@ describe('PlanPanel', () => {
   it('shows routing… while loading', () => {
     const w = make({ loading: true });
     expect(w.find('[data-test="totals"]').text()).toBe('routing…');
+  });
+
+  describe('calculate route', () => {
+    it('prompts to calculate when not calculated', async () => {
+      const w = make({ calculated: false, legs: [] });
+      const btn = w.find('[data-test="calculate"]');
+      expect(btn.text()).toBe('Calculate route');
+      expect(btn.attributes('disabled')).toBeUndefined();
+      expect(w.find('[data-test="totals"]').text()).toBe('Route not calculated');
+      expect(w.find('[data-test="leg"]').exists()).toBe(false);
+      await btn.trigger('click');
+      expect(w.emitted('calculate')).toHaveLength(1);
+    });
+
+    it('offers a recalculation when stale', () => {
+      const w = make({ calculated: false, stale: true, legs: [] });
+      expect(w.find('[data-test="calculate"]').text()).toBe('Recalculate route');
+      expect(w.find('[data-test="totals"]').text()).toBe('Route out of date');
+    });
+
+    it('disables the button while loading', () => {
+      const w = make({ calculated: false, loading: true, legs: [] });
+      const btn = w.find('[data-test="calculate"]');
+      expect(btn.text()).toBe('Routing…');
+      expect(btn.attributes('disabled')).toBeDefined();
+    });
+
+    it('hides the button once calculated', () => {
+      const w = make();
+      expect(w.find('[data-test="calculate"]').exists()).toBe(false);
+      expect(w.find('[data-test="totals"]').text()).toBe('212 km · ~3 h');
+    });
+
+    it('disables the button with fewer than 2 stops', () => {
+      const w = make({ stops: [eventStop(A)], calculated: false, legs: [] });
+      const btn = w.find('[data-test="calculate"]');
+      expect(btn.attributes('disabled')).toBeDefined();
+      expect(btn.attributes('title')).toBe('Add another stop or a homebase');
+    });
   });
 
   it('shows conflicts on the later stop', () => {

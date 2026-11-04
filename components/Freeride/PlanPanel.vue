@@ -3,6 +3,16 @@
     <header class="fr-plan__head">
       <h2 class="fr-plan__title">Plan</h2>
       <p v-if="eventCount > 0" class="fr-plan__totals" data-test="totals">{{ totalsText }}</p>
+      <button
+        v-if="eventCount > 0 && (!calculated || loading)"
+        type="button"
+        class="fr-plan__btn fr-plan__calc"
+        data-test="calculate"
+        :disabled="loading || stops.length < 2"
+        :title="stops.length < 2 ? 'Add another stop or a homebase' : undefined"
+        @click="emit('calculate')">
+        {{ loading ? 'Routing…' : stale ? 'Recalculate route' : 'Calculate route' }}
+      </button>
     </header>
 
     <p v-if="eventCount === 0" class="fr-plan__empty" data-test="empty">
@@ -51,7 +61,11 @@
             ×
           </button>
         </li>
-        <li v-if="i < stops.length - 1" class="fr-plan__leg" data-test="leg" aria-hidden="true">
+        <li
+          v-if="i < stops.length - 1 && legText(i)"
+          class="fr-plan__leg"
+          data-test="leg"
+          aria-hidden="true">
           {{ legText(i) }}
         </li>
         <li v-if="nextEventAfter(i)" class="fr-plan__leg fr-plan__leg--trip">
@@ -130,6 +144,8 @@
     home: Homebase | null;
     options: PlanOptions;
     loading: boolean;
+    calculated: boolean;
+    stale: boolean;
   }>();
 
   const emit = defineEmits<{
@@ -138,6 +154,7 @@
     (e: 'update:options', value: PlanOptions): void;
     (e: 'set-home'): void;
     (e: 'clear'): void;
+    (e: 'calculate'): void;
   }>();
 
   const MONTHS = [
@@ -175,6 +192,7 @@
   const totalsText = computed(() => {
     if (props.stops.length < 2) return 'Add another stop or a homebase to see the route';
     if (props.loading) return 'routing…';
+    if (!props.calculated) return props.stale ? 'Route out of date' : 'Route not calculated';
     const t = totals(props.legs);
     if (t.hours == null) return `~${fmtKm(t.km)} km straight-line`;
     return `${fmtKm(t.km)} km · ${fmtHours(t.hours, true)}`;
@@ -182,6 +200,7 @@
 
   function legText(i: number): string {
     if (props.loading) return 'routing…';
+    if (!props.calculated) return '';
     const leg = props.legs.find((l) => l.from === i);
     if (!leg) return '';
     if (leg.source === 'straight' || leg.hours == null) return `≈${fmtKm(leg.km)} km`;
@@ -430,6 +449,14 @@
     background: #fff;
     color: var(--fr-slate);
     cursor: pointer;
+  }
+  .fr-plan__calc {
+    margin-top: 6px;
+  }
+  .fr-plan__btn:disabled {
+    color: var(--fr-muted);
+    border-color: var(--fr-muted);
+    cursor: not-allowed;
   }
   .fr-plan__btn--clear {
     border-color: var(--fr-signal);
