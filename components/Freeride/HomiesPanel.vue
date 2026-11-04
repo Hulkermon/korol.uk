@@ -40,6 +40,13 @@
         </span>
         <span v-if="resultText(entry)" class="fr-entry-result">{{ resultText(entry) }}</span>
         <span v-else class="fr-pill" :class="pillClass(entry.status)">{{ entry.status }}</span>
+        <span
+          v-if="plannedSet.has(entry.event.id)"
+          class="fr-inplan"
+          title="In your plan"
+          aria-label="In your plan"
+          >✓</span
+        >
       </button>
     </template>
 
@@ -128,8 +135,9 @@
       events: FreerideEvent[];
       focusedKey: string | null;
       athletes?: Record<string, Athlete>;
+      plannedIds?: string[];
     }>(),
-    { athletes: () => ({}) },
+    { athletes: () => ({}), plannedIds: () => [] },
   );
 
   const emit = defineEmits<{
@@ -137,6 +145,8 @@
     (e: 'select', eventId: string): void;
     (e: 'toggle-homie', name: string): void;
   }>();
+
+  const plannedSet = computed(() => new Set(props.plannedIds));
 
   const MONTHS = [
     'Jan',
@@ -348,6 +358,21 @@
     flex: none;
     font-size: 0.75rem;
     font-weight: 700;
+  }
+  .fr-inplan {
+    flex: none;
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1f2a37;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
   }
   .fr-flag {
     width: 20px;

@@ -181,6 +181,14 @@ describe('HomiesPanel focused view', () => {
     expect(w.emitted('select')![0]).toEqual(['late']);
   });
 
+  it('marks only planned entries with the in-plan icon', () => {
+    const w = make({ homies: [ANN], focusedKey: 'ann lee', plannedIds: ['late'] });
+    const entries = w.findAll('.fr-entry');
+    expect(entries.map((e) => e.find('.fr-inplan').exists())).toEqual([false, false, true]);
+    const none = make({ homies: [ANN], focusedKey: 'ann lee' });
+    expect(none.find('.fr-inplan').exists()).toBe(false);
+  });
+
   it('emits focus(null) from back', async () => {
     const w = make({ homies: [ANN], focusedKey: 'ann lee' });
     await w.find('.fr-homies-back').trigger('click');

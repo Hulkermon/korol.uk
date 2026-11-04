@@ -108,6 +108,7 @@
             :events="events"
             :athletes="snapshot.athletes"
             :focused-key="focusedHomie"
+            :planned-ids="plannedIds"
             @focus="focusedHomie = $event"
             @select="pickEvent($event)"
             @toggle-homie="toggleHomie" />
@@ -140,6 +141,13 @@
                 <span class="fr-row-date">{{ formatRange(e.start, e.end) }}</span>
                 <span class="fr-row-name">{{ e.name }}</span>
               </span>
+              <span
+                v-if="plannedSet.has(e.id)"
+                class="fr-inplan"
+                title="In your plan"
+                aria-label="In your plan"
+                >✓</span
+              >
             </button>
           </div>
         </template>
@@ -331,6 +339,7 @@
     });
   });
 
+  const plannedSet = computed(() => new Set(plannedIds.value));
   const visible = computed(() => filterEvents(events.value, legend.value, range.value));
   const rangeEvents = computed(() => events.value.filter((e) => overlapsRange(e, range.value)));
   const plannedEvents = computed(() =>
@@ -748,6 +757,21 @@
     height: 10px;
     border-radius: 50%;
     flex: none;
+  }
+  .fr-inplan {
+    flex: none;
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1f2a37;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
   }
   .fr-row-text {
     display: flex;
