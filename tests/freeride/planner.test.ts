@@ -7,6 +7,9 @@ import {
   osrmUrl,
   fetchRoute,
   totals,
+  sortByDate,
+  planOrder,
+  planNav,
 } from '@/composables/freeride/planner';
 import type { Leg, PlanOptions } from '@/composables/freeride/planner';
 import type { FreerideEvent } from '@/composables/freeride/types';
@@ -226,5 +229,45 @@ describe('totals', () => {
     });
     expect(totals([l(10, 1), l(5, 2)])).toEqual({ km: 15, hours: 3 });
     expect(totals([l(10, 1), l(5, null)])).toEqual({ km: 15, hours: null });
+  });
+});
+
+describe('sortByDate', () => {
+  it('breaks ties by end then name without mutating input', () => {
+    const input = [
+      ev('d', '2027-01-02', '2027-01-03', 46, 7, 'B'),
+      ev('c', '2027-01-02', '2027-01-03', 46, 7, 'A'),
+      ev('b', '2027-01-02', '2027-01-02'),
+      ev('a', '2027-01-01', '2027-01-09'),
+    ];
+    const copy = [...input];
+    expect(sortByDate(input).map((e) => e.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(input).toEqual(copy);
+  });
+});
+
+describe('planOrder', () => {
+  it('numbers events by date whatever the input order', () => {
+    const events = [ev('z', '2027-03-01', '2027-03-02'), ev('y', '2027-01-01', '2027-01-02')];
+    expect(planOrder(events)).toEqual({ y: 1, z: 2 });
+  });
+  it('is empty for no events', () => {
+    expect(planOrder([])).toEqual({});
+  });
+});
+
+describe('planNav', () => {
+  const ids = ['a', 'b', 'c'];
+  it('handles middle, first and last', () => {
+    expect(planNav(ids, 'b')).toEqual({ index: 2, total: 3, prevId: 'a', nextId: 'c' });
+    expect(planNav(ids, 'a')).toEqual({ index: 1, total: 3, prevId: null, nextId: 'b' });
+    expect(planNav(ids, 'c')).toEqual({ index: 3, total: 3, prevId: 'b', nextId: null });
+  });
+  it('handles a single item', () => {
+    expect(planNav(['a'], 'a')).toEqual({ index: 1, total: 1, prevId: null, nextId: null });
+  });
+  it('returns null for unknown or null id', () => {
+    expect(planNav(ids, 'x')).toBeNull();
+    expect(planNav(ids, null)).toBeNull();
   });
 });

@@ -57,14 +57,41 @@ export function homeTripOn(prev: FreerideEvent, next: FreerideEvent, opts: PlanO
   return opts.homeTrips?.[prev.id] ?? gapDays(prev, next) >= opts.homeGapDays;
 }
 
+export function sortByDate(events: FreerideEvent[]): FreerideEvent[] {
+  return [...events].sort(
+    (a, b) => cmp(a.start, b.start) || cmp(a.end, b.end) || cmp(a.name, b.name),
+  );
+}
+
+export function planOrder(events: FreerideEvent[]): Record<string, number> {
+  const order: Record<string, number> = {};
+  sortByDate(events).forEach((event, i) => {
+    order[event.id] = i + 1;
+  });
+  return order;
+}
+
+export function planNav(
+  orderedIds: string[],
+  id: string | null,
+): { index: number; total: number; prevId: string | null; nextId: string | null } | null {
+  if (id === null) return null;
+  const i = orderedIds.indexOf(id);
+  if (i < 0) return null;
+  return {
+    index: i + 1,
+    total: orderedIds.length,
+    prevId: orderedIds[i - 1] ?? null,
+    nextId: orderedIds[i + 1] ?? null,
+  };
+}
+
 export function buildStops(
   events: FreerideEvent[],
   home: Homebase | null,
   opts: PlanOptions,
 ): Stop[] {
-  const sorted = [...events].sort(
-    (a, b) => cmp(a.start, b.start) || cmp(a.end, b.end) || cmp(a.name, b.name),
-  );
+  const sorted = sortByDate(events);
   const stops: Stop[] = [];
   if (home && opts.startAtHome) {
     stops.push({ kind: 'home', role: 'start', lat: home.lat, lng: home.lng, label: home.label });
