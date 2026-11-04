@@ -401,7 +401,17 @@
     else selectedId.value = null;
   }
 
+  const route = useRoute();
+  const router = useRouter();
+
   onMounted(() => {
+    const wanted = route.query.event;
+    if (wanted !== undefined) {
+      if (typeof wanted === 'string' && events.value.some((e) => e.id === wanted)) {
+        selectedId.value = wanted;
+      }
+      router.replace({ query: {} });
+    }
     window.addEventListener('keydown', onKey);
     document.addEventListener('visibilitychange', onVisibility);
     tickTimer = setInterval(() => (nowTick.value = Date.now()), 60000);
