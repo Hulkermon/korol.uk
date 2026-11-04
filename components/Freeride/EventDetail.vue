@@ -47,14 +47,14 @@
           <button
             type="button"
             class="fr-star"
-            :class="{ on: isHomie(rider.name) }"
-            :aria-pressed="isHomie(rider.name)"
-            :aria-label="starLabel(rider.name)"
-            :title="starLabel(rider.name)"
-            @click="emit('toggle-homie', rider.name)">
-            {{ isHomie(rider.name) ? '★' : '☆' }}
+            :class="{ on: isHomie(rider) }"
+            :aria-pressed="isHomie(rider)"
+            :aria-label="starLabel(rider)"
+            :title="starLabel(rider)"
+            @click="emit('toggle-homie', rider.name, rider.athleteId)">
+            {{ isHomie(rider) ? '★' : '☆' }}
           </button>
-          <span class="fr-rider-name" :class="{ 'fr-rider-name--homie': isHomie(rider.name) }">{{
+          <span class="fr-rider-name" :class="{ 'fr-rider-name--homie': isHomie(rider) }">{{
             rider.name
           }}</span>
           <template v-if="rider.nationality">
@@ -78,9 +78,9 @@
 
 <script setup lang="ts">
   import { computed } from 'vue';
-  import type { FreerideEvent, Tier } from '@/composables/freeride/types';
+  import type { FreerideEvent, Rider, Tier } from '@/composables/freeride/types';
   import { countryCode, flagUrl } from '@/composables/freeride/countries';
-  import { riderKey } from '@/composables/freeride/homies';
+  import { riderId } from '@/composables/freeride/homies';
 
   const props = withDefaults(
     defineProps<{
@@ -95,17 +95,18 @@
   const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'toggle-plan', id: string): void;
-    (e: 'toggle-homie', name: string): void;
+    (e: 'toggle-homie', name: string, athleteId?: string | null): void;
   }>();
 
   const homieSet = computed(() => new Set(props.homieKeys));
 
-  function isHomie(name: string): boolean {
-    return homieSet.value.has(riderKey(name));
+  function isHomie(rider: Rider): boolean {
+    return homieSet.value.has(riderId(rider));
   }
 
-  function starLabel(name: string): string {
-    return isHomie(name) ? `Remove ${name} from homies` : `Add ${name} to homies`;
+  function starLabel(rider: Rider): string {
+    const name = rider.name;
+    return isHomie(rider) ? `Remove ${name} from homies` : `Add ${name} to homies`;
   }
 
   const MONTHS = [

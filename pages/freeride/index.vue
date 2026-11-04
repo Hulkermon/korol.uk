@@ -201,7 +201,7 @@
   const selectedId = ref<string | null>(null);
   pruneMissing();
 
-  const { homies, toggleHomie } = useHomies();
+  const { homies, toggleHomie } = useHomies(undefined, events);
   const homieKeys = computed(() => homies.value.map((h) => h.key));
   const sideTab = ref<'list' | 'homies'>('list');
   // Rider whose events the map is narrowed to (any rider key, not only homies)

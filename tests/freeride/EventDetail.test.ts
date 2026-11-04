@@ -179,7 +179,25 @@ describe('EventDetail', () => {
   it('emits toggle-homie with the rider name', async () => {
     const w = render(makeEvent());
     await w.findAll('.fr-star')[1].trigger('click');
-    expect(w.emitted('toggle-homie')![0]).toEqual(['B Rider']);
+    expect(w.emitted('toggle-homie')![0]).toEqual(['B Rider', undefined]);
+  });
+
+  it('emits toggle-homie with name and athleteId', async () => {
+    const event = makeEvent({
+      divisions: [
+        {
+          name: 'Ski Men',
+          entryCount: 1,
+          riders: [{ name: 'A Rider', athleteId: '777', nationality: 'CH', status: 'confirmed' }],
+        },
+      ],
+    });
+    const w = mount(EventDetail, {
+      props: { event, planned: false, planning: false, homieKeys: ['777'] },
+    });
+    expect(w.find('.fr-star').classes()).toContain('on');
+    await w.find('.fr-star').trigger('click');
+    expect(w.emitted('toggle-homie')![0]).toEqual(['A Rider', '777']);
   });
 
   it('bolds homies and marks their star on', () => {

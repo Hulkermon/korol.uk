@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { nextTick } from 'vue';
+import { nextTick, ref } from 'vue';
 import {
   HOMIES_KEY,
   allRiders,
   homieEntries,
   homieEventIds,
   matchesQuery,
+  migrateHomies,
+  riderId,
   riderKey,
   useHomies,
 } from '@/composables/freeride/homies';
@@ -163,5 +165,107 @@ describe('useHomies', () => {
     b.toggleHomie('Kim');
     await nextTick();
     expect(b.homies.value).toHaveLength(1);
+  });
+});
+
+const idDiv = (name: string, riders: [string, string | null][]): Division => ({
+  name,
+  entryCount: riders.length,
+  riders: riders.map(([n, athleteId]) => ({
+    name: n,
+    athleteId,
+    nationality: null,
+    status: 'confirmed',
+  })),
+});
+
+const idEvents = [
+  ev('1', '2027-01-10', [
+    idDiv('Ski Men', [
+      ['Sam Lee', '111'],
+      ['Sam Lee', '222'],
+      ['No Id', null],
+    ]),
+  ]),
+];
+
+describe('riderId', () => {
+  it('prefers athleteId and falls back to the normalised name', () => {
+    expect(riderId({ athleteId: '42', name: 'Kim' })).toBe('42');
+    expect(riderId({ athleteId: null, name: ' Élise  Dupré ' })).toBe('elise dupre');
+    expect(riderId({ name: 'Kim' })).toBe('kim');
+  });
+});
+
+describe('id keyed riders', () => {
+  it('keeps same-name riders with different ids separate', () => {
+    const riders = allRiders(idEvents);
+    expect(riders.map((r) => [r.key, r.athleteId ?? null])).toEqual([
+      ['no id', null],
+      ['111', '111'],
+      ['222', '222'],
+    ]);
+    expect(homieEntries(idEvents, '111')).toHaveLength(1);
+    expect(homieEntries(idEvents, '222')).toHaveLength(1);
+    expect(homieEntries(idEvents, 'sam lee')).toHaveLength(0);
+    expect(homieEntries(idEvents, 'no id')).toHaveLength(1);
+  });
+});
+
+describe('migrateHomies', () => {
+  it('migrates name keys to ids, dedupes and keeps unknown names', () => {
+    const list = [
+      { key: 'zed rider', name: 'Zed Rider' },
+      { key: 'no id', name: 'No Id' },
+      { key: '111', name: 'Sam Lee' },
+      { key: 'sam lee', name: 'Sam Lee' },
+    ];
+    const m = migrateHomies(list, idEvents);
+    expect(m).toEqual([
+      { key: 'zed rider', name: 'Zed Rider' },
+      { key: 'no id', name: 'No Id' },
+      { key: '111', name: 'Sam Lee' },
+    ]);
+  });
+
+  it('returns the same reference when nothing changes', () => {
+    const list = [
+      { key: '111', name: 'Sam Lee' },
+      { key: 'ghost', name: 'Ghost' },
+    ];
+    expect(migrateHomies(list, idEvents)).toBe(list);
+  });
+
+  it('useHomies migrates stored homies when events are given', () => {
+    const st = memStorage(JSON.stringify([{ key: 'sam lee', name: 'Sam Lee' }]));
+    const h = useHomies(st, ref(idEvents));
+    expect(h.homies.value).toEqual([{ key: '111', name: 'Sam Lee' }]);
+  });
+});
+
+describe('toggleHomie with ids', () => {
+  it('uses the given athlete id', () => {
+    const h = useHomies(memStorage(), ref(idEvents));
+    h.toggleHomie('Sam Lee', '222');
+    expect(h.homies.value).toEqual([{ key: '222', name: 'Sam Lee' }]);
+    expect(h.isHomie('Sam Lee', '222')).toBe(true);
+    expect(h.isHomie('Sam Lee', '999')).toBe(false);
+    h.toggleHomie('Sam Lee', '222');
+    expect(h.homies.value).toEqual([]);
+  });
+
+  it('resolves the id by name via events and removes a name-keyed homie', () => {
+    const h = useHomies(memStorage(), ref(idEvents));
+    h.toggleHomie('Sam Lee');
+    expect(h.homies.value).toEqual([{ key: '111', name: 'Sam Lee' }]);
+    h.homies.value = [{ key: 'sam lee', name: 'Sam Lee' }];
+    h.toggleHomie('Sam Lee');
+    expect(h.homies.value).toEqual([]);
+  });
+
+  it('falls back to the name key for riders without an id', () => {
+    const h = useHomies(memStorage(), ref(idEvents));
+    h.toggleHomie('No Id');
+    expect(h.homies.value).toEqual([{ key: 'no id', name: 'No Id' }]);
   });
 });
