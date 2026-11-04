@@ -8,15 +8,22 @@ import {
   fetchRoute,
   totals,
 } from '@/composables/freeride/planner';
-import type { Leg } from '@/composables/freeride/planner';
+import type { Leg, PlanOptions } from '@/composables/freeride/planner';
 import type { FreerideEvent } from '@/composables/freeride/types';
 
 const ev = (id: string, start: string, end: string, lat = 46, lng = 7, name = id) =>
   ({ id, name, start, end, lat, lng, place: 'x' }) as FreerideEvent;
+const O = (startAtHome: boolean, returnHome: boolean, extra: Partial<PlanOptions> = {}) => ({
+  startAtHome,
+  returnHome,
+  homeTrips: {},
+  homeGapDays: 5,
+  ...extra,
+});
 const home = { lat: 47.3769, lng: 8.5417, label: 'Home' };
 
 describe('buildStops', () => {
-  const events = [ev('c', '2026-03-10', '2026-03-12'), ev('a', '2026-03-01', '2026-03-02')];
+  const events = [ev('c', '2026-03-05', '2026-03-12'), ev('a', '2026-03-01', '2026-03-02')];
   const kinds = (s: ReturnType<typeof buildStops>) =>
     s.map((x) => (x.kind === 'home' ? `home:${x.role}` : x.label));
 
@@ -28,12 +35,12 @@ describe('buildStops', () => {
         ev('a', '2026-03-01', '2026-03-02', 0, 0, 'A'),
       ],
       null,
-      { startAtHome: true, returnHome: true },
+      O(true, true),
     );
     expect(kinds(s)).toEqual(['A', 'B', 'Z']);
   });
   it('adds home at both ends', () => {
-    expect(kinds(buildStops(events, home, { startAtHome: true, returnHome: true }))).toEqual([
+    expect(kinds(buildStops(events, home, O(true, true)))).toEqual([
       'home:start',
       'a',
       'c',
@@ -41,23 +48,69 @@ describe('buildStops', () => {
     ]);
   });
   it('respects each option', () => {
-    expect(kinds(buildStops(events, home, { startAtHome: true, returnHome: false }))).toEqual([
-      'home:start',
-      'a',
-      'c',
-    ]);
-    expect(kinds(buildStops(events, home, { startAtHome: false, returnHome: true }))).toEqual([
-      'a',
-      'c',
-      'home:end',
-    ]);
-    expect(kinds(buildStops(events, home, { startAtHome: false, returnHome: false }))).toEqual([
-      'a',
-      'c',
-    ]);
+    expect(kinds(buildStops(events, home, O(true, false)))).toEqual(['home:start', 'a', 'c']);
+    expect(kinds(buildStops(events, home, O(false, true)))).toEqual(['a', 'c', 'home:end']);
+    expect(kinds(buildStops(events, home, O(false, false)))).toEqual(['a', 'c']);
   });
   it('omits home when null', () => {
-    expect(buildStops(events, null, { startAtHome: true, returnHome: true })).toHaveLength(2);
+    expect(buildStops(events, null, O(true, true))).toHaveLength(2);
+  });
+});
+
+describe('home trips', () => {
+  const a = ev('a', '2026-03-01', '2026-03-02');
+  const kinds = (s: ReturnType<typeof buildStops>) =>
+    s.map((x) => (x.kind === 'home' ? `home:${x.role}` : x.label));
+  it('inserts a via stop by the auto threshold', () => {
+    const b4 = ev('b', '2026-03-06', '2026-03-07'); // gap 4
+    const b5 = ev('b', '2026-03-07', '2026-03-08'); // gap 5
+    expect(kinds(buildStops([a, b4], home, O(false, false)))).toEqual(['a', 'b']);
+    const s = buildStops([a, b5], home, O(false, false));
+    expect(kinds(s)).toEqual(['a', 'home:via', 'b']);
+    expect(s[1]).toMatchObject({ kind: 'home', role: 'via', after: 'a' });
+  });
+  it('lets overrides force on or off', () => {
+    const b4 = ev('b', '2026-03-06', '2026-03-07');
+    const b9 = ev('b', '2026-03-11', '2026-03-12');
+    expect(kinds(buildStops([a, b4], home, O(false, false, { homeTrips: { a: true } })))).toEqual([
+      'a',
+      'home:via',
+      'b',
+    ]);
+    expect(kinds(buildStops([a, b9], home, O(false, false, { homeTrips: { a: false } })))).toEqual([
+      'a',
+      'b',
+    ]);
+  });
+  it('adds no via without home', () => {
+    const b9 = ev('b', '2026-03-11', '2026-03-12');
+    expect(buildStops([a, b9], null, O(true, true, { homeTrips: { a: true } }))).toHaveLength(2);
+  });
+  it('sums legs through home for conflicts', () => {
+    const b = ev('b', '2026-03-05', '2026-03-06'); // gap 3
+    const stops = buildStops([a, b], home, O(false, false, { homeTrips: { a: true } }));
+    const legs = (h: number): Leg[] => [
+      { from: 0, to: 1, km: 1, hours: h, source: 'osrm' },
+      { from: 1, to: 2, km: 1, hours: h, source: 'osrm' },
+    ];
+    expect(findConflicts(stops, legs(15))).toEqual([]); // 30h -> 3 days, gap 3
+    expect(findConflicts(stops, legs(16))).toEqual([{ a: 'a', b: 'b', reason: 'tight' }]); // 32h -> 4
+  });
+  it('sums km when any leg lacks hours', () => {
+    const b = ev('b', '2026-03-05', '2026-03-06');
+    const stops = buildStops([a, b], home, O(false, false, { homeTrips: { a: true } }));
+    const legs: Leg[] = [
+      { from: 0, to: 1, km: 1000, hours: 1, source: 'osrm' },
+      { from: 1, to: 2, km: 1200, hours: null, source: 'straight' },
+    ];
+    expect(findConflicts(stops, legs)).toEqual([{ a: 'a', b: 'b', reason: 'tight' }]); // 4 days
+  });
+  it('still flags overlap with a via', () => {
+    const b = ev('b', '2026-03-02', '2026-03-03');
+    const stops = buildStops([a, b], home, O(false, false, { homeTrips: { a: true } }));
+    expect(findConflicts(stops, straightLegs(stops))).toEqual([
+      { a: 'a', b: 'b', reason: 'overlap' },
+    ]);
   });
 });
 
@@ -70,7 +123,7 @@ describe('haversineKm', () => {
 
 describe('findConflicts', () => {
   const run = (a: FreerideEvent, b: FreerideEvent, legs?: Leg[]) => {
-    const stops = buildStops([a, b], null, { startAtHome: false, returnHome: false });
+    const stops = buildStops([a, b], null, O(false, false));
     return findConflicts(stops, legs ?? straightLegs(stops));
   };
   it('flags overlap, including same-day', () => {
@@ -111,7 +164,7 @@ describe('fetchRoute', () => {
   const stops = buildStops(
     [ev('a', '2026-03-01', '2026-03-01', 46, 7), ev('b', '2026-03-05', '2026-03-05', 45, 6)],
     home,
-    { startAtHome: true, returnHome: false },
+    O(true, false),
   );
   const okFetch = (body: unknown, ok = true) =>
     vi.fn().mockResolvedValue({ ok, json: async () => body }) as unknown as typeof fetch;

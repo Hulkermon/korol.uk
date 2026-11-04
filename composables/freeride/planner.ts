@@ -8,9 +8,18 @@ export interface Homebase {
 export interface PlanOptions {
   startAtHome: boolean;
   returnHome: boolean;
+  homeTrips: Record<string, boolean>;
+  homeGapDays: number;
 }
 export type Stop =
-  | { kind: 'home'; role: 'start' | 'end'; lat: number; lng: number; label: string }
+  | {
+      kind: 'home';
+      role: 'start' | 'end' | 'via';
+      after?: string;
+      lat: number;
+      lng: number;
+      label: string;
+    }
   | { kind: 'event'; event: FreerideEvent; lat: number; lng: number; label: string };
 export interface Leg {
   from: number;
@@ -36,6 +45,18 @@ const KM_PER_DRIVING_DAY = 700;
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
+function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS);
+}
+
+export function gapDays(prev: FreerideEvent, next: FreerideEvent): number {
+  return daysBetween(prev.end, next.start);
+}
+
+export function homeTripOn(prev: FreerideEvent, next: FreerideEvent, opts: PlanOptions): boolean {
+  return opts.homeTrips?.[prev.id] ?? gapDays(prev, next) >= opts.homeGapDays;
+}
+
 export function buildStops(
   events: FreerideEvent[],
   home: Homebase | null,
@@ -48,9 +69,20 @@ export function buildStops(
   if (home && opts.startAtHome) {
     stops.push({ kind: 'home', role: 'start', lat: home.lat, lng: home.lng, label: home.label });
   }
-  for (const event of sorted) {
+  sorted.forEach((event, i) => {
+    const prev = sorted[i - 1];
+    if (home && prev && homeTripOn(prev, event, opts)) {
+      stops.push({
+        kind: 'home',
+        role: 'via',
+        after: prev.id,
+        lat: home.lat,
+        lng: home.lng,
+        label: home.label,
+      });
+    }
     stops.push({ kind: 'event', event, lat: event.lat, lng: event.lng, label: event.name });
-  }
+  });
   if (home && opts.returnHome) {
     stops.push({ kind: 'home', role: 'end', lat: home.lat, lng: home.lng, label: home.label });
   }
@@ -84,28 +116,32 @@ export function straightLegs(stops: Stop[]): Leg[] {
   return legs;
 }
 
-function daysBetween(from: string, to: string): number {
-  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS);
-}
-
 export function findConflicts(stops: Stop[], legs: Leg[]): Conflict[] {
   const conflicts: Conflict[] = [];
-  for (let i = 0; i < stops.length - 1; i++) {
-    const prev = stops[i];
-    const next = stops[i + 1];
-    if (prev.kind !== 'event' || next.kind !== 'event') continue;
-    const gap = daysBetween(prev.event.end, next.event.start);
-    if (gap <= 0) {
-      conflicts.push({ a: prev.event.id, b: next.event.id, reason: 'overlap' });
-      continue;
+  let prevIdx = -1;
+  for (let i = 0; i < stops.length; i++) {
+    const next = stops[i];
+    if (next.kind !== 'event') continue;
+    const prev = prevIdx >= 0 ? stops[prevIdx] : null;
+    if (prev && prev.kind === 'event') {
+      const gap = gapDays(prev.event, next.event);
+      if (gap <= 0) {
+        conflicts.push({ a: prev.event.id, b: next.event.id, reason: 'overlap' });
+      } else {
+        const between = legs.filter((l) => l.from >= prevIdx && l.to <= i);
+        if (between.length) {
+          const needed = between.every((l) => l.hours != null)
+            ? Math.ceil(
+                between.reduce((s, l) => s + (l.hours as number), 0) / HOURS_PER_DRIVING_DAY,
+              )
+            : Math.ceil(between.reduce((s, l) => s + l.km, 0) / KM_PER_DRIVING_DAY);
+          if (gap < needed) {
+            conflicts.push({ a: prev.event.id, b: next.event.id, reason: 'tight' });
+          }
+        }
+      }
     }
-    const leg = legs.find((l) => l.from === i && l.to === i + 1);
-    if (!leg) continue;
-    const needed =
-      leg.hours != null
-        ? Math.ceil(leg.hours / HOURS_PER_DRIVING_DAY)
-        : Math.ceil(leg.km / KM_PER_DRIVING_DAY);
-    if (gap < needed) conflicts.push({ a: prev.event.id, b: next.event.id, reason: 'tight' });
+    prevIdx = i;
   }
   return conflicts;
 }

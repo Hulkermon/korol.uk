@@ -28,7 +28,12 @@ describe('usePlannerState', () => {
     expect(s.planning.value).toBe(false);
     expect(s.plannedIds.value).toEqual([]);
     expect(s.home.value).toBeNull();
-    expect(s.planOptions.value).toEqual({ startAtHome: true, returnHome: true });
+    expect(s.planOptions.value).toEqual({
+      startAtHome: true,
+      returnHome: true,
+      homeTrips: {},
+      homeGapDays: 5,
+    });
   });
 
   it('round trips through storage', async () => {
@@ -48,7 +53,12 @@ describe('usePlannerState', () => {
     expect(b.planning.value).toBe(true);
     expect(b.plannedIds.value).toEqual(['x', 'y']);
     expect(b.home.value).toEqual({ lat: 1.5, lng: 2.5, label: 'Home' });
-    expect(b.planOptions.value).toEqual({ startAtHome: true, returnHome: false });
+    expect(b.planOptions.value).toEqual({
+      startAtHome: true,
+      returnHome: false,
+      homeTrips: {},
+      homeGapDays: 5,
+    });
   });
 
   it('falls back to defaults on corrupt JSON', () => {
@@ -75,7 +85,38 @@ describe('usePlannerState', () => {
     expect(s.planning.value).toBe(true);
     expect(s.plannedIds.value).toEqual(['a', 'b']);
     expect(s.home.value).toBeNull();
-    expect(s.planOptions.value).toEqual({ startAtHome: false, returnHome: true });
+    expect(s.planOptions.value).toEqual({
+      startAtHome: false,
+      returnHome: true,
+      homeTrips: {},
+      homeGapDays: 5,
+    });
+  });
+
+  it('parses homeTrips and homeGapDays, rejecting invalid values', () => {
+    const parse = (planOptions: unknown) =>
+      usePlannerState(bounds, memStorage(JSON.stringify({ planOptions }))).planOptions.value;
+    const good = parse({ homeTrips: { a: true, b: false, c: 'x', d: 1 }, homeGapDays: 9 });
+    expect(good.homeTrips).toEqual({ a: true, b: false });
+    expect(good.homeGapDays).toBe(9);
+    expect(parse({ startAtHome: true }).homeGapDays).toBe(5);
+    for (const bad of [0, 61, 2.5, '7', null])
+      expect(parse({ homeGapDays: bad }).homeGapDays).toBe(5);
+    expect(parse({ homeTrips: [true] }).homeTrips).toEqual({});
+  });
+
+  it('prunes homeTrips on remove, untoggle and clear', () => {
+    const s = usePlannerState(bounds, null);
+    s.togglePlanned('a');
+    s.togglePlanned('b');
+    s.planOptions.value.homeTrips = { a: true, b: false };
+    s.removePlanned('a');
+    expect(s.planOptions.value.homeTrips).toEqual({ b: false });
+    s.togglePlanned('b');
+    expect(s.planOptions.value.homeTrips).toEqual({});
+    s.planOptions.value.homeTrips = { c: true };
+    s.clearPlan();
+    expect(s.planOptions.value.homeTrips).toEqual({});
   });
 
   it('clamps the loaded range into bounds', () => {

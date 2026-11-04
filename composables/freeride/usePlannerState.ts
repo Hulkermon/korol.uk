@@ -26,7 +26,7 @@ function defaultLegend(): LegendFilter {
 }
 
 function defaultOptions(): PlanOptions {
-  return { startAtHome: true, returnHome: true };
+  return { startAtHome: true, returnHome: true, homeTrips: {}, homeGapDays: 5 };
 }
 
 function isObj(v: unknown): v is Record<string, unknown> {
@@ -75,6 +75,13 @@ function parseOptions(raw: unknown): PlanOptions {
   if (!isObj(raw)) return out;
   if (typeof raw.startAtHome === 'boolean') out.startAtHome = raw.startAtHome;
   if (typeof raw.returnHome === 'boolean') out.returnHome = raw.returnHome;
+  if (isObj(raw.homeTrips)) {
+    for (const [id, v] of Object.entries(raw.homeTrips)) {
+      if (typeof v === 'boolean') out.homeTrips[id] = v;
+    }
+  }
+  const g = raw.homeGapDays;
+  if (typeof g === 'number' && Number.isInteger(g) && g >= 1 && g <= 60) out.homeGapDays = g;
   return out;
 }
 
@@ -127,15 +134,17 @@ export function usePlannerState(bounds: DateRange, storage: Storage | null = saf
   function togglePlanned(id: string) {
     const i = plannedIds.value.indexOf(id);
     if (i === -1) plannedIds.value = [...plannedIds.value, id];
-    else plannedIds.value = plannedIds.value.filter((x) => x !== id);
+    else removePlanned(id);
   }
 
   function removePlanned(id: string) {
     plannedIds.value = plannedIds.value.filter((x) => x !== id);
+    delete planOptions.value.homeTrips[id];
   }
 
   function clearPlan() {
     plannedIds.value = [];
+    planOptions.value.homeTrips = {};
   }
 
   function setHome(h: Homebase | null) {
