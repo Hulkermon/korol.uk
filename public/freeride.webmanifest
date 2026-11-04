@@ -1,0 +1,17 @@
+{
+  "name": "Freeride Planner",
+  "short_name": "Freeride",
+  "description": "FWT & FWQ Europe events, results and trip planner",
+  "id": "/freeride",
+  "start_url": "/freeride",
+  "scope": "/freeride",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f9fb",
+  "theme_color": "#1f2a37",
+  "icons": [
+    { "src": "/freeride-icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/freeride-icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/freeride-icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
