@@ -675,7 +675,8 @@
   }
   .fr-legend {
     position: absolute;
-    top: 10px;
+    /* below Leaflet's zoom control */
+    top: 86px;
     left: 10px;
     z-index: 1000;
   }
@@ -804,17 +805,31 @@
     .fr-titles h1 {
       font-size: 20px;
     }
+    .fr-toggle {
+      flex: none;
+    }
     .fr-toggle button {
       padding: 6px 10px;
     }
+    .fr-home-btn {
+      flex: none;
+    }
     .fr-notice {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1150;
+      margin-top: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--fr-slate);
+      color: #fff;
       white-space: nowrap;
+      pointer-events: none;
     }
     .fr-hint {
-      top: 52px;
+      top: 10px;
       max-width: calc(100% - 20px);
       font-size: 13px;
       padding: 6px 10px;
