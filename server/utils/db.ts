@@ -66,6 +66,17 @@ export const useDb = async () => {
       `);
 
       await connection.query(`
+        CREATE TABLE IF NOT EXISTS freeride_snapshots (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          fetched_at CHAR(24) NOT NULL,
+          event_count INT NOT NULL,
+          data LONGTEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_freeride_snapshots_fetched (fetched_at)
+        )
+      `);
+
+      await connection.query(`
         CREATE TABLE IF NOT EXISTS visitor_counter (
           name VARCHAR(50) PRIMARY KEY,
           count BIGINT DEFAULT 0
