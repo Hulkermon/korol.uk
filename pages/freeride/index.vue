@@ -18,21 +18,8 @@
       <button type="button" class="fr-btn" @click="useMyLocation">📍 Use my location</button>
       <span v-if="notice" class="fr-notice">{{ notice }}</span>
       <span class="fr-data">
-        Data from Liveheats · as of {{ fetchedAtText }}
-        <button
-          type="button"
-          class="fr-refresh"
-          :class="{ spinning: refreshing }"
-          :disabled="refreshing"
-          :title="
-            refreshing
-              ? 'Fetching fresh data from Liveheats…'
-              : `Refresh data (fetched ${snapshot.fetchedAt})`
-          "
-          aria-label="Refresh data from Liveheats"
-          @click="onRefresh">
-          ↻
-        </button>
+        Data from Liveheats ·
+        <span :title="fetchedAtText">updated {{ timeAgo(snapshot.fetchedAt, nowTick) }}</span>
       </span>
     </header>
 
@@ -147,7 +134,7 @@
     rebaseRange,
     seasonBounds,
   } from '@/composables/freeride/filters';
-  import { useSnapshot } from '@/composables/freeride/useSnapshot';
+  import { timeAgo, useSnapshot } from '@/composables/freeride/useSnapshot';
   import { usePlannerState } from '@/composables/freeride/usePlannerState';
   import {
     buildStops,
@@ -183,7 +170,7 @@
     '--fr-muted': '#6b7a8a',
   };
 
-  const { snapshot, refreshing, refresh } = useSnapshot(
+  const { snapshot, sync, lastSyncAt } = useSnapshot(
     bundledSnapshot as unknown as EventSnapshot,
   );
   const events = computed(() => snapshot.value.events);
@@ -370,16 +357,22 @@
     pickingHome.value = false;
   }
 
-  async function onRefresh() {
+  async function runSync() {
     const oldBounds = bounds.value;
-    const ok = await refresh();
-    if (!ok) {
-      showNotice('Refresh failed, showing the previous data');
-      return;
-    }
+    const result = await sync();
+    if (result !== 'updated') return;
     range.value = rebaseRange(range.value, oldBounds, bounds.value);
     pruneMissing();
     showNotice(`Updated · ${events.value.length} events`);
+  }
+
+  const SYNC_STALE_MS = 10 * 60 * 1000;
+  const nowTick = ref(Date.now());
+  let tickTimer: ReturnType<typeof setInterval> | undefined;
+
+  function onVisibility() {
+    if (document.visibilityState !== 'visible') return;
+    if (lastSyncAt.value === null || Date.now() - lastSyncAt.value > SYNC_STALE_MS) runSync();
   }
 
   function showNotice(msg: string) {
@@ -408,9 +401,16 @@
     else selectedId.value = null;
   }
 
-  onMounted(() => window.addEventListener('keydown', onKey));
+  onMounted(() => {
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('visibilitychange', onVisibility);
+    tickTimer = setInterval(() => (nowTick.value = Date.now()), 60000);
+    runSync();
+  });
   onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKey);
+    document.removeEventListener('visibilitychange', onVisibility);
+    clearInterval(tickTimer);
     clearTimeout(debounce);
     clearTimeout(noticeTimer);
     requestId++;
@@ -510,32 +510,6 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-  }
-  .fr-refresh {
-    width: 26px;
-    height: 26px;
-    border: 1px solid #dde3ea;
-    border-radius: 50%;
-    background: #fff;
-    color: var(--fr-slate);
-    font-size: 15px;
-    line-height: 1;
-    cursor: pointer;
-  }
-  .fr-refresh:hover:not(:disabled) {
-    border-color: var(--fr-signal);
-    color: var(--fr-signal);
-  }
-  .fr-refresh:disabled {
-    cursor: progress;
-  }
-  .fr-refresh.spinning {
-    animation: fr-spin 0.9s linear infinite;
-  }
-  @keyframes fr-spin {
-    to {
-      transform: rotate(360deg);
-    }
   }
   .fr-main {
     flex: 1;
