@@ -5,12 +5,12 @@ import {
   placeLabel,
   reversePlace,
   reverseUrl,
-  searchPlaces
+  searchPlaces,
 } from '@/composables/freeride/geocode';
 
 const feature = (coordinates: unknown, properties: Record<string, unknown>) => ({
   geometry: { coordinates },
-  properties
+  properties,
 });
 
 const okFetch = (json: unknown) =>
@@ -49,23 +49,23 @@ describe('placeLabel', () => {
         housenumber: '1',
         postcode: '8001',
         city: 'Zürich',
-        country: 'Switzerland'
-      })
+        country: 'Switzerland',
+      }),
     ).toBe('Bahnhofstrasse 1, 8001 Zürich, Switzerland');
   });
 
   it('uses name, falls back to district and dedupes', () => {
     expect(placeLabel({ name: 'Verbier', district: 'Verbier', country: 'Switzerland' })).toBe(
-      'Verbier, Switzerland'
+      'Verbier, Switzerland',
     );
     expect(placeLabel({ name: 'Hotel', postcode: '1936', district: 'Bagnes' })).toBe(
-      'Hotel, 1936 Bagnes'
+      'Hotel, 1936 Bagnes',
     );
   });
 
   it('drops a postcode without a city or district', () => {
     expect(placeLabel({ name: 'Zermatt', postcode: '3920', country: 'Switzerland' })).toBe(
-      'Zermatt, Switzerland'
+      'Zermatt, Switzerland',
     );
   });
 
@@ -85,8 +85,8 @@ describe('parsePhoton', () => {
         feature(['a', 1], { name: 'Bad2' }),
         feature(null, { name: 'Bad3' }),
         feature([1, 2], {}),
-        null
-      ]
+        null,
+      ],
     };
     expect(parsePhoton(json)).toEqual([{ label: 'Zürich, Switzerland', lat: 47.3, lng: 8.5 }]);
   });

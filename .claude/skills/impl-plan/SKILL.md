@@ -45,7 +45,7 @@ The following files are hotspots. Tasks that touch them always run one after ano
 - `package.json` and `pnpm-lock.yaml`: any `pnpm add`
 - `CLAUDE.md`, for example adding a sub-project to the table
 
-Then derive the **waves**. Wave 1 is the tasks with no dependencies. Wave *n* is the tasks whose dependencies all fall in earlier waves. Waves are for the reader only. The manager starts each task as soon as its own dependencies are committed.
+Then derive the **waves**. Wave 1 is the tasks with no dependencies. Wave _n_ is the tasks whose dependencies all fall in earlier waves. Waves are for the reader only. The manager starts each task as soon as its own dependencies are committed.
 
 ### 4. Write the briefs
 

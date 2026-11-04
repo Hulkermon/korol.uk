@@ -2,7 +2,7 @@ export default defineEventHandler(async (event) => {
   try {
     const db = await useDb();
     const [rows] = await db.query(
-      'SELECT id, player_name, score, wave_reached, won, kills, created_at FROM firewall_scores ORDER BY score DESC, created_at ASC LIMIT 10'
+      'SELECT id, player_name, score, wave_reached, won, kills, created_at FROM firewall_scores ORDER BY score DESC, created_at ASC LIMIT 10',
     );
     return (rows as any[]).map((r) => ({
       id: r.id,

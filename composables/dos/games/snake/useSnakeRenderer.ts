@@ -15,7 +15,7 @@ const FOOD = '*';
 
 export function useSnakeRenderer(
   gridApiRef: Ref<GridApi | null>,
-  gameStateRef: ComputedRef<GameState | null> // Accept ComputedRef
+  gameStateRef: ComputedRef<GameState | null>, // Accept ComputedRef
 ) {
   const drawBorderAndSidebar = () => {
     const gridApi = gridApiRef.value;
@@ -74,32 +74,34 @@ export function useSnakeRenderer(
         modeY += 1; // Move down for next line of info
       });
     } else {
-        // If no mode info, still increment modeY for consistent spacing
-        modeY += 1;
+      // If no mode info, still increment modeY for consistent spacing
+      modeY += 1;
     }
 
     // --- Draw Active Effect ---
     modeY += 1; // Add a blank line after mode info
     const effect = gameState.activeEffect.value;
-    if (effect && effect.endTime > effect.startTime) { // Ensure duration is positive
-        const remaining = Math.max(0, Math.ceil((effect.endTime - Date.now()) / 1000));
-        let effectName = effect.type.charAt(0) + effect.type.slice(1).toLowerCase();
-        if (effectName === 'Invincibility') effectName = 'Invincible'; // Nicer display name
-        gridApi.writeTextAt(`${effectName}: ${remaining}s`, sidebarX, modeY);
-        modeY += 1; // Move down for progress bar
+    if (effect && effect.endTime > effect.startTime) {
+      // Ensure duration is positive
+      const remaining = Math.max(0, Math.ceil((effect.endTime - Date.now()) / 1000));
+      let effectName = effect.type.charAt(0) + effect.type.slice(1).toLowerCase();
+      if (effectName === 'Invincibility') effectName = 'Invincible'; // Nicer display name
+      gridApi.writeTextAt(`${effectName}: ${remaining}s`, sidebarX, modeY);
+      modeY += 1; // Move down for progress bar
 
-        // Draw Progress Bar
-        const progressBarWidth = 10; // Width of the progress bar
-        const totalDuration = effect.endTime - effect.startTime;
-        const elapsedTime = Date.now() - effect.startTime;
-        // Ensure progress doesn't go below 0 or above 1 due to timing nuances
-        const progress = Math.max(0, Math.min(1, 1 - elapsedTime / totalDuration));
-        const filledChars = Math.round(progress * progressBarWidth);
-        const progressBar = '[' + '#'.repeat(filledChars) + '-'.repeat(progressBarWidth - filledChars) + ']';
-        // Ensure progress bar fits within available width
-        const displayBar = progressBar.substring(0, availableSidebarWidth - (sidebarX - gw));
-        gridApi.writeTextAt(displayBar, sidebarX, modeY);
-        modeY += 1; // Move down after progress bar
+      // Draw Progress Bar
+      const progressBarWidth = 10; // Width of the progress bar
+      const totalDuration = effect.endTime - effect.startTime;
+      const elapsedTime = Date.now() - effect.startTime;
+      // Ensure progress doesn't go below 0 or above 1 due to timing nuances
+      const progress = Math.max(0, Math.min(1, 1 - elapsedTime / totalDuration));
+      const filledChars = Math.round(progress * progressBarWidth);
+      const progressBar =
+        '[' + '#'.repeat(filledChars) + '-'.repeat(progressBarWidth - filledChars) + ']';
+      // Ensure progress bar fits within available width
+      const displayBar = progressBar.substring(0, availableSidebarWidth - (sidebarX - gw));
+      gridApi.writeTextAt(displayBar, sidebarX, modeY);
+      modeY += 1; // Move down after progress bar
     }
 
     // Add legend later if needed below modeY
@@ -151,24 +153,24 @@ export function useSnakeRenderer(
   }; // End of drawGameElements
 
   const drawPopupMessage = () => {
-      const gridApi = gridApiRef.value;
-        const gameState = gameStateRef.value;
-        if (!gridApi || !gameState || !gameState.popupMessage.value) return;
+    const gridApi = gridApiRef.value;
+    const gameState = gameStateRef.value;
+    if (!gridApi || !gameState || !gameState.popupMessage.value) return;
 
-        const message = gameState.popupMessage.value.text;
-        // Position near bottom-right of game area
-        const x = gameState.gameWidth.value - message.length - 2; // 1 char padding + border
-        const y = gameState.gameHeight.value - 2; // 1 line above bottom border
+    const message = gameState.popupMessage.value.text;
+    // Position near bottom-right of game area
+    const x = gameState.gameWidth.value - message.length - 2; // 1 char padding + border
+    const y = gameState.gameHeight.value - 2; // 1 line above bottom border
 
-        // Basic check to ensure it fits horizontally
-        if (x > 0 && y > 0) {
-             gridApi.writeTextAt(message, x, y);
-        }
-    }; // End of drawPopupMessage
+    // Basic check to ensure it fits horizontally
+    if (x > 0 && y > 0) {
+      gridApi.writeTextAt(message, x, y);
+    }
+  }; // End of drawPopupMessage
 
-    // Main render function called by the game loop
-    const renderFrame = () => {
-        const gridApi = gridApiRef.value;
+  // Main render function called by the game loop
+  const renderFrame = () => {
+    const gridApi = gridApiRef.value;
     const gameState = gameStateRef.value;
     if (!gridApi || !gameState) return;
 
@@ -177,15 +179,15 @@ export function useSnakeRenderer(
     drawSidebarContent();
 
     if (gameState.isGameOver.value) {
-            drawGameOver();
-        } else {
-            drawGameElements();
-            // Call mode-specific rendering if needed
-             gameState.activeMode.value?.render?.(gridApi, gameState);
-             // Draw popup message last so it's on top
-             drawPopupMessage();
-        }
-    };
+      drawGameOver();
+    } else {
+      drawGameElements();
+      // Call mode-specific rendering if needed
+      gameState.activeMode.value?.render?.(gridApi, gameState);
+      // Draw popup message last so it's on top
+      drawPopupMessage();
+    }
+  };
 
   return {
     renderFrame,

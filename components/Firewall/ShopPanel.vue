@@ -46,7 +46,8 @@
       items: BUILDING_DEFS.map((d) => {
         const stats: string[] = [];
         if (d.base.auraRange) stats.push(`aura ${d.base.auraRange}`);
-        if (d.base.fireRateBonus) stats.push(`fire rate +${Math.round(d.base.fireRateBonus * 100)}%`);
+        if (d.base.fireRateBonus)
+          stats.push(`fire rate +${Math.round(d.base.fireRateBonus * 100)}%`);
         if (d.base.rangeBonus) stats.push(`range +${Math.round(d.base.rangeBonus * 100)}%`);
         if (d.base.damageBonus) stats.push(`damage +${Math.round(d.base.damageBonus * 100)}%`);
         if (d.base.incomePerWave) stats.push(`income $${d.base.incomePerWave}/wave`);
@@ -87,9 +88,7 @@
         :disabled="credits < it.cost"
         :title="it.tip"
         @click="onClick(g.kind, it.id)">
-        <span
-          class="fw-swatch"
-          :style="{ background: it.color, clipPath: shapeClip[it.shape] }" />
+        <span class="fw-swatch" :style="{ background: it.color, clipPath: shapeClip[it.shape] }" />
         <span class="fw-name">{{ it.name }}</span>
         <span class="fw-cost">${{ it.cost }}</span>
         <span class="fw-key">[{{ it.hotkey }}]</span>
@@ -103,7 +102,10 @@
     margin-bottom: 6px;
   }
   .fw-group-title {
-    font: bold 11px Tahoma, Verdana, sans-serif;
+    font:
+      bold 11px Tahoma,
+      Verdana,
+      sans-serif;
     color: #404040;
     margin-bottom: 2px;
   }
@@ -116,7 +118,11 @@
     padding: 3px 4px;
     background: #c0c0c0;
     color: #000;
-    font: 12px Tahoma, Verdana, 'MS Sans Serif', sans-serif;
+    font:
+      12px Tahoma,
+      Verdana,
+      'MS Sans Serif',
+      sans-serif;
     text-align: left;
     border: 2px solid;
     border-color: #fff #404040 #404040 #fff;
@@ -147,7 +153,9 @@
     text-overflow: ellipsis;
   }
   .fw-cost {
-    font: bold 11px 'Courier New', monospace;
+    font:
+      bold 11px 'Courier New',
+      monospace;
     background: #000;
     color: #30ff60;
     padding: 0 3px;
@@ -156,7 +164,9 @@
     color: #808080;
   }
   .fw-key {
-    font: 11px 'Courier New', monospace;
+    font:
+      11px 'Courier New',
+      monospace;
     color: #404040;
   }
 </style>

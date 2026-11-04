@@ -42,7 +42,7 @@ export function endDay(startDay: string, daysWindow: number): string {
 
 export function inSeason(
   day: string,
-  season: { from: string; to: string } = { from: '2026-10-01', to: '2027-06-30' }
+  season: { from: string; to: string } = { from: '2026-10-01', to: '2027-06-30' },
 ): boolean {
   return day >= season.from && day <= season.to;
 }

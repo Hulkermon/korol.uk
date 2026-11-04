@@ -87,11 +87,11 @@
             <div class="gb-content">
               <p>
                 {{ entry.name }}
-                <span class="text-xs text-gray-600 font-normal"
-                  > | {{ formatDate(entry.timestamp) }}:</span
+                <span class="text-xs text-gray-600 font-normal">
+                  | {{ formatDate(entry.timestamp) }}:</span
                 >
               </p>
-              <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll("\\n", "\n") }}</p>
+              <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll('\\n', '\n') }}</p>
             </div>
           </div>
           <div v-else class="gb-content">
@@ -99,7 +99,7 @@
               {{ entry.name }}
               <span> | {{ formatDate(entry.timestamp) }}:</span>
             </p>
-            <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll("\\n", "\n") }}</p>
+            <p class="mt-1 whitespace-pre-wrap">{{ entry.message.replaceAll('\\n', '\n') }}</p>
           </div>
 
           <!-- XP Glitch Trail Elements -->
@@ -159,18 +159,21 @@
     deltaT = 0.3 + Math.random() * 0.7; // Time delta (in seconds) for each step
     dragCoefficient = Math.random() * 1; // Drag coefficient (0 = no drag, 1 = full 🐉)
 
-    const loop = setInterval(() => {
-      trailStyles.value.push(getTrailStyle(trailStyles.value.length + 1));
-      setTimeout(() => {
-        clearInterval(loop);
-        if (trailStyles.value.length > 0) {
-          trailStyles.value.splice(0, 1);
-          if (trailStyles.value.length === 0) {
-            isGlitching.value = 0; // Reset glitch counter
+    const loop = setInterval(
+      () => {
+        trailStyles.value.push(getTrailStyle(trailStyles.value.length + 1));
+        setTimeout(() => {
+          clearInterval(loop);
+          if (trailStyles.value.length > 0) {
+            trailStyles.value.splice(0, 1);
+            if (trailStyles.value.length === 0) {
+              isGlitching.value = 0; // Reset glitch counter
+            }
           }
-        }
-      }, 2000);
-    }, 20 + isGlitching.value++ * 5);
+        }, 2000);
+      },
+      20 + isGlitching.value++ * 5,
+    );
   }
 
   // Form state
@@ -182,12 +185,7 @@
   const submitStatus = reactive({ message: '', isError: false });
 
   // Fetch guestbook entries
-  const {
-    data: entries,
-    pending,
-    error,
-    refresh,
-  } = await useFetch('/api/guestbook');
+  const { data: entries, pending, error, refresh } = await useFetch('/api/guestbook');
 
   // Form submission handler
   async function submitEntry() {
@@ -199,7 +197,7 @@
     try {
       // Pick a random style for the new entry
       const randomStyle = availableStyles[Math.floor(Math.random() * availableStyles.length)];
-      
+
       const response = await $fetch('/api/guestbook', {
         method: 'POST',
         body: {

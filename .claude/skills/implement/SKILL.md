@@ -44,6 +44,7 @@ Repeat until every task is `committed`:
    - the idiom of the surrounding code.
 
    Look out for unrequested refactors, debug leftovers, styles that leak globally, and secrets.
+
 4. **Tests must pass.** This is a hard gate: a task is not approved, and not committed, until its tests pass.
    - Run `pnpm vitest run <the task's test files>` yourself. Don't rely on the implementer's report.
    - Then run `pnpm test`. Failures in test files that belong to a task that is still `running` are expected (half-written work in the same tree) and are ignored. Any other failure blocks the commit, including a regression in an earlier task's tests.

@@ -16,7 +16,9 @@
 <template>
   <Win98Window title="HALL_OF_FAME.TXT" icon="&#9733;">
     <div class="fw-lb">
-      <div v-if="loading && !entries.length" class="fw-lb-line" data-testid="loading">Loading...</div>
+      <div v-if="loading && !entries.length" class="fw-lb-line" data-testid="loading">
+        Loading...
+      </div>
       <div v-else-if="error" class="fw-lb-line" data-testid="error">
         {{ error }}
         <button class="fw-lb-btn" data-testid="retry" @click="emit('refresh')">RETRY</button>

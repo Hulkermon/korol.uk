@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
        JOIN map_seeds ms ON sb.map_seed_id = ms.id
        WHERE ms.seed_value = ?
        ORDER BY sb.created_at DESC`,
-      [query.seedValue]
+      [query.seedValue],
     );
 
     return { benches: benches || [] };

@@ -62,7 +62,7 @@ export interface SnakeModeStrategy {
   checkCollision(head: Position, gameState: GameState): boolean;
   // Handles logic when food is eaten (might differ per mode)
   onFoodEaten(gameState: GameState): void;
-   // Optional: Renders mode-specific elements (e.g., trails)
+  // Optional: Renders mode-specific elements (e.g., trails)
   render?(gridApi: GridApi, gameState: GameState): void;
   // Optional: Returns info strings for the sidebar
   getSidebarInfo?(): string[];

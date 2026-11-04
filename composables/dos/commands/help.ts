@@ -9,8 +9,10 @@ const helpCommand: DosCommand = {
       const output: string[] = [
         'For more information on a specific command, type HELP command-name',
         '',
-        ...context.availableCommands.sort().map(cmd =>
-            `${cmd} ${context.commandAliases[cmd] ? '(alias: ' + context.commandAliases[cmd] + ')' : ''}`.toUpperCase()
+        ...context.availableCommands
+          .sort()
+          .map((cmd) =>
+            `${cmd} ${context.commandAliases[cmd] ? '(alias: ' + context.commandAliases[cmd] + ')' : ''}`.toUpperCase(),
           ),
         '',
       ];
@@ -24,7 +26,7 @@ const helpCommand: DosCommand = {
         // Return the command's description
         // Could add more details like aliases or usage later
         return [
-            `${command.name.toUpperCase()}: ${command.description || 'No description available.'}`
+          `${command.name.toUpperCase()}: ${command.description || 'No description available.'}`,
         ];
       } else {
         return `Help topic not found: ${commandName}`;

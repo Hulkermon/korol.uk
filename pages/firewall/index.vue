@@ -287,7 +287,9 @@
     flex-wrap: wrap;
   }
   .fw-logo {
-    font: bold 24px 'Courier New', monospace;
+    font:
+      bold 24px 'Courier New',
+      monospace;
     color: var(--fw-magenta);
     text-shadow: 2px 2px 0 var(--fw-dark);
     display: flex;
@@ -339,7 +341,9 @@
   }
   .fw-strip {
     padding: 2px 12px;
-    font: bold 11px 'Courier New', monospace;
+    font:
+      bold 11px 'Courier New',
+      monospace;
   }
   .fw-counter-wrap {
     display: flex;

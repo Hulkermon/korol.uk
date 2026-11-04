@@ -13,10 +13,10 @@ export const useDb = async () => {
       password: config.db.password || process.env.MYSQL_PASSWORD,
       database: config.db.database || process.env.MYSQL_DATABASE,
     };
-    
+
     try {
       const connection = await mysql.createConnection(dbConfig);
-      
+
       // Ensure Tables Exist
       await connection.query(`
         CREATE TABLE IF NOT EXISTS guestbook_entries (
@@ -87,7 +87,7 @@ export const useDb = async () => {
       await connection.query(`
         INSERT IGNORE INTO visitor_counter (name, count) VALUES ('homepage', 0)
       `);
-      
+
       await connection.end();
 
       // Create Pool for the specific database
@@ -95,7 +95,7 @@ export const useDb = async () => {
         ...dbConfig,
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0
+        queueLimit: 0,
       });
     } catch (error) {
       console.error('[DB] Error initializing database:', error);

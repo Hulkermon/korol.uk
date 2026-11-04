@@ -81,7 +81,8 @@ export interface HistoryEntry {
 }
 
 // --- Composable Logic ---
-export function useDosCommands(options: DosCommandOptions) { // Accept options
+export function useDosCommands(options: DosCommandOptions) {
+  // Accept options
   const commandHistory = ref<HistoryEntry[]>([]);
   const currentPath = ref<string[]>(['C:']); // Start at root
   const terminalColor = ref<string>('green'); // Default color
@@ -244,7 +245,8 @@ export function useDosCommands(options: DosCommandOptions) { // Accept options
           gridApi: gridApiRef,
         };
         const output = await command.execute(args, context);
-        if (output !== undefined && output !== null && output !== '') { // Check if command returned something displayable
+        if (output !== undefined && output !== null && output !== '') {
+          // Check if command returned something displayable
           addHistoryEntry('output', output); // Log output to history
           return output; // Return output for display
         }

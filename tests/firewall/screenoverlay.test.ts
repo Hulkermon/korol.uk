@@ -18,8 +18,8 @@ function mountWith(props: Partial<typeof base> & { submitState?: string; phase?:
 
 describe('ScreenOverlay', () => {
   it('renders a distinct screen per phase', () => {
-    const html = (['title', 'won', 'lost', 'paused'] as const).map(
-      (phase) => mountWith({ phase }).html()
+    const html = (['title', 'won', 'lost', 'paused'] as const).map((phase) =>
+      mountWith({ phase }).html(),
     );
     expect(new Set(html).size).toBe(4);
     expect(html[0]).toContain('START');

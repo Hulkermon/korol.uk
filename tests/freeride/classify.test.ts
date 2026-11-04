@@ -5,26 +5,26 @@ import {
   inSeason,
   isInEurope,
   isTrustedOrg,
-  toDay
+  toDay,
 } from '@/composables/freeride/classify';
 
 describe('classifyName', () => {
   it('classifies real names', () => {
     expect(classifyName('2027 Nendaz Freeride Qualifier 2*')).toEqual({
       tier: 'qualifier',
-      stars: 2
+      stars: 2,
     });
     expect(classifyName('2027 Evolution 2 Freeride Series Valfréjus Qualifier 4*')).toEqual({
       tier: 'qualifier',
-      stars: 4
+      stars: 4,
     });
     expect(classifyName('2027 YETI Freeride World Tour Verbier Junior 4*')).toEqual({
       tier: 'junior',
-      stars: 4
+      stars: 4,
     });
     expect(classifyName('2027 Baqueira Beret Pro By Occident')).toEqual({
       tier: 'pro',
-      stars: null
+      stars: null,
     });
     expect(classifyName('2027 Georgia pro')).toEqual({ tier: 'pro', stars: null });
     expect(classifyName('2027 Fieberbrunn pro')).toEqual({ tier: 'pro', stars: null });
@@ -42,7 +42,7 @@ describe('classifyName', () => {
     expect(classifyName('Pro Qualifier 2*')?.tier).toBe('qualifier');
     expect(classifyName('2027 Nendaz Freeride Video Contest Junior 1*')).toEqual({
       tier: 'junior',
-      stars: 1
+      stars: 1,
     });
   });
 

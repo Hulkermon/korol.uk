@@ -21,12 +21,12 @@ export default defineEventHandler(async (event) => {
     // next_refresh is a BIGINT timestamp in seconds
     await db.execute(
       `UPDATE map_seeds SET next_refresh = next_refresh - ? ORDER BY created_at DESC LIMIT 1`,
-      [secondsToSubtract]
+      [secondsToSubtract],
     );
 
     // Fetch the updated seed to return the new nextRefresh
     const [seeds] = await db.query(
-      'SELECT id, seed_value, next_refresh FROM map_seeds ORDER BY created_at DESC LIMIT 1'
+      'SELECT id, seed_value, next_refresh FROM map_seeds ORDER BY created_at DESC LIMIT 1',
     );
 
     if (Array.isArray(seeds) && seeds.length > 0) {

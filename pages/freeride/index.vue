@@ -256,9 +256,7 @@
     '--fr-muted': '#6b7a8a',
   };
 
-  const { snapshot, sync, lastSyncAt } = useSnapshot(
-    bundledSnapshot as unknown as EventSnapshot,
-  );
+  const { snapshot, sync, lastSyncAt } = useSnapshot(bundledSnapshot as unknown as EventSnapshot);
   const events = computed(() => snapshot.value.events);
   const bounds = computed(() => seasonBounds(events.value));
 
@@ -405,10 +403,15 @@
     return evStops.some((s) => s.kind === 'event') ? evStops : [];
   });
 
-  const { legs, line: routeLine, loading, calculated, stale, calculate, cancel } = useRouting(
-    stops,
-    planOptions,
-  );
+  const {
+    legs,
+    line: routeLine,
+    loading,
+    calculated,
+    stale,
+    calculate,
+    cancel,
+  } = useRouting(stops, planOptions);
   const conflicts = computed(() => findConflicts(stops.value, legs.value));
 
   function onPinSelect(id: string) {

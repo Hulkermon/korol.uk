@@ -29,7 +29,7 @@
           ? `${d.blurb} (cooldown ${d.cooldown}s)`
           : `Unlock: ${getBuildingDef(d.unlock.building).name} level ${d.unlock.level}`,
       };
-    })
+    }),
   );
 
   function onClick(a: (typeof abilities.value)[number]) {
@@ -83,7 +83,11 @@
     padding: 4px 6px;
     background: #c0c0c0;
     color: #000;
-    font: 11px Tahoma, Verdana, 'MS Sans Serif', sans-serif;
+    font:
+      11px Tahoma,
+      Verdana,
+      'MS Sans Serif',
+      sans-serif;
     border: 2px solid;
     border-color: #fff #404040 #404040 #fff;
     cursor: pointer;

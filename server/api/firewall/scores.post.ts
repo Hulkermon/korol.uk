@@ -33,11 +33,11 @@ export default defineEventHandler(async (event) => {
     const db = await useDb();
     const [insert] = await db.execute(
       'INSERT INTO firewall_scores (player_name, score, wave_reached, won, kills, integrity) VALUES (?, ?, ?, ?, ?, ?)',
-      [s.name, score, s.wave, s.won ? 1 : 0, s.kills, s.integrity]
+      [s.name, score, s.wave, s.won ? 1 : 0, s.kills, s.integrity],
     );
     const [rows] = await db.query(
       'SELECT COUNT(*) AS higher FROM firewall_scores WHERE score > ?',
-      [score]
+      [score],
     );
     lastSubmission.set(ip, now);
     return { id: (insert as any).insertId, score, rank: 1 + Number((rows as any[])[0].higher) };

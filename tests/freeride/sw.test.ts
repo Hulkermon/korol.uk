@@ -52,7 +52,7 @@ function load() {
     caches,
     fetchMock,
     URL,
-    Response
+    Response,
   );
 }
 

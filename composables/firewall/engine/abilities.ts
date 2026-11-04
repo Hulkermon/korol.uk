@@ -57,7 +57,14 @@ export const useAbility = (state: GameState, id: string, point?: Vec): Result =>
       }
     }
     state.fx.push({ kind: 'ring', from: { ...point }, color: def.color, age: 0, ttl: 0.7, radius });
-    state.fx.push({ kind: 'burst', from: { ...point }, color: def.color, age: 0, ttl: 0.7, radius });
+    state.fx.push({
+      kind: 'burst',
+      from: { ...point },
+      color: def.color,
+      age: 0,
+      ttl: 0.7,
+      radius,
+    });
     pushNews(state, 'ION CANNON: orbital strike delivered');
   } else if (id === 'ctrlaltdel') {
     for (const enemy of state.enemies) {

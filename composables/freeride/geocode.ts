@@ -79,7 +79,7 @@ export async function searchPlaces(q: string, opts: FetchOpts = {}): Promise<Pla
 export async function reversePlace(
   lat: number,
   lng: number,
-  opts: FetchOpts = {}
+  opts: FetchOpts = {},
 ): Promise<Place | null> {
   const places = parsePhoton(await getJson(reverseUrl(lat, lng), opts));
   return places[0] ?? null;

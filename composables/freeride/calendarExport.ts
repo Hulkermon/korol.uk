@@ -80,7 +80,10 @@ function foldLine(line: string): string {
 }
 
 function icsStamp(d: Date): string {
-  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  return d
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d+Z$/, 'Z');
 }
 
 export function eventsIcs(events: FreerideEvent[], now: Date): string {

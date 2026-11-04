@@ -1,24 +1,24 @@
 services:
-    nuxt-app:
-        container_name: koroluk-nuxt-app
-        build:
-            context: .
-            dockerfile: Dockerfile
-        volumes:
-            - ../:/workspaces/app:cached
-            - ${HOME}/.claude-configs/korol.uk:/home/node/.claude
-        environment:
-            CLAUDE_CONFIG_DIR: /home/node/.claude
-        env_file: ../.env
-        command: sleep infinity # chill out a bit
+  nuxt-app:
+    container_name: koroluk-nuxt-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/workspaces/app:cached
+      - ${HOME}/.claude-configs/korol.uk:/home/node/.claude
+    environment:
+      CLAUDE_CONFIG_DIR: /home/node/.claude
+    env_file: ../.env
+    command: sleep infinity # chill out a bit
 
-    db:
-        image: mysql:8.0
-        env_file: ../.env
-        volumes:
-            - db_data:/var/lib/mysql
-        restart: unless-stopped
+  db:
+    image: mysql:8.0
+    env_file: ../.env
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
 
 volumes:
-    db_data:
-        driver: local
+  db_data:
+    driver: local

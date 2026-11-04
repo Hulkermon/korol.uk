@@ -27,7 +27,7 @@ export function useFirewallScores() {
     try {
       const res = await $fetch<{ id: number; score: number; rank: number }>(
         '/api/firewall/scores',
-        { method: 'POST', body: s }
+        { method: 'POST', body: s },
       );
       lastRank.value = res.rank;
       lastEntryId.value = res.id;

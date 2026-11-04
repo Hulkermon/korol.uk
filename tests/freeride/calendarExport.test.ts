@@ -49,7 +49,9 @@ describe('eventDescription', () => {
 describe('calendar urls', () => {
   it('builds a google url with exclusive end across a month', () => {
     const url = googleCalendarUrl(ev({ name: 'A & B, "C"' }));
-    expect(url.startsWith('https://calendar.google.com/calendar/render?action=TEMPLATE')).toBe(true);
+    expect(url.startsWith('https://calendar.google.com/calendar/render?action=TEMPLATE')).toBe(
+      true,
+    );
     expect(url).toContain('&dates=20270130/20270201&');
     expect(url).toContain(`&text=${encodeURIComponent('A & B, "C"')}`);
     expect(url).toContain('&location=Verbier');

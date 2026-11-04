@@ -46,19 +46,19 @@ export function useGameLoop(options: GameLoopOptions) {
 
   // Function to change the loop interval
   const setLoopInterval = (newMs: number) => {
-      if (newMs <= 0) {
-          console.warn("Loop interval must be positive.");
-          return;
-      }
-      const currentlyRunning = isRunning.value;
-      if (currentlyRunning) {
-          stopGameLoop(); // Clear the existing interval
-      }
-      loopIntervalMs.value = newMs; // Update the interval duration ref
-      // If it was running before, start it again with the new interval
-      if (currentlyRunning) {
-          startGameLoop();
-      }
+    if (newMs <= 0) {
+      console.warn('Loop interval must be positive.');
+      return;
+    }
+    const currentlyRunning = isRunning.value;
+    if (currentlyRunning) {
+      stopGameLoop(); // Clear the existing interval
+    }
+    loopIntervalMs.value = newMs; // Update the interval duration ref
+    // If it was running before, start it again with the new interval
+    if (currentlyRunning) {
+      startGameLoop();
+    }
   };
 
   return {
@@ -66,6 +66,6 @@ export function useGameLoop(options: GameLoopOptions) {
     stopGameLoop,
     setLoopInterval, // Expose the new function
     isRunning,
-    loopIntervalMs // Expose the reactive interval if needed elsewhere
+    loopIntervalMs, // Expose the reactive interval if needed elsewhere
   };
 }

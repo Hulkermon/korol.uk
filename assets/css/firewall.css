@@ -46,7 +46,9 @@
   height: 31px;
   line-height: 31px;
   text-align: center;
-  font: bold 11px 'Courier New', monospace;
+  font:
+    bold 11px 'Courier New',
+    monospace;
   color: var(--fw-cyan);
   background: linear-gradient(135deg, #000 0%, #2a0040 100%);
   border: 1px solid var(--fw-magenta);
@@ -70,7 +72,11 @@
 .fw-root .fw-btn {
   background: var(--fw-grey);
   color: #000;
-  font: 12px Tahoma, Verdana, 'MS Sans Serif', sans-serif;
+  font:
+    12px Tahoma,
+    Verdana,
+    'MS Sans Serif',
+    sans-serif;
   padding: 3px 10px;
   border: 2px solid;
   border-color: var(--fw-light) var(--fw-dark) var(--fw-dark) var(--fw-light);

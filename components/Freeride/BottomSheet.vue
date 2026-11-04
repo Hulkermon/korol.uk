@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="fr-sheet"
-    :class="{ dragging }"
-    :style="{ height: `${currentHeight}px` }">
+  <div class="fr-sheet" :class="{ dragging }" :style="{ height: `${currentHeight}px` }">
     <div
       class="fr-sheet-top"
       @pointerdown="onHeaderDown"
@@ -28,7 +25,13 @@
 
 <script setup lang="ts">
   import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-  import { SNAPS, clampHeight, nearestSnap, snapHeight, type Snap } from '@/composables/freeride/sheet';
+  import {
+    SNAPS,
+    clampHeight,
+    nearestSnap,
+    snapHeight,
+    type Snap,
+  } from '@/composables/freeride/sheet';
 
   const props = defineProps<{ modelValue: Snap }>();
   const emit = defineEmits<{ (e: 'update:modelValue', v: Snap): void }>();
@@ -38,7 +41,7 @@
   const dragHeight = ref(0);
 
   const currentHeight = computed(() =>
-    dragging.value ? dragHeight.value : snapHeight(props.modelValue, viewport.value)
+    dragging.value ? dragHeight.value : snapHeight(props.modelValue, viewport.value),
   );
 
   let startY = 0;

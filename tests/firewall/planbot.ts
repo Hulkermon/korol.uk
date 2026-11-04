@@ -147,7 +147,7 @@ const buildPlan = (opts: BotOptions): Step[] => {
   const sloppy = opts.sloppy ?? 0;
   if (sloppy > 0) {
     let h = ((opts.seed ?? 1337) * 2654435761) >>> 0;
-    const next = () => ((h = (Math.imul(h, 1664525) + 1013904223) >>> 0) / 4294967296);
+    const next = () => (h = (Math.imul(h, 1664525) + 1013904223) >>> 0) / 4294967296;
     const gone = new Set<string>();
     const cut: Record<string, number> = {};
     for (const st of plan) {
@@ -273,4 +273,3 @@ export const playBot = (opts: BotOptions = {}): Outcome => {
   });
   return outcome;
 };
-

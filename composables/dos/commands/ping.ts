@@ -1,4 +1,4 @@
-import type { DosCommand } from "../useDosCommands";
+import type { DosCommand } from '../useDosCommands';
 
 const pingCommand: DosCommand = {
   name: 'ping',

@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     const db = await useDb();
     await db.execute(
       'INSERT INTO guestbook_entries (name, message, style, timestamp) VALUES (?, ?, ?, NOW())',
-      [body.name, body.message, body.style || 'gb-style-win95']
+      [body.name, body.message, body.style || 'gb-style-win95'],
     );
     return { success: true };
   } catch (error) {

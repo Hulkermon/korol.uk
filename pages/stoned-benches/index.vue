@@ -11,9 +11,15 @@
       </div>
       <div class="countdown-display">
         <span class="label flex gap-2">
-          <span @click="adjustTime('HOUR', 1)" @contextmenu.prevent="adjustTime('HOUR', -1)">NEXT</span>
-          <span @click="adjustTime('MINUTE', 1)" @contextmenu.prevent="adjustTime('MINUTE', -1)">MAP</span>
-          <span @click="adjustTime('SECOND', 1)" @contextmenu.prevent="adjustTime('SECOND', -1)">IN:</span>
+          <span @click="adjustTime('HOUR', 1)" @contextmenu.prevent="adjustTime('HOUR', -1)"
+            >NEXT</span
+          >
+          <span @click="adjustTime('MINUTE', 1)" @contextmenu.prevent="adjustTime('MINUTE', -1)"
+            >MAP</span
+          >
+          <span @click="adjustTime('SECOND', 1)" @contextmenu.prevent="adjustTime('SECOND', -1)"
+            >IN:</span
+          >
         </span>
         <span class="digital-clock">{{ timeRemaining }}</span>
       </div>
@@ -160,8 +166,8 @@
           drawMap(lastMap.seed);
           fetchBenches();
         } else if (lastMap && lastMap.nextRefresh) {
-            // Even if seed is same (maybe just refreshed exact moment), update refresh time
-            currentMap.value = lastMap;
+          // Even if seed is same (maybe just refreshed exact moment), update refresh time
+          currentMap.value = lastMap;
         }
       } catch (e) {
         console.error('Failed to reload map', e);
@@ -184,10 +190,13 @@
 
   async function adjustTime(unit: 'HOUR' | 'MINUTE' | 'SECOND', amount: number) {
     try {
-      const data = await $fetch<{ success: boolean; nextRefresh: number }>('/api/stoner-benches/debug-advance-time', {
-        method: 'POST',
-        body: { unit, amount },
-      });
+      const data = await $fetch<{ success: boolean; nextRefresh: number }>(
+        '/api/stoner-benches/debug-advance-time',
+        {
+          method: 'POST',
+          body: { unit, amount },
+        },
+      );
       if (data && data.success && data.nextRefresh && currentMap.value) {
         currentMap.value.nextRefresh = data.nextRefresh;
       }
@@ -197,13 +206,12 @@
   }
 
   const timeRemaining = computed(() => {
-    if (!currentMap.value?.nextRefresh)
-      return '--:--:--';
-    
+    if (!currentMap.value?.nextRefresh) return '--:--:--';
+
     // nextRefresh is in seconds. Convert to ms.
     const targetTime = currentMap.value.nextRefresh * 1000;
     const diff = targetTime - now.value.getTime();
-    
+
     if (diff <= 0) return '00:00:00';
 
     // Format as simple countdown HH:MM:SS
@@ -211,8 +219,8 @@
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
     const s = totalSeconds % 60;
-    
-    return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+
+    return [h, m, s].map((v) => v.toString().padStart(2, '0')).join(':');
   });
 
   // Benches state
@@ -371,7 +379,7 @@
   async function getLastMap(): Promise<{ seed: string | null; nextRefresh: number | null }> {
     try {
       const data = await $fetch<{ seed: string | null; nextRefresh: number | null }>(
-        '/api/stoner-benches/latest-seed'
+        '/api/stoner-benches/latest-seed',
       );
       return data;
     } catch (error) {
@@ -379,8 +387,6 @@
       return { seed: null, nextRefresh: null };
     }
   }
-
-
 
   function seededRandom(seed: string): () => number {
     let hash = 0;
@@ -603,7 +609,7 @@
     font-weight: bold;
     font-family: 'Orbitron', monospace;
     font-size: 24px;
-    text-shadow: 
+    text-shadow:
       0 0 5px #00ff00,
       0 0 10px #00ff00;
     letter-spacing: 2px;
@@ -651,7 +657,7 @@
     font-family: 'Orbitron', monospace;
     font-size: 24px;
     color: #ff0000;
-    text-shadow: 
+    text-shadow:
       0 0 5px #ff0000,
       0 0 10px #ff0000;
     letter-spacing: 2px;

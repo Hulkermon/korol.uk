@@ -6,7 +6,7 @@ export function useCrtRenderer(
   canvas: Ref<HTMLCanvasElement | null>,
   grid: Ref<string[][]>,
   cursorPos: Ref<CursorPosition>,
-  config: Ref<GridConfig> // Accept reactive config
+  config: Ref<GridConfig>, // Accept reactive config
 ) {
   let ctx: CanvasRenderingContext2D | null = null;
   let animationFrameId: number | null = null;
@@ -38,7 +38,7 @@ export function useCrtRenderer(
         height / 10,
         width / 2,
         height / 2,
-        width
+        width,
       );
       vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
       vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
@@ -70,7 +70,7 @@ export function useCrtRenderer(
           ctx.fillText(
             char,
             x * config.value.cellWidth + config.value.cellWidth * 0.15, // Use .value
-            y * config.value.cellHeight + config.value.cellHeight / 2 // Use .value
+            y * config.value.cellHeight + config.value.cellHeight / 2, // Use .value
           );
         }
       }
@@ -84,7 +84,7 @@ export function useCrtRenderer(
         cursorPos.value.x * config.value.cellWidth, // Use .value
         cursorPos.value.y * config.value.cellHeight + config.value.cellHeight * 0.8, // Use .value
         config.value.cellWidth * 0.8, // Use .value
-        config.value.cellHeight * 0.2 // Use .value
+        config.value.cellHeight * 0.2, // Use .value
       );
     }
 

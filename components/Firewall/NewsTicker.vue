@@ -6,7 +6,7 @@
       .slice(-5)
       .reverse()
       .map((i) => `*** ${i}`)
-      .join('     ')
+      .join('     '),
   );
 </script>
 
@@ -27,7 +27,9 @@
     border: 2px solid;
     border-color: #404040 #fff #fff #404040;
     padding: 2px 4px;
-    font: 12px 'Courier New', monospace;
+    font:
+      12px 'Courier New',
+      monospace;
     color: #00fff0;
   }
   .fw-track {

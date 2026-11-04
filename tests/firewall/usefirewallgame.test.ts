@@ -11,7 +11,10 @@ describe('useFirewallGame', () => {
   let game: ReturnType<typeof useFirewallGame>;
 
   beforeEach(() => {
-    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn(() => 1),
+    );
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     canvas = document.createElement('canvas');

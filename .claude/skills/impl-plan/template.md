@@ -9,10 +9,10 @@ The status moves through `draft` → `approved` → `in-progress` → `verifying
 
 ## Tasks
 
-| ID | Commit message | Files | Depends on | Kind | Owner | Status | Commit |
-|---|---|---|---|---|---|---|---|
-| T1 | `feat: …` | `path/a.ts` (new) | — | logic | implementer | todo | |
-| T2 | `feat: …` | `path/b.vue`, `pages/index.vue` | T1 | logic | implementer | todo | |
+| ID  | Commit message | Files                           | Depends on | Kind  | Owner       | Status | Commit |
+| --- | -------------- | ------------------------------- | ---------- | ----- | ----------- | ------ | ------ |
+| T1  | `feat: …`      | `path/a.ts` (new)               | —          | logic | implementer | todo   |        |
+| T2  | `feat: …`      | `path/b.vue`, `pages/index.vue` | T1         | logic | implementer | todo   |        |
 
 The task status moves through `todo` → `running` → `review` → `committed`. A task that can't proceed is marked `blocked` with a note in the log.
 
@@ -30,15 +30,19 @@ The waves are derived from **Depends on**. The manager starts each task as soon 
 **Goal:** <what this commit achieves>
 
 **Files:**
+
 - `path/a.ts` (create): <what goes in it>
 
 **Context:**
+
 - <existing signatures, types, schemas, files to read with line ranges, what earlier tasks provide>
 
 **Constraints:**
+
 - <what not to touch, style to match, edge cases>
 
 **Done when:**
+
 - <checkable from the diff>
 
 ## Verification

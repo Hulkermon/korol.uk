@@ -30,7 +30,10 @@ const applyStatus = (state: GameState, enemy: Enemy, s: HitStatus) => {
     enemy.slowFactor = Math.min(active, s.slowFactor);
     enemy.slowUntil = Math.max(enemy.slowUntil, state.time + s.slowDuration);
   }
-  if (s.stunDuration > 0 && (enemy.stunUntil <= 0 || state.time >= enemy.stunUntil + STUN_RECOVERY)) {
+  if (
+    s.stunDuration > 0 &&
+    (enemy.stunUntil <= 0 || state.time >= enemy.stunUntil + STUN_RECOVERY)
+  ) {
     const share = getEnemyDef(enemy.defId).boss ? BOSS_STUN_SHARE : 1;
     enemy.stunUntil = state.time + s.stunDuration * share;
   }
@@ -279,4 +282,3 @@ export const updateCombat = (state: GameState, dt: number): void => {
   }
   fx.length = w;
 };
-

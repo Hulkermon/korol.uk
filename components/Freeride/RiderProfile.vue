@@ -34,9 +34,8 @@
         <span class="fr-points-value">{{ formatPoints(profile.ranking.points) }}</span>
         <span class="fr-points-place">#{{ profile.ranking.place }}</span>
         <span class="fr-points-series">
-          {{ profile.ranking.series }}<template v-if="profile.ranking.division">
-            · {{ profile.ranking.division }}</template
-          >
+          {{ profile.ranking.series
+          }}<template v-if="profile.ranking.division"> · {{ profile.ranking.division }}</template>
         </span>
       </template>
       <span v-else class="fr-points-none">Not ranked yet</span>
@@ -61,7 +60,10 @@
           </button>
           <span class="fr-entry-div">{{ entry.division }}</span>
         </div>
-        <span v-if="showResult(entry)" class="fr-result" :class="{ dropped: entry.result!.dropped }">
+        <span
+          v-if="showResult(entry)"
+          class="fr-result"
+          :class="{ dropped: entry.result!.dropped }">
           <span class="fr-result-text">{{ resultText(entry) }}</span>
           <span v-if="entry.result!.dropped" class="fr-dropped">dropped</span>
         </span>
@@ -147,7 +149,9 @@
       : `Add ${props.profile.name} to homies`,
   );
 
-  const otherRankings = computed(() => props.profile.rankings.filter((r) => r !== props.profile.ranking));
+  const otherRankings = computed(() =>
+    props.profile.rankings.filter((r) => r !== props.profile.ranking),
+  );
 
   function showResult(entry: ProfileEntry): boolean {
     return !!entry.result && isFinished(entry.event);

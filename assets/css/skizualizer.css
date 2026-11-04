@@ -58,7 +58,7 @@
 }
 
 .start-button::before {
-  content: "";
+  content: '';
   display: inline-block;
   background-image: url('../images/win95_start_logo.png');
   background-size: contain;
@@ -178,20 +178,20 @@
 }
 
 /* Added title bar control icons */
-.title-bar-controls button[aria-label="Minimize"]::before {
-  content: "_";
+.title-bar-controls button[aria-label='Minimize']::before {
+  content: '_';
   position: absolute;
   bottom: -2px;
   font-weight: bold;
 }
 
-.title-bar-controls button[aria-label="Maximize"]::before {
-  content: "□";
+.title-bar-controls button[aria-label='Maximize']::before {
+  content: '□';
   font-weight: bold;
 }
 
-.title-bar-controls button[aria-label="Close"]::before {
-  content: "×";
+.title-bar-controls button[aria-label='Close']::before {
+  content: '×';
   font-weight: bold;
   font-size: 18px;
 }

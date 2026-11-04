@@ -4,32 +4,32 @@ services:
   app:
     container_name: koroluk-app
     image: ghcr.io/hulkermon/koroluk-app:latest
-    env_file: ".env"
+    env_file: '.env'
     restart: always
     networks:
       - coolify
       - default
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.koroluk.rule=Host(`korol.uk`)"
-      - "traefik.http.routers.koroluk.entrypoints=http" 
-      
-      # Define Middleware locally to ensure it exists
-      - "traefik.http.middlewares.koroluk-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.koroluk.middlewares=koroluk-redirect"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.koroluk.rule=Host(`korol.uk`)'
+      - 'traefik.http.routers.koroluk.entrypoints=http'
 
-      - "traefik.http.services.koroluk.loadbalancer.server.port=3000"
-      
+      # Define Middleware locally to ensure it exists
+      - 'traefik.http.middlewares.koroluk-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.koroluk.middlewares=koroluk-redirect'
+
+      - 'traefik.http.services.koroluk.loadbalancer.server.port=3000'
+
       # HTTPS Configuration
-      - "traefik.http.routers.koroluk-secure.rule=Host(`korol.uk`)"
-      - "traefik.http.routers.koroluk-secure.entrypoints=https"
-      - "traefik.http.routers.koroluk-secure.tls=true"
-      - "traefik.http.routers.koroluk-secure.tls.certresolver=letsencrypt"
+      - 'traefik.http.routers.koroluk-secure.rule=Host(`korol.uk`)'
+      - 'traefik.http.routers.koroluk-secure.entrypoints=https'
+      - 'traefik.http.routers.koroluk-secure.tls=true'
+      - 'traefik.http.routers.koroluk-secure.tls.certresolver=letsencrypt'
 
   db:
     image: mysql:8.0
     container_name: koroluk-db
-    env_file: ".env"
+    env_file: '.env'
     volumes:
       - db_data:/var/lib/mysql
 

@@ -13,7 +13,7 @@ function ev(type: string, y: number, t: number) {
 function make(modelValue: 'peek' | 'half' | 'full' = 'peek') {
   return mount(BottomSheet, {
     props: { modelValue },
-    slots: { header: '<button class="tab">Tab</button>', default: '<p class="body">Hi</p>' }
+    slots: { header: '<button class="tab">Tab</button>', default: '<p class="body">Hi</p>' },
   });
 }
 

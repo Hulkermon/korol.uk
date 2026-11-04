@@ -9,7 +9,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         // Environment variables will be injected by the server environment or .env file
-      }
-    }
-  ]
-}
+      },
+    },
+  ],
+};

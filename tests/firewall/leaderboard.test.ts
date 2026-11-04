@@ -70,7 +70,7 @@ describe('useFirewallScores', () => {
 
   it('submits, tracks state, refreshes, and blocks a second submit', async () => {
     const fetchMock = vi.fn(async (url: string, opts?: { method: string }) =>
-      opts?.method === 'POST' ? { id: 7, score: 123, rank: 3 } : [entry(7)]
+      opts?.method === 'POST' ? { id: 7, score: 123, rank: 3 } : [entry(7)],
     );
     vi.stubGlobal('$fetch', fetchMock);
     const s = useFirewallScores();

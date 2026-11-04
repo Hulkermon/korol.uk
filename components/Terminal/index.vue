@@ -221,7 +221,7 @@
         if (inputHistory.value.length === 0) return;
         commandHistoryIndex.value = Math.min(
           inputHistory.value.length,
-          commandHistoryIndex.value + 1
+          commandHistoryIndex.value + 1,
         );
         if (commandHistoryIndex.value === inputHistory.value.length) {
           replaceCurrentInputLine('');
@@ -291,7 +291,7 @@
     (newColorName) => {
       const newHexColor = colorMap[newColorName.toLowerCase()] || colorMap['white'];
       gridApi.updateConfig({ charColor: newHexColor });
-    }
+    },
   );
 
   // --- Lifecycle Hooks ---
@@ -345,7 +345,9 @@
   .crt-screen {
     /* Keep screen styles */
     image-rendering: pixelated;
-    box-shadow: 0 0 10px rgba(51, 255, 0, 0.5), 0 0 20px rgba(51, 255, 0, 0.2),
+    box-shadow:
+      0 0 10px rgba(51, 255, 0, 0.5),
+      0 0 20px rgba(51, 255, 0, 0.2),
       inset 0 0 30px rgba(0, 0, 0, 0.8);
     border-radius: 16px;
     position: relative;

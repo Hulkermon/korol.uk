@@ -19,7 +19,7 @@
   const integrityPct = computed(() =>
     props.maxIntegrity > 0
       ? Math.max(0, Math.min(100, (props.integrity / props.maxIntegrity) * 100))
-      : 0
+      : 0,
   );
   const speeds: (1 | 2 | 3)[] = [1, 2, 3];
 </script>
@@ -48,14 +48,14 @@
       @click="$emit('set-speed', s)">
       {{ s }}x
     </button>
-    <button type="button" class="fw-sbtn" :class="{ 'fw-on': paused }" @click="$emit('toggle-pause')">
-      {{ paused ? 'RESUME' : 'PAUSE' }}
-    </button>
     <button
       type="button"
-      class="fw-start"
-      :disabled="!canStartWave"
-      @click="$emit('start-wave')">
+      class="fw-sbtn"
+      :class="{ 'fw-on': paused }"
+      @click="$emit('toggle-pause')">
+      {{ paused ? 'RESUME' : 'PAUSE' }}
+    </button>
+    <button type="button" class="fw-start" :disabled="!canStartWave" @click="$emit('start-wave')">
       START WAVE
     </button>
   </div>
@@ -84,7 +84,9 @@
   .fw-credits {
     background: #000;
     color: #30ff60;
-    font: bold 14px 'Courier New', monospace;
+    font:
+      bold 14px 'Courier New',
+      monospace;
     min-width: 70px;
   }
   .fw-bar {
@@ -109,7 +111,11 @@
   .fw-sbtn {
     background: #c0c0c0;
     color: #000;
-    font: 12px Tahoma, Verdana, 'MS Sans Serif', sans-serif;
+    font:
+      12px Tahoma,
+      Verdana,
+      'MS Sans Serif',
+      sans-serif;
     padding: 3px 8px;
     border: 2px solid;
     border-color: #fff #404040 #404040 #fff;
@@ -123,7 +129,11 @@
   .fw-start {
     background: #ff2bd6;
     color: #fff;
-    font: bold 16px Tahoma, Verdana, 'MS Sans Serif', sans-serif;
+    font:
+      bold 16px Tahoma,
+      Verdana,
+      'MS Sans Serif',
+      sans-serif;
     text-shadow: 1px 1px 0 #000;
     padding: 6px 16px;
     border: 3px solid;
