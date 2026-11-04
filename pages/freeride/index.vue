@@ -86,6 +86,7 @@
             v-if="sideTab === 'homies'"
             :homies="homies"
             :events="events"
+            :athletes="snapshot.athletes"
             :focused-key="focusedHomie"
             @focus="focusedHomie = $event"
             @select="selectedId = $event"

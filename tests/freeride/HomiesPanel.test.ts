@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, RouterLinkStub } from '@vue/test-utils';
 import HomiesPanel from '@/components/Freeride/HomiesPanel.vue';
 import type { Homie } from '@/composables/freeride/homies';
-import type { FreerideEvent } from '@/composables/freeride/types';
+import type { Athlete, FreerideEvent } from '@/composables/freeride/types';
 
 function ev(over: Partial<FreerideEvent> = {}): FreerideEvent {
   return {
@@ -36,7 +36,12 @@ const LATE = ev({
   start: '2026-03-20',
   end: '2026-03-22',
   divisions: [
-    { name: 'Men Ski', entryCount: 2, riders: [rider('Ann Lee', 'waitlisted'), rider('Bob Ray')] },
+    {
+      name: 'Men Ski',
+      entryCount: 2,
+      riders: [rider('Ann Lee', 'waitlisted'), rider('Bob Ray')],
+      results: [],
+    },
   ],
 });
 const EARLY = ev({
@@ -46,8 +51,14 @@ const EARLY = ev({
       name: 'Women Ski',
       entryCount: 2,
       riders: [rider('Ann Lee', 'confirmed'), rider('Zoë Moxon', 'weird', 'Atlantis')],
+      results: [],
     },
-    { name: 'Women Snowboard', entryCount: 1, riders: [rider('Ann Lee', 'denied')] },
+    {
+      name: 'Women Snowboard',
+      entryCount: 1,
+      riders: [rider('Ann Lee', 'denied')],
+      results: [],
+    },
   ],
 });
 const events = [LATE, EARLY];
@@ -56,7 +67,10 @@ const BOB: Homie = { key: 'bob ray', name: 'Bob Ray' };
 const NONE: Homie = { key: 'nobody', name: 'Nobody' };
 
 function make(props: Record<string, unknown> = {}) {
-  return mount(HomiesPanel, { props: { homies: [], events, focusedKey: null, ...props } });
+  return mount(HomiesPanel, {
+    props: { homies: [], events, focusedKey: null, ...props },
+    global: { stubs: { NuxtLink: RouterLinkStub } },
+  });
 }
 
 describe('HomiesPanel list view', () => {
@@ -193,5 +207,89 @@ describe('HomiesPanel focused view', () => {
   it('shows a message when there are no entries', () => {
     const w = make({ homies: [NONE], focusedKey: 'nobody' });
     expect(w.text()).toContain('Not signed up to any events in this snapshot');
+  });
+});
+
+const athletes: Record<string, Athlete> = {
+  '123': {
+    id: '123',
+    name: 'Ann Lee',
+    nationality: 'Switzerland',
+    image: null,
+    rankings: [
+      {
+        series: 'FWT',
+        tier: 'pro',
+        place: 3,
+        points: 5100,
+        results: [],
+      } as unknown as Athlete['rankings'][number],
+    ],
+  },
+};
+const ANN_ID: Homie = { key: '123', name: 'Ann Lee' };
+
+describe('HomiesPanel points and profiles', () => {
+  it('shows points in homie rows and omits them when unranked', () => {
+    const w = make({ homies: [ANN_ID, NONE], athletes });
+    const rows = w.findAll('.fr-homie');
+    expect(rows[0].find('.fr-homie-points').text()).toBe('5,100 pts · #3');
+    expect(rows[1].find('.fr-homie-points').exists()).toBe(false);
+  });
+
+  it('shows points on search results', async () => {
+    const w = make({ athletes: { ...athletes, 'bob ray': athletes['123'] } });
+    await w.find('.fr-homies-search').setValue('bob');
+    expect(w.find('.fr-rider-result .fr-homie-points').text()).toBe('5,100 pts · #3');
+  });
+
+  it('links to the profile only for id keys', () => {
+    const withId = make({ homies: [ANN_ID], focusedKey: '123', athletes });
+    const link = withId.findComponent(RouterLinkStub);
+    expect(link.props('to')).toBe('/freeride/rider/123');
+    expect(link.text()).toContain('View profile');
+    const byName = make({ homies: [ANN], focusedKey: 'ann lee' });
+    expect(byName.findComponent(RouterLinkStub).exists()).toBe(false);
+  });
+
+  it('shows the result instead of the pill for finished events', () => {
+    const done = ev({
+      id: 'done',
+      status: 'finished',
+      divisions: [
+        {
+          name: 'Women Ski',
+          entryCount: 2,
+          riders: [{ ...rider('Ann Lee'), athleteId: '123' } as never],
+          results: [
+            { place: 2, athleteId: '123', name: 'Ann Lee', nationality: null, points: 400 },
+            { place: 5, athleteId: '999', name: 'Other', nationality: null, points: null },
+          ],
+        },
+      ],
+    });
+    const w = make({ homies: [ANN_ID], events: [done], focusedKey: '123', athletes });
+    const entry = w.find('.fr-entry');
+    expect(entry.find('.fr-entry-result').text()).toBe('#2 · 400 pts');
+    expect(entry.find('.fr-pill').exists()).toBe(false);
+  });
+
+  it('shows only the place when points are null', () => {
+    const done = ev({
+      id: 'done',
+      status: 'finished',
+      divisions: [
+        {
+          name: 'Women Ski',
+          entryCount: 1,
+          riders: [{ ...rider('Ann Lee'), athleteId: '123' } as never],
+          results: [
+            { place: 4, athleteId: '123', name: 'Ann Lee', nationality: null, points: null },
+          ],
+        },
+      ],
+    });
+    const w = make({ homies: [ANN_ID], events: [done], focusedKey: '123' });
+    expect(w.find('.fr-entry-result').text()).toBe('#4');
   });
 });

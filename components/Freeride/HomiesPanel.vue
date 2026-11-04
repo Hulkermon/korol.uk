@@ -17,6 +17,12 @@
           {{ focusedIsHomie ? '★' : '☆' }}
         </button>
       </div>
+      <NuxtLink
+        v-if="isIdKey(focused.key)"
+        class="fr-profile-link"
+        :to="`/freeride/rider/${focused.key}`">
+        View profile →
+      </NuxtLink>
       <p v-if="!entries.length" class="fr-homies-none">
         Not signed up to any events in this snapshot
       </p>
@@ -32,7 +38,8 @@
           <span class="fr-entry-name">{{ entry.event.name }}</span>
           <span class="fr-entry-division">{{ entry.division }}</span>
         </span>
-        <span class="fr-pill" :class="pillClass(entry.status)">{{ entry.status }}</span>
+        <span v-if="resultText(entry)" class="fr-entry-result">{{ resultText(entry) }}</span>
+        <span v-else class="fr-pill" :class="pillClass(entry.status)">{{ entry.status }}</span>
       </button>
     </template>
 
@@ -54,6 +61,7 @@
         <button type="button" class="fr-homie-open" @click="emit('focus', h.key)">
           <span class="fr-homie-name">{{ h.name }}</span>
           <span class="fr-homie-count">{{ countText(countFor(h.key)) }}</span>
+          <span v-if="pointsText(h.key)" class="fr-homie-points">{{ pointsText(h.key) }}</span>
         </button>
         <button
           type="button"
@@ -85,6 +93,7 @@
               </template>
             </span>
             <span class="fr-homie-count">{{ countText(r.eventCount) }}</span>
+            <span v-if="pointsText(r.key)" class="fr-homie-points">{{ pointsText(r.key) }}</span>
           </button>
           <button
             type="button"
@@ -104,14 +113,19 @@
   import type { Homie } from '@/composables/freeride/homies';
   import { allRiders, homieEntries, matchesQuery } from '@/composables/freeride/homies';
   import { TIER_COLORS } from '@/composables/freeride/pins';
-  import type { FreerideEvent } from '@/composables/freeride/types';
+  import type { Athlete, FreerideEvent } from '@/composables/freeride/types';
+  import { formatPoints, isFinished, riderPoints } from '@/composables/freeride/riders';
   import { countryCode, flagUrl } from '@/composables/freeride/countries';
 
-  const props = defineProps<{
-    homies: Homie[];
-    events: FreerideEvent[];
-    focusedKey: string | null;
-  }>();
+  const props = withDefaults(
+    defineProps<{
+      homies: Homie[];
+      events: FreerideEvent[];
+      focusedKey: string | null;
+      athletes?: Record<string, Athlete>;
+    }>(),
+    { athletes: () => ({}) },
+  );
 
   const emit = defineEmits<{
     (e: 'focus', key: string | null): void;
@@ -167,6 +181,22 @@
       .filter((r) => !keys.has(r.key) && matchesQuery(r.name, query.value))
       .slice(0, 30);
   });
+
+  const isIdKey = (key: string) => /^\d+$/.test(key);
+
+  function pointsText(key: string): string {
+    const p = riderPoints(props.athletes, key);
+    return p ? `${formatPoints(p.points)} · #${p.place}` : '';
+  }
+
+  function resultText(entry: { event: FreerideEvent; division: string }): string {
+    if (!focused.value || !isFinished(entry.event)) return '';
+    const res = entry.event.divisions
+      .find((d) => d.name === entry.division)
+      ?.results.find((r) => r.athleteId === focused.value!.key);
+    if (!res) return '';
+    return res.points == null ? `#${res.place}` : `#${res.place} · ${formatPoints(res.points)}`;
+  }
 
   function countText(n: number): string {
     if (n === 0) return 'Not signed up yet';
@@ -288,6 +318,23 @@
   .fr-rider-nat {
     font-size: 12px;
     color: var(--fr-muted);
+  }
+  .fr-homie-points {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fr-ice);
+  }
+  .fr-profile-link {
+    display: inline-block;
+    margin: 4px 0;
+    color: var(--fr-ice);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .fr-entry-result {
+    flex: none;
+    font-size: 0.75rem;
+    font-weight: 700;
   }
   .fr-flag {
     width: 20px;
