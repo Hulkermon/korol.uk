@@ -63,6 +63,12 @@ describe('placeLabel', () => {
     );
   });
 
+  it('drops a postcode without a city or district', () => {
+    expect(placeLabel({ name: 'Zermatt', postcode: '3920', country: 'Switzerland' })).toBe(
+      'Zermatt, Switzerland'
+    );
+  });
+
   it('handles empty input', () => {
     expect(placeLabel({})).toBe('');
     expect(placeLabel(null)).toBe('');

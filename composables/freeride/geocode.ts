@@ -31,7 +31,9 @@ function str(v: unknown): string {
 export function placeLabel(props: Record<string, unknown> | null | undefined): string {
   const p = props ?? {};
   const street = [str(p.street), str(p.housenumber)].filter(Boolean).join(' ');
-  const locality = [str(p.postcode), str(p.city) || str(p.district)].filter(Boolean).join(' ');
+  // A postcode alone ("Zermatt, 3920") reads as noise, so it only goes with a city or district
+  const town = str(p.city) || str(p.district);
+  const locality = town ? [str(p.postcode), town].filter(Boolean).join(' ') : '';
   const parts = [str(p.name), street, locality, str(p.country)].filter(Boolean);
   return [...new Set(parts)].join(', ');
 }
