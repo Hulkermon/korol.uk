@@ -12,11 +12,11 @@
         <dt>Status</dt>
         <dd class="fr-status">{{ event.status }}</dd>
       </div>
-      <div>
+      <div v-if="!finished">
         <dt>Registration</dt>
         <dd class="fr-registration">{{ registration }}</dd>
       </div>
-      <div>
+      <div v-if="!finished">
         <dt>Price</dt>
         <dd class="fr-price">{{ price }}</dd>
       </div>
@@ -26,7 +26,12 @@
       <a class="fr-link-event" :href="event.url" target="_blank" rel="noopener">
         Event on Liveheats
       </a>
-      <a class="fr-link-register" :href="event.registerUrl" target="_blank" rel="noopener">
+      <a
+        v-if="!finished"
+        class="fr-link-register"
+        :href="event.registerUrl"
+        target="_blank"
+        rel="noopener">
         Sign up
       </a>
     </div>
@@ -35,52 +40,125 @@
       {{ planned ? 'Remove from plan' : 'Add to plan' }}
     </button>
 
-    <h3 class="fr-riders-title">Riders</h3>
+    <h3 class="fr-riders-title">{{ finished ? 'Results' : 'Riders' }}</h3>
     <p v-if="!event.divisions.length" class="fr-empty">No divisions published yet</p>
-    <details v-for="division in event.divisions" :key="division.name" class="fr-division">
-      <summary>{{ division.name }} ({{ division.entryCount }})</summary>
-      <p v-if="!division.riders.length && division.entryCount > 0" class="fr-hidden">
-        Entry list hidden by organiser
-      </p>
-      <ul v-else class="fr-riders">
-        <li v-for="(rider, i) in division.riders" :key="i" class="fr-rider">
-          <button
-            type="button"
-            class="fr-star"
-            :class="{ on: isHomie(rider) }"
-            :aria-pressed="isHomie(rider)"
-            :aria-label="starLabel(rider)"
-            :title="starLabel(rider)"
-            @click="emit('toggle-homie', rider.name, rider.athleteId)">
-            {{ isHomie(rider) ? '★' : '☆' }}
-          </button>
-          <span class="fr-rider-name" :class="{ 'fr-rider-name--homie': isHomie(rider) }">{{
-            rider.name
-          }}</span>
-          <template v-if="rider.nationality">
-            <img
-              v-if="flagFor(rider.nationality)"
-              class="fr-flag"
-              :src="flagFor(rider.nationality)!"
-              :alt="rider.nationality"
-              :title="rider.nationality"
-              width="20"
-              height="15"
-              loading="lazy" />
-            <span v-else class="fr-rider-nat">{{ rider.nationality }}</span>
-          </template>
-          <span class="fr-pill" :class="pillClass(rider.status)">{{ rider.status }}</span>
-        </li>
-      </ul>
-    </details>
+    <template v-if="finished">
+      <details
+        v-for="(division, di) in event.divisions"
+        :key="division.name"
+        class="fr-division"
+        :open="di === 0">
+        <summary>{{ division.name }} ({{ (division.results ?? []).length }})</summary>
+        <p v-if="!(division.results ?? []).length" class="fr-hidden">No results published</p>
+        <ul v-else class="fr-riders fr-results">
+          <li
+            v-for="(res, i) in sortedResults(division)"
+            :key="i"
+            class="fr-rider fr-result"
+            :class="{ 'fr-result--podium': res.place >= 1 && res.place <= 3 }">
+            <span class="fr-place-num">{{ placeLabel(res.place) }}</span>
+            <button
+              type="button"
+              class="fr-star"
+              :class="{ on: isHomie(res) }"
+              :aria-pressed="isHomie(res)"
+              :aria-label="starLabel(res)"
+              :title="starLabel(res)"
+              @click="emit('toggle-homie', res.name, res.athleteId)">
+              {{ isHomie(res) ? '★' : '☆' }}
+            </button>
+            <NuxtLink
+              v-if="res.athleteId"
+              :to="`/freeride/rider/${res.athleteId}`"
+              class="fr-rider-name"
+              :class="{ 'fr-rider-name--homie': isHomie(res) }">
+              {{ res.name }}
+            </NuxtLink>
+            <span v-else class="fr-rider-name" :class="{ 'fr-rider-name--homie': isHomie(res) }">{{
+              res.name
+            }}</span>
+            <template v-if="res.nationality">
+              <img
+                v-if="flagFor(res.nationality)"
+                class="fr-flag"
+                :src="flagFor(res.nationality)!"
+                :alt="res.nationality"
+                :title="res.nationality"
+                width="20"
+                height="15"
+                loading="lazy" />
+              <span v-else class="fr-rider-nat">{{ res.nationality }}</span>
+            </template>
+            <span class="fr-points">{{
+              res.points === null ? '—' : formatPoints(res.points)
+            }}</span>
+          </li>
+        </ul>
+      </details>
+    </template>
+    <template v-else>
+      <details v-for="division in event.divisions" :key="division.name" class="fr-division">
+        <summary>{{ division.name }} ({{ division.entryCount }})</summary>
+        <p v-if="!division.riders.length && division.entryCount > 0" class="fr-hidden">
+          Entry list hidden by organiser
+        </p>
+        <ul v-else class="fr-riders">
+          <li v-for="(rider, i) in division.riders" :key="i" class="fr-rider">
+            <button
+              type="button"
+              class="fr-star"
+              :class="{ on: isHomie(rider) }"
+              :aria-pressed="isHomie(rider)"
+              :aria-label="starLabel(rider)"
+              :title="starLabel(rider)"
+              @click="emit('toggle-homie', rider.name, rider.athleteId)">
+              {{ isHomie(rider) ? '★' : '☆' }}
+            </button>
+            <NuxtLink
+              v-if="rider.athleteId"
+              :to="`/freeride/rider/${rider.athleteId}`"
+              class="fr-rider-name"
+              :class="{ 'fr-rider-name--homie': isHomie(rider) }">
+              {{ rider.name }}
+            </NuxtLink>
+            <span
+              v-else
+              class="fr-rider-name"
+              :class="{ 'fr-rider-name--homie': isHomie(rider) }"
+              >{{ rider.name }}</span
+            >
+            <template v-if="rider.nationality">
+              <img
+                v-if="flagFor(rider.nationality)"
+                class="fr-flag"
+                :src="flagFor(rider.nationality)!"
+                :alt="rider.nationality"
+                :title="rider.nationality"
+                width="20"
+                height="15"
+                loading="lazy" />
+              <span v-else class="fr-rider-nat">{{ rider.nationality }}</span>
+            </template>
+            <span class="fr-pill" :class="pillClass(rider.status)">{{ rider.status }}</span>
+          </li>
+        </ul>
+      </details>
+    </template>
   </aside>
 </template>
 
 <script setup lang="ts">
   import { computed } from 'vue';
-  import type { FreerideEvent, Rider, Tier } from '@/composables/freeride/types';
+  import type {
+    Division,
+    DivisionResult,
+    FreerideEvent,
+    Rider,
+    Tier,
+  } from '@/composables/freeride/types';
   import { countryCode, flagUrl } from '@/composables/freeride/countries';
   import { riderId } from '@/composables/freeride/homies';
+  import { formatPoints, isFinished } from '@/composables/freeride/riders';
 
   const props = withDefaults(
     defineProps<{
@@ -100,11 +178,21 @@
 
   const homieSet = computed(() => new Set(props.homieKeys));
 
-  function isHomie(rider: Rider): boolean {
+  const finished = computed(() => isFinished(props.event));
+
+  function isHomie(rider: Pick<Rider, 'name' | 'athleteId'>): boolean {
     return homieSet.value.has(riderId(rider));
   }
 
-  function starLabel(rider: Rider): string {
+  function sortedResults(division: Division): DivisionResult[] {
+    return [...(division.results ?? [])].sort((a, b) => a.place - b.place);
+  }
+
+  function placeLabel(place: number): string {
+    return ['🥇', '🥈', '🥉'][place - 1] ?? `#${place}`;
+  }
+
+  function starLabel(rider: Pick<Rider, 'name'>): string {
     const name = rider.name;
     return isHomie(rider) ? `Remove ${name} from homies` : `Add ${name} to homies`;
   }
@@ -296,8 +384,27 @@
     padding: 0.15rem 0;
     font-size: 0.9rem;
   }
+  .fr-result {
+    min-height: 40px;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+  }
+  .fr-result--podium {
+    background: rgba(255, 107, 26, 0.08);
+  }
+  .fr-place-num {
+    min-width: 2.2rem;
+    font-weight: 700;
+    color: var(--fr-muted);
+  }
+  .fr-points {
+    min-width: 4.5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--fr-muted);
+  }
   .fr-star {
-    padding: 0;
+    padding: 0.4rem;
     border: 0;
     background: none;
     font-size: 1rem;
@@ -310,6 +417,13 @@
   }
   .fr-rider-name {
     flex: 1;
+  }
+  .fr-rider-name {
+    color: inherit;
+    text-decoration: none;
+  }
+  a.fr-rider-name:hover {
+    text-decoration: underline;
   }
   .fr-rider-name--homie {
     font-weight: 700;

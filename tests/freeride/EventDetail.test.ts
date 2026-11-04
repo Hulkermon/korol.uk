@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, RouterLinkStub } from '@vue/test-utils';
 import EventDetail from '@/components/Freeride/EventDetail.vue';
 import type { FreerideEvent } from '@/composables/freeride/types';
 
@@ -28,14 +28,20 @@ function makeEvent(overrides: Partial<FreerideEvent> = {}): FreerideEvent {
           { name: 'A Rider', nationality: 'CH', status: 'confirmed' },
           { name: 'B Rider', nationality: 'FR', status: 'waitlisted' },
         ],
+        results: [],
       },
     ],
     ...overrides,
   };
 }
 
+const stubs = { NuxtLink: RouterLinkStub };
+
 function render(event: FreerideEvent, planned = false) {
-  return mount(EventDetail, { props: { event, planned, planning: false } });
+  return mount(EventDetail, {
+    props: { event, planned, planning: false },
+    global: { stubs },
+  });
 }
 
 describe('EventDetail', () => {
@@ -117,7 +123,12 @@ describe('EventDetail', () => {
     const w = render(
       makeEvent({
         divisions: [
-          { name: 'X', entryCount: 1, riders: [{ name: 'R', nationality: null, status: 'odd' }] },
+          {
+            name: 'X',
+            entryCount: 1,
+            riders: [{ name: 'R', nationality: null, status: 'odd' }],
+            results: [],
+          },
         ],
       }),
     );
@@ -127,7 +138,7 @@ describe('EventDetail', () => {
 
   it('shows hidden-entries and no-divisions messages', () => {
     const hidden = render(
-      makeEvent({ divisions: [{ name: 'Ski Women', entryCount: 5, riders: [] }] }),
+      makeEvent({ divisions: [{ name: 'Ski Women', entryCount: 5, riders: [], results: [] }] }),
     );
     expect(hidden.text()).toContain('Entry list hidden by organiser');
     expect(render(makeEvent({ divisions: [] })).text()).toContain('No divisions published yet');
@@ -154,6 +165,7 @@ describe('EventDetail', () => {
             name: 'X',
             entryCount: 1,
             riders: [{ name: 'R', nationality: 'Sweden', status: 'confirmed' }],
+            results: [],
           },
         ],
       }),
@@ -189,11 +201,13 @@ describe('EventDetail', () => {
           name: 'Ski Men',
           entryCount: 1,
           riders: [{ name: 'A Rider', athleteId: '777', nationality: 'CH', status: 'confirmed' }],
+          results: [],
         },
       ],
     });
     const w = mount(EventDetail, {
       props: { event, planned: false, planning: false, homieKeys: ['777'] },
+      global: { stubs },
     });
     expect(w.find('.fr-star').classes()).toContain('on');
     await w.find('.fr-star').trigger('click');
@@ -203,6 +217,7 @@ describe('EventDetail', () => {
   it('bolds homies and marks their star on', () => {
     const w = mount(EventDetail, {
       props: { event: makeEvent(), planned: false, planning: false, homieKeys: ['a rider'] },
+      global: { stubs },
     });
     const names = w.findAll('.fr-rider-name');
     const stars = w.findAll('.fr-star');
@@ -222,6 +237,7 @@ describe('EventDetail', () => {
             name: 'X',
             entryCount: 1,
             riders: [{ name: 'R', nationality: 'Atlantis', status: 'confirmed' }],
+            results: [],
           },
         ],
       }),
@@ -236,11 +252,108 @@ describe('EventDetail', () => {
             name: 'X',
             entryCount: 1,
             riders: [{ name: 'R', nationality: null, status: 'confirmed' }],
+            results: [],
           },
         ],
       }),
     );
     expect(none.find('img.fr-flag').exists()).toBe(false);
     expect(none.find('.fr-rider-nat').exists()).toBe(false);
+  });
+
+  describe('finished events', () => {
+    const res = (place: number, name: string, athleteId: string | null, points: number | null) => ({
+      place,
+      athleteId,
+      name,
+      nationality: 'CH',
+      points,
+    });
+    const finishedEvent = () =>
+      makeEvent({
+        status: 'finished',
+        divisions: [
+          {
+            name: 'Ski Men',
+            entryCount: 4,
+            riders: [],
+            results: [
+              res(4, 'Dan', null, null),
+              res(2, 'Bob', '22', 4000),
+              res(1, 'Al', '11', 5100),
+              res(3, 'Cy', '33', 3000),
+            ],
+          },
+          { name: 'Ski Women', entryCount: 0, riders: [], results: [] },
+        ],
+      });
+
+    it('shows results sorted by place with medals and points', () => {
+      const w = render(finishedEvent());
+      expect(w.find('.fr-riders-title').text()).toBe('Results');
+      const divs = w.findAll('.fr-division');
+      expect(divs[0].attributes('open')).toBeDefined();
+      expect(divs[1].attributes('open')).toBeUndefined();
+      expect(divs[0].find('summary').text()).toBe('Ski Men (4)');
+      const rows = divs[0].findAll('.fr-result');
+      expect(rows.map((r) => r.find('.fr-place-num').text())).toEqual(['🥇', '🥈', '🥉', '#4']);
+      expect(rows.map((r) => r.find('.fr-rider-name').text())).toEqual(['Al', 'Bob', 'Cy', 'Dan']);
+      expect(rows.map((r) => r.find('.fr-points').text())).toEqual([
+        '5,100 pts',
+        '4,000 pts',
+        '3,000 pts',
+        '—',
+      ]);
+      expect(rows[0].classes()).toContain('fr-result--podium');
+      expect(rows[3].classes()).not.toContain('fr-result--podium');
+    });
+
+    it('shows no results message for an empty division', () => {
+      expect(render(finishedEvent()).text()).toContain('No results published');
+    });
+
+    it('hides sign up, registration and price but keeps status', () => {
+      const w = render(finishedEvent());
+      expect(w.find('.fr-link-register').exists()).toBe(false);
+      expect(w.find('.fr-registration').exists()).toBe(false);
+      expect(w.find('.fr-price').exists()).toBe(false);
+      expect(w.find('.fr-status').exists()).toBe(true);
+    });
+
+    it('links to the profile only when there is an athleteId', () => {
+      const rows = render(finishedEvent()).findAll('.fr-result');
+      const link = rows[0].findComponent(RouterLinkStub);
+      expect(link.props('to')).toBe('/freeride/rider/11');
+      expect(rows[3].findComponent(RouterLinkStub).exists()).toBe(false);
+      expect(rows[3].find('span.fr-rider-name').text()).toBe('Dan');
+    });
+
+    it('emits toggle-homie from a result row', async () => {
+      const w = render(finishedEvent());
+      await w.findAll('.fr-result')[0].find('.fr-star').trigger('click');
+      expect(w.emitted('toggle-homie')![0]).toEqual(['Al', '11']);
+    });
+  });
+
+  it('links entry-list riders with an athleteId and keeps Riders layout', () => {
+    const w = render(
+      makeEvent({
+        divisions: [
+          {
+            name: 'X',
+            entryCount: 2,
+            riders: [
+              { name: 'R1', athleteId: '5', nationality: null, status: 'confirmed' },
+              { name: 'R2', nationality: null, status: 'confirmed' },
+            ],
+            results: [],
+          },
+        ],
+      }),
+    );
+    expect(w.find('.fr-riders-title').text()).toBe('Riders');
+    expect(w.findAllComponents(RouterLinkStub)).toHaveLength(1);
+    expect(w.find('.fr-link-register').exists()).toBe(true);
+    expect(w.find('.fr-registration').exists()).toBe(true);
   });
 });
