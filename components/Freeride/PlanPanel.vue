@@ -18,7 +18,7 @@
             'fr-plan__stop--via': stop.kind === 'home' && stop.role === 'via',
           }"
           data-test="stop">
-          <span class="fr-plan__num">{{ i + 1 }}</span>
+          <span class="fr-plan__num">{{ stop.kind === 'home' ? '🏠' : eventNumber(i) }}</span>
           <div v-if="stop.kind === 'home'" class="fr-plan__body">
             <span class="fr-plan__name" data-test="home-stop">🏠 {{ stop.label }}</span>
             <span v-if="viaGapText(i)" class="fr-plan__via" data-test="via-gap">
@@ -249,6 +249,10 @@
       ...props.options,
       homeTrips: { ...props.options.homeTrips, [cur.event.id]: !tripOn(i) },
     });
+  }
+
+  function eventNumber(i: number): number {
+    return props.stops.slice(0, i + 1).filter((s) => s.kind === 'event').length;
   }
 
   function viaGapText(i: number): string {

@@ -100,8 +100,17 @@ describe('PlanPanel', () => {
     expect(stops[2].text()).toContain('PRO');
     expect(stops[2].text()).not.toContain('★');
     expect(stops[3].text()).toContain('🏠 Zurich');
-    expect(stops[0].find('.fr-plan__num').text()).toBe('1');
-    expect(stops[3].find('.fr-plan__num').text()).toBe('4');
+    expect(stops[0].find('.fr-plan__num').text()).toBe('🏠');
+    expect(stops[1].find('.fr-plan__num').text()).toBe('1');
+    expect(stops[2].find('.fr-plan__num').text()).toBe('2');
+    expect(stops[3].find('.fr-plan__num').text()).toBe('🏠');
+  });
+
+  it('numbers events only, skipping a via-home stop between them', () => {
+    const via: Stop = { kind: 'home', role: 'via', lat: 47, lng: 8, label: 'Zurich' };
+    const w = make({ stops: [homeStop('start'), eventStop(A), via, eventStop(B)], home });
+    const nums = w.findAll('.fr-plan__num').map((n) => n.text());
+    expect(nums).toEqual(['🏠', '1', '🏠', '2']);
   });
 
   it('formats junior stars and cross-month ranges', () => {

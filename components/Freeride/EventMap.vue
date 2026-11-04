@@ -15,7 +15,7 @@
   const props = defineProps<{
     events: FreerideEvent[];
     selectedId: string | null;
-    plannedIds: string[];
+    planOrder: Record<string, number>;
     home: { lat: number; lng: number; label: string } | null;
     routeLine: [number, number][];
     pickingHome: boolean;
@@ -64,11 +64,11 @@
     for (const e of props.events) {
       seen.add(e.id);
 
-      const planIdx = props.plannedIds.indexOf(e.id);
+      const order = props.planOrder[e.id];
       const state = {
         selected: props.selectedId === e.id,
-        planned: planIdx !== -1,
-        order: planIdx !== -1 ? planIdx + 1 : null,
+        planned: order !== undefined,
+        order: order ?? null,
       };
       // Overlapping pins are fanned out around their true location
       const offset = offsets.get(e.id) ?? { dx: 0, dy: 0 };
@@ -181,7 +181,7 @@
     syncRoute();
   });
 
-  watch(() => [props.events, props.selectedId, props.plannedIds], syncEvents, { deep: true });
+  watch(() => [props.events, props.selectedId, props.planOrder], syncEvents, { deep: true });
   watch(() => props.home, syncHome, { deep: true });
   watch(() => props.routeLine, syncRoute, { deep: true });
 

@@ -43,7 +43,7 @@
           <EventMap
             :events="shownEvents"
             :selected-id="selectedId"
-            :planned-ids="plannedIds"
+            :plan-order="planOrderMap"
             :home="home"
             :route-line="planning && !focusedHomie ? routeLine : []"
             :picking-home="pickingHome"
@@ -165,6 +165,7 @@
     buildStops,
     fetchRoute,
     findConflicts,
+    planOrder,
     straightLegs,
   } from '@/composables/freeride/planner';
   import type { Leg } from '@/composables/freeride/planner';
@@ -330,6 +331,7 @@
       .map((id) => events.value.find((e) => e.id === id))
       .filter((e): e is FreerideEvent => !!e),
   );
+  const planOrderMap = computed(() => planOrder(plannedEvents.value));
   // A focused rider overrides the legend and date filters (and hides our own plan)
   const shownEvents = computed(() =>
     mapEvents(
