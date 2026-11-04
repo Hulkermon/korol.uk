@@ -8,7 +8,9 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "vitest run"
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@nuxtjs/tailwindcss": "^6.13.2",
@@ -31,6 +33,7 @@
     "@vitest/ui": "^3.1.1",
     "@vue/test-utils": "^2.4.6",
     "jsdom": "^26.0.0",
+    "prettier": "^3.9.10",
     "vitest": "^3.1.1"
   }
 }
