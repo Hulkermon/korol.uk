@@ -98,7 +98,10 @@
           :planned="plannedIds.includes(selectedEvent.id)"
           :planning="planning"
           :homie-keys="homieKeys"
+          :nav="planNavState"
           @close="selectedId = null"
+          @prev="stepPlan(-1)"
+          @next="stepPlan(1)"
           @toggle-plan="togglePlanned"
           @toggle-homie="toggleHomie" />
         <template v-else>
@@ -124,7 +127,7 @@
             :stale="stale"
             @calculate="calculate"
             @remove="removePlanned"
-            @select="pickEvent($event)"
+            @select="openFromPlan($event)"
             @update:options="planOptions = $event"
             @set-home="pickerOpen = true"
             @clear="clearPlan" />
@@ -182,7 +185,13 @@
   } from '@/composables/freeride/filters';
   import { timeAgo, useSnapshot } from '@/composables/freeride/useSnapshot';
   import { usePlannerState } from '@/composables/freeride/usePlannerState';
-  import { buildStops, findConflicts, planOrder } from '@/composables/freeride/planner';
+  import {
+    buildStops,
+    findConflicts,
+    planNav,
+    planOrder,
+    sortByDate,
+  } from '@/composables/freeride/planner';
   import { useRouting } from '@/composables/freeride/useRouting';
   import { TIER_COLORS } from '@/composables/freeride/pins';
   import EventMap from '@/components/Freeride/EventMap.vue';
@@ -373,6 +382,7 @@
   const conflicts = computed(() => findConflicts(stops.value, legs.value));
 
   function onPinSelect(id: string) {
+    fromPlan.value = false;
     // In plan mode a pin click only edits the route, so the stop list stays visible
     if (planning.value) {
       togglePlanned(id);
@@ -383,10 +393,38 @@
     selectedId.value = id;
   }
 
+  // True while the open event was picked from the plan list (enables prev/next stepping)
+  const fromPlan = ref(false);
+  watch(selectedId, (id) => {
+    if (!id) fromPlan.value = false;
+  });
+  const planNavState = computed(() =>
+    fromPlan.value
+      ? planNav(
+          sortByDate(plannedEvents.value).map((e) => e.id),
+          selectedId.value,
+        )
+      : null,
+  );
+
+  function openFromPlan(id: string) {
+    pickEvent(id);
+    fromPlan.value = true;
+  }
+
+  function stepPlan(dir: -1 | 1) {
+    const nav = planNavState.value;
+    const id = nav && (dir < 0 ? nav.prevId : nav.nextId);
+    if (!id) return;
+    keepSheet = true;
+    openFromPlan(id);
+  }
+
   const mapRef = ref<InstanceType<typeof EventMap> | null>(null);
 
   // Selecting from a list pans the map to the event (pin clicks don't)
   function pickEvent(id: string) {
+    fromPlan.value = false;
     selectedId.value = id;
     nextTick(() => {
       const e = events.value.find((x) => x.id === id);

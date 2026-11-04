@@ -1,5 +1,24 @@
 <template>
   <aside class="fr-detail">
+    <div v-if="nav" class="fr-nav">
+      <button
+        type="button"
+        class="fr-nav-prev"
+        aria-label="Previous planned event"
+        :disabled="!nav.prevId"
+        @click="emit('prev')">
+        ‹
+      </button>
+      <span class="fr-nav-count">Plan {{ nav.index }} / {{ nav.total }}</span>
+      <button
+        type="button"
+        class="fr-nav-next"
+        aria-label="Next planned event"
+        :disabled="!nav.nextId"
+        @click="emit('next')">
+        ›
+      </button>
+    </div>
     <button type="button" class="fr-close" aria-label="Close" @click="emit('close')">×</button>
 
     <span class="fr-badge" :style="{ background: tierColour }">{{ badge }}</span>
@@ -198,14 +217,17 @@
       planned: boolean;
       planning: boolean;
       homieKeys?: string[];
+      nav?: { index: number; total: number; prevId: string | null; nextId: string | null } | null;
     }>(),
-    { homieKeys: () => [] },
+    { homieKeys: () => [], nav: null },
   );
 
   const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'toggle-plan', id: string): void;
     (e: 'toggle-homie', name: string, athleteId?: string | null): void;
+    (e: 'prev'): void;
+    (e: 'next'): void;
   }>();
 
   const homieSet = computed(() => new Set(props.homieKeys));
@@ -321,6 +343,28 @@
     background: var(--fr-snow);
     color: var(--fr-slate);
     font-family: system-ui, sans-serif;
+  }
+  .fr-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 2rem 0.75rem 0;
+    font-size: 0.85rem;
+    color: var(--fr-muted);
+  }
+  .fr-nav button {
+    border: 1px solid var(--fr-muted);
+    border-radius: 4px;
+    background: none;
+    padding: 0 0.6rem;
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: var(--fr-slate);
+    cursor: pointer;
+  }
+  .fr-nav button:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
   .fr-close {
     position: absolute;

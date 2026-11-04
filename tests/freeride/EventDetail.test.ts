@@ -406,4 +406,35 @@ describe('EventDetail add to calendar', () => {
     expect(downloads).toEqual([icsFilename(event.name)]);
     expect(revoke).toHaveBeenCalledWith('blob:x');
   });
+
+  describe('plan nav', () => {
+    const nav = { index: 2, total: 3, prevId: 'a', nextId: 'c' };
+    const renderNav = (n: typeof nav | null) =>
+      mount(EventDetail, {
+        props: { event: makeEvent(), planned: true, planning: true, nav: n },
+        global: { stubs },
+      });
+
+    it('has no nav bar without nav', () => {
+      expect(render(makeEvent()).find('.fr-nav').exists()).toBe(false);
+    });
+
+    it('shows the position and emits prev/next', async () => {
+      const w = renderNav(nav);
+      expect(w.find('.fr-nav-count').text()).toBe('Plan 2 / 3');
+      await w.find('.fr-nav-prev').trigger('click');
+      await w.find('.fr-nav-next').trigger('click');
+      expect(w.emitted('prev')).toHaveLength(1);
+      expect(w.emitted('next')).toHaveLength(1);
+    });
+
+    it('disables the buttons at the ends', () => {
+      const first = renderNav({ index: 1, total: 3, prevId: null, nextId: 'b' });
+      expect(first.find('.fr-nav-prev').attributes('disabled')).toBeDefined();
+      expect(first.find('.fr-nav-next').attributes('disabled')).toBeUndefined();
+      const last = renderNav({ index: 3, total: 3, prevId: 'b', nextId: null });
+      expect(last.find('.fr-nav-next').attributes('disabled')).toBeDefined();
+      expect(last.find('.fr-nav-prev').attributes('disabled')).toBeUndefined();
+    });
+  });
 });
