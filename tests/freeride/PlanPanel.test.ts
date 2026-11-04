@@ -52,7 +52,12 @@ const B = ev({
 });
 const osrmLeg: Leg = { from: 0, to: 1, km: 212.4, hours: 2 + 40 / 60, source: 'osrm' };
 const straightLeg: Leg = { from: 0, to: 1, km: 212.4, hours: null, source: 'straight' };
-const opts: PlanOptions = { startAtHome: false, returnHome: false };
+const opts: PlanOptions = {
+  startAtHome: false,
+  returnHome: false,
+  homeTrips: {},
+  homeGapDays: 5,
+};
 const home = { lat: 47, lng: 8, label: 'Zurich' };
 
 function make(props: Record<string, unknown> = {}) {
@@ -188,9 +193,85 @@ describe('PlanPanel', () => {
   it('emits update:options with a new object when toggled', async () => {
     const w = make({ home });
     await w.find('[data-test="start-home"]').setValue(true);
-    expect(w.emitted('update:options')![0]).toEqual([{ startAtHome: true, returnHome: false }]);
+    expect(w.emitted('update:options')![0]).toEqual([{ ...opts, startAtHome: true }]);
     await w.find('[data-test="return-home"]').setValue(true);
-    expect(w.emitted('update:options')![1]).toEqual([{ startAtHome: false, returnHome: true }]);
+    expect(w.emitted('update:options')![1]).toEqual([{ ...opts, returnHome: true }]);
     expect(w.emitted('update:options')![0][0]).not.toBe(opts);
+  });
+
+  describe('home trips', () => {
+    const viaStop: Stop = {
+      kind: 'home',
+      role: 'via',
+      after: 'e1',
+      lat: 47,
+      lng: 8,
+      label: 'Zurich',
+    };
+    const C = ev({ id: 'e3', name: 'Chamonix', start: '2026-03-10', end: '2026-03-11' });
+
+    it('shows one toggle per event pair', () => {
+      expect(make().findAll('[data-test="home-trip"]')).toHaveLength(1);
+      const w = make({ stops: [eventStop(A), eventStop(B), eventStop(C)], legs: [] });
+      expect(w.findAll('[data-test="home-trip"]')).toHaveLength(2);
+      expect(
+        make({ stops: [eventStop(A)], legs: [] })
+          .find('[data-test="home-trip"]')
+          .exists(),
+      ).toBe(false);
+    });
+
+    it('reflects auto and override pressed state', () => {
+      const far = { stops: [eventStop(A), eventStop(C)], legs: [], home };
+      const auto = make(far).find('[data-test="home-trip"]');
+      expect(auto.attributes('aria-pressed')).toBe('true');
+      expect(auto.text()).toContain('(auto)');
+      const off = make({ ...far, options: { ...opts, homeTrips: { e1: false } } }).find(
+        '[data-test="home-trip"]',
+      );
+      expect(off.attributes('aria-pressed')).toBe('false');
+      expect(off.text()).not.toContain('(auto)');
+      const near = make({ home }).find('[data-test="home-trip"]');
+      expect(near.attributes('aria-pressed')).toBe('false');
+    });
+
+    it('emits a new homeTrips override when toggled', async () => {
+      const w = make({ home });
+      await w.find('[data-test="home-trip"]').trigger('click');
+      const out = w.emitted('update:options')![0][0] as PlanOptions;
+      expect(out.homeTrips).toEqual({ e1: true });
+      expect(opts.homeTrips).toEqual({});
+    });
+
+    it('disables the toggle without home', () => {
+      const btn = make().find('[data-test="home-trip"]');
+      expect(btn.attributes('disabled')).toBeDefined();
+      expect(btn.attributes('title')).toBe('Set a homebase first');
+    });
+
+    it('renders a via stop with the days at home', () => {
+      const w = make({
+        stops: [eventStop(A), viaStop, eventStop(C)],
+        legs: [],
+        home,
+      });
+      const stops = w.findAll('[data-test="stop"]');
+      expect(stops[1].text()).toContain('🏠 Zurich');
+      expect(stops[1].find('[data-test="via-gap"]').text()).toBe('14 days at home');
+      expect(w.findAll('[data-test="home-trip"]')).toHaveLength(1);
+    });
+
+    it('emits a clamped integer homeGapDays', async () => {
+      const w = make({ home });
+      const input = w.find('[data-test="home-gap"]');
+      await input.setValue('100');
+      expect((w.emitted('update:options')![0][0] as PlanOptions).homeGapDays).toBe(60);
+      await input.setValue('0');
+      expect((w.emitted('update:options')![1][0] as PlanOptions).homeGapDays).toBe(1);
+      await input.setValue('7.4');
+      expect((w.emitted('update:options')![2][0] as PlanOptions).homeGapDays).toBe(7);
+      await input.setValue('');
+      expect(w.emitted('update:options')).toHaveLength(3);
+    });
   });
 });

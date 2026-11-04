@@ -13,11 +13,17 @@
       <template v-for="(stop, i) in stops" :key="stopKey(stop, i)">
         <li
           class="fr-plan__stop"
-          :class="{ 'fr-plan__stop--home': stop.kind === 'home' }"
+          :class="{
+            'fr-plan__stop--home': stop.kind === 'home',
+            'fr-plan__stop--via': stop.kind === 'home' && stop.role === 'via',
+          }"
           data-test="stop">
           <span class="fr-plan__num">{{ i + 1 }}</span>
           <div v-if="stop.kind === 'home'" class="fr-plan__body">
             <span class="fr-plan__name" data-test="home-stop">🏠 {{ stop.label }}</span>
+            <span v-if="viaGapText(i)" class="fr-plan__via" data-test="via-gap">
+              {{ viaGapText(i) }}
+            </span>
           </div>
           <div v-else class="fr-plan__body">
             <span class="fr-plan__dates">{{ formatRange(stop.event.start, stop.event.end) }}</span>
@@ -48,6 +54,18 @@
         <li v-if="i < stops.length - 1" class="fr-plan__leg" data-test="leg" aria-hidden="true">
           {{ legText(i) }}
         </li>
+        <li v-if="nextEventAfter(i)" class="fr-plan__leg fr-plan__leg--trip">
+          <button
+            type="button"
+            class="fr-plan__trip"
+            data-test="home-trip"
+            :aria-pressed="tripOn(i)"
+            :disabled="!home"
+            :title="home ? undefined : 'Set a homebase first'"
+            @click="toggleTrip(i)">
+            🏠 via home{{ hasOverride(i) ? '' : ' (auto)' }}
+          </button>
+        </li>
       </template>
     </ol>
 
@@ -70,6 +88,19 @@
           @change="setOption('returnHome', ($event.target as HTMLInputElement).checked)" />
         Return to homebase
       </label>
+      <label class="fr-plan__opt">
+        Go home if gap ≥
+        <input
+          type="number"
+          class="fr-plan__num-input"
+          data-test="home-gap"
+          min="1"
+          max="60"
+          step="1"
+          :value="options.homeGapDays"
+          @change="setGapDays(($event.target as HTMLInputElement).value)" />
+        days
+      </label>
       <button type="button" class="fr-plan__btn" data-test="set-home" @click="emit('set-home')">
         {{ home ? 'Change homebase' : 'Set homebase' }}
       </button>
@@ -88,7 +119,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import type { Conflict, Homebase, Leg, PlanOptions, Stop } from '@/composables/freeride/planner';
-  import { totals } from '@/composables/freeride/planner';
+  import { gapDays, homeTripOn, totals } from '@/composables/freeride/planner';
   import { TIER_COLORS } from '@/composables/freeride/pins';
   import type { FreerideEvent } from '@/composables/freeride/types';
 
@@ -189,7 +220,57 @@
     return `Overlaps with ${name}`;
   }
 
-  function setOption(key: keyof PlanOptions, value: boolean) {
+  function nextEventAfter(i: number): FreerideEvent | null {
+    const cur = props.stops[i];
+    if (cur?.kind !== 'event') return null;
+    for (let j = i + 1; j < props.stops.length; j++) {
+      const s = props.stops[j];
+      if (s.kind === 'event') return s.event;
+    }
+    return null;
+  }
+
+  function tripOn(i: number): boolean {
+    const cur = props.stops[i];
+    const next = nextEventAfter(i);
+    if (cur?.kind !== 'event' || !next) return false;
+    return homeTripOn(cur.event, next, props.options);
+  }
+
+  function hasOverride(i: number): boolean {
+    const cur = props.stops[i];
+    return cur?.kind === 'event' && props.options.homeTrips?.[cur.event.id] !== undefined;
+  }
+
+  function toggleTrip(i: number) {
+    const cur = props.stops[i];
+    if (cur?.kind !== 'event' || !props.home) return;
+    emit('update:options', {
+      ...props.options,
+      homeTrips: { ...props.options.homeTrips, [cur.event.id]: !tripOn(i) },
+    });
+  }
+
+  function viaGapText(i: number): string {
+    const via = props.stops[i];
+    if (via?.kind !== 'home' || via.role !== 'via') return '';
+    const prev = props.stops.find((s) => s.kind === 'event' && s.event.id === via.after);
+    let next: FreerideEvent | null = null;
+    for (let j = i + 1; j < props.stops.length && !next; j++) {
+      const s = props.stops[j];
+      if (s.kind === 'event') next = s.event;
+    }
+    if (!prev || prev.kind !== 'event' || !next) return '';
+    return `${gapDays(prev.event, next)} days at home`;
+  }
+
+  function setGapDays(raw: string) {
+    const n = Math.round(Number(raw));
+    if (raw.trim() === '' || Number.isNaN(n)) return;
+    emit('update:options', { ...props.options, homeGapDays: Math.min(60, Math.max(1, n)) });
+  }
+
+  function setOption(key: 'startAtHome' | 'returnHome', value: boolean) {
     emit('update:options', { ...props.options, [key]: value });
   }
 </script>
@@ -304,6 +385,31 @@
     border-left: 2px dashed var(--fr-ice);
     font-size: 12px;
     color: var(--fr-muted);
+  }
+  .fr-plan__stop--via .fr-plan__name,
+  .fr-plan__via {
+    color: var(--fr-muted);
+    font-size: 12px;
+  }
+  .fr-plan__trip {
+    padding: 2px 8px;
+    border: 1px solid var(--fr-ice);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--fr-slate);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .fr-plan__trip[aria-pressed='true'] {
+    background: var(--fr-ice);
+    color: #fff;
+  }
+  .fr-plan__trip:disabled {
+    color: var(--fr-muted);
+    cursor: not-allowed;
+  }
+  .fr-plan__num-input {
+    width: 4em;
   }
   .fr-plan__opts {
     display: flex;
