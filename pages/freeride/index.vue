@@ -41,11 +41,11 @@
       <div class="fr-mapcol">
         <div class="fr-mapwrap">
           <EventMap
-            :events="mapEvents"
+            :events="shownEvents"
             :selected-id="selectedId"
             :planned-ids="plannedIds"
             :home="home"
-            :route-line="planning ? routeLine : []"
+            :route-line="planning && !focusedHomie ? routeLine : []"
             :picking-home="pickingHome"
             @select="onPinSelect"
             @pick-home="onPickHome" />
@@ -154,6 +154,7 @@
   import type { EventSnapshot, FreerideEvent } from '@/composables/freeride/types';
   import {
     filterEvents,
+    mapEvents,
     overlapsRange,
     rebaseRange,
     seasonBounds,
@@ -329,16 +330,15 @@
       .map((id) => events.value.find((e) => e.id === id))
       .filter((e): e is FreerideEvent => !!e),
   );
-  const mapEvents = computed(() => {
-    const planned = new Set(plannedIds.value);
-    // A focused rider overrides the legend and date filters: show all their events
-    const vis = new Set(
-      focusedHomie.value
-        ? homieEventIds(events.value, focusedHomie.value)
-        : visible.value.map((e) => e.id),
-    );
-    return events.value.filter((e) => vis.has(e.id) || planned.has(e.id));
-  });
+  // A focused rider overrides the legend and date filters (and hides our own plan)
+  const shownEvents = computed(() =>
+    mapEvents(
+      events.value,
+      visible.value.map((e) => e.id),
+      plannedIds.value,
+      focusedHomie.value ? homieEventIds(events.value, focusedHomie.value) : null,
+    ),
+  );
   const selectedEvent = computed(() =>
     selectedId.value ? (events.value.find((e) => e.id === selectedId.value) ?? null) : null,
   );

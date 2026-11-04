@@ -84,3 +84,15 @@ export function rebaseRange(r: DateRange, oldBounds: DateRange, newBounds: DateR
   if (r.to < newBounds.from || r.from > newBounds.to) return { ...newBounds };
   return clampRange(r, newBounds);
 }
+
+// Events drawn on the map. A focused rider (focusIds) replaces everything else, including the
+// user's own plan; otherwise the visible events plus the planned ones. Always in `events` order.
+export function mapEvents(
+  events: FreerideEvent[],
+  visibleIds: string[],
+  plannedIds: string[],
+  focusIds: string[] | null,
+): FreerideEvent[] {
+  const keep = new Set(focusIds ?? [...visibleIds, ...plannedIds]);
+  return events.filter((e) => keep.has(e.id));
+}

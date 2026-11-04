@@ -6,6 +6,7 @@ import {
   countByTier,
   dayToNum,
   filterEvents,
+  mapEvents,
   numToDay,
   overlapsRange,
   passesLegend,
@@ -187,5 +188,23 @@ describe('rebaseRange', () => {
   });
   it('falls back to the new bounds when the range is fully outside', () => {
     expect(rebaseRange({ from: '2026-12-01', to: '2026-12-05' }, oldB, newB)).toEqual(newB);
+  });
+});
+
+describe('mapEvents', () => {
+  const evs = [ev({ id: 'a' }), ev({ id: 'b' }), ev({ id: 'c' }), ev({ id: 'd' })];
+  const ids = (list: FreerideEvent[]) => list.map((e) => e.id);
+
+  it('shows visible plus planned without duplicates, in event order', () => {
+    expect(ids(mapEvents(evs, ['c', 'a'], ['a', 'd'], null))).toEqual(['a', 'c', 'd']);
+  });
+  it('with focus, excludes planned events outside the focus', () => {
+    expect(ids(mapEvents(evs, ['a'], ['d'], ['b', 'c']))).toEqual(['b', 'c']);
+  });
+  it('with focus, includes planned events inside the focus', () => {
+    expect(ids(mapEvents(evs, ['a'], ['c'], ['b', 'c']))).toEqual(['b', 'c']);
+  });
+  it('with focus and an empty list, shows nothing', () => {
+    expect(mapEvents(evs, ['a'], ['b'], [])).toEqual([]);
   });
 });
