@@ -98,7 +98,7 @@
           :planning="planning"
           :homie-keys="homieKeys"
           @close="selectedId = null"
-          @toggle-plan="onTogglePlan"
+          @toggle-plan="togglePlanned"
           @toggle-homie="toggleHomie" />
         <template v-else>
           <HomiesPanel
@@ -408,12 +408,6 @@
       return;
     }
     selectedId.value = id;
-  }
-
-  function onTogglePlan(id: string) {
-    const adding = !plannedIds.value.includes(id);
-    togglePlanned(id);
-    if (adding) planning.value = true;
   }
 
   const pickerOpen = ref(false);
