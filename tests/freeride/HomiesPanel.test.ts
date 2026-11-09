@@ -84,10 +84,12 @@ describe('HomiesPanel list view', () => {
     const w = make({ homies: [ANN, NONE, { key: 'zoe moxon', name: 'Zoë Moxon' }] });
     const rows = w.findAll('.fr-homie');
     expect(rows).toHaveLength(3);
-    expect(rows[0].text()).toContain('2 events');
-    expect(rows[1].text()).toContain('Not signed up yet');
-    expect(rows[2].text()).toContain('1 event');
-    expect(rows[2].text()).not.toContain('1 events');
+    const row = (name: string) =>
+      rows.find((r) => r.find('.fr-homie-name').text().startsWith(name))!;
+    expect(row('Ann Lee').text()).toContain('2 events');
+    expect(row('Nobody').text()).toContain('Not signed up yet');
+    expect(row('Zoë Moxon').text()).toContain('1 event');
+    expect(row('Zoë Moxon').text()).not.toContain('1 events');
   });
 
   describe('flags', () => {
@@ -374,5 +376,60 @@ describe('HomiesPanel points and profiles', () => {
     });
     const w = make({ homies: [ANN_ID], events: [done], focusedKey: '123' });
     expect(w.find('.fr-entry-result').text()).toBe('#4');
+  });
+});
+
+describe('HomiesPanel categories', () => {
+  const ath = (id: string, division: string, points: number) =>
+    ({
+      id,
+      name: id,
+      nationality: null,
+      image: null,
+      rankings: [{ series: 'FWQ', tier: 'qualifier', division, place: 1, points, results: [] }],
+    }) as unknown as Athlete;
+  const hs: Homie[] = [
+    { key: '1', name: 'Sam' },
+    { key: '2', name: 'Kai' },
+    { key: '3', name: 'Mia' },
+    { key: 'ann lee', name: 'Ann Lee' },
+    { key: 'nobody', name: 'Abe' },
+  ];
+  const athletes = {
+    '1': ath('1', 'Snowboard Men', 900),
+    '2': ath('2', 'Ski Men', 100),
+    '3': ath('3', 'Ski Women U-19', 500),
+  };
+  const groups = (w: ReturnType<typeof make>) =>
+    w.findAll('.fr-homie-group').map((g) => ({
+      head: g.find('.fr-homies-cat').text(),
+      names: g.findAll('.fr-homie-name').map((n) => n.text()),
+    }));
+
+  it('splits homies into one leaderboard per category, each with its own gold', () => {
+    const w = make({ homies: hs, athletes });
+    expect(groups(w)).toEqual([
+      { head: 'Ski Men', names: ['🥇 Kai'] },
+      { head: 'Ski Women', names: ['🥇 Mia', 'Ann Lee'] },
+      { head: 'Snowboard Men', names: ['🥇 Sam'] },
+      { head: 'Other', names: ['Abe'] },
+    ]);
+  });
+
+  it('hides category headings when all homies share one', () => {
+    const w = make({ homies: [hs[1]], athletes });
+    expect(w.find('.fr-homies-cat').exists()).toBe(false);
+  });
+
+  it('drops groups left empty by a search', async () => {
+    const w = make({ homies: hs, athletes });
+    await w.find('.fr-homies-search').setValue('mia');
+    expect(groups(w)).toEqual([{ head: 'Ski Women', names: ['🥇 Mia'] }]);
+  });
+
+  it('labels search results with their category', async () => {
+    const w = make();
+    await w.find('.fr-homies-search').setValue('bob');
+    expect(w.find('.fr-rider-result .fr-homie-count').text()).toBe('Ski Men · 1 event');
   });
 });

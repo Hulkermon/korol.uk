@@ -64,37 +64,44 @@
       </p>
       <p v-else-if="homies.length && !homieRows.length" class="fr-homies-none">No homies match</p>
 
-      <div v-for="{ homie: h, medal } in homieRows" :key="h.key" class="fr-homie">
-        <button type="button" class="fr-homie-open" @click="emit('focus', h.key)">
-          <span class="fr-homie-name">
-            <span v-if="medal" class="fr-medal" :aria-label="MEDALS[medal - 1].label">{{
-              MEDALS[medal - 1].icon
-            }}</span>
-            {{ h.name }}
-            <template v-if="nationalityFor(h.key)">
-              <img
-                v-if="flagFor(nationalityFor(h.key))"
-                class="fr-flag"
-                :src="flagFor(nationalityFor(h.key))!"
-                :alt="nationalityFor(h.key)!"
-                :title="nationalityFor(h.key)!"
-                width="20"
-                height="15"
-                loading="lazy" />
-              <span v-else class="fr-rider-nat">{{ nationalityFor(h.key) }}</span>
-            </template>
-          </span>
-          <span class="fr-homie-count">{{ countText(countFor(h.key)) }}</span>
-          <span v-if="pointsText(h.key)" class="fr-homie-points">{{ pointsText(h.key) }}</span>
-        </button>
-        <button
-          type="button"
-          class="fr-star on"
-          :aria-label="`Remove ${h.name} from homies`"
-          @click="emit('toggle-homie', h.name)">
-          ★
-        </button>
-      </div>
+      <section
+        v-for="g in homieGroups"
+        :key="g.category ?? 'other'"
+        class="fr-homie-group"
+        :aria-label="g.category ?? 'Other'">
+        <h3 v-if="showGroupHeads" class="fr-homies-cat">{{ g.category ?? 'Other' }}</h3>
+        <div v-for="{ homie: h, medal } in g.rows" :key="h.key" class="fr-homie">
+          <button type="button" class="fr-homie-open" @click="emit('focus', h.key)">
+            <span class="fr-homie-name">
+              <span v-if="medal" class="fr-medal" :aria-label="MEDALS[medal - 1].label">{{
+                MEDALS[medal - 1].icon
+              }}</span>
+              {{ h.name }}
+              <template v-if="nationalityFor(h.key)">
+                <img
+                  v-if="flagFor(nationalityFor(h.key))"
+                  class="fr-flag"
+                  :src="flagFor(nationalityFor(h.key))!"
+                  :alt="nationalityFor(h.key)!"
+                  :title="nationalityFor(h.key)!"
+                  width="20"
+                  height="15"
+                  loading="lazy" />
+                <span v-else class="fr-rider-nat">{{ nationalityFor(h.key) }}</span>
+              </template>
+            </span>
+            <span class="fr-homie-count">{{ countText(countFor(h.key)) }}</span>
+            <span v-if="pointsText(h.key)" class="fr-homie-points">{{ pointsText(h.key) }}</span>
+          </button>
+          <button
+            type="button"
+            class="fr-star on"
+            :aria-label="`Remove ${h.name} from homies`"
+            @click="emit('toggle-homie', h.name)">
+            ★
+          </button>
+        </div>
+      </section>
 
       <template v-if="searching">
         <h3 class="fr-homies-sub">Other riders</h3>
@@ -116,7 +123,10 @@
                 <span v-else class="fr-rider-nat">{{ r.nationality }}</span>
               </template>
             </span>
-            <span class="fr-homie-count">{{ countText(r.eventCount) }}</span>
+            <span class="fr-homie-count"
+              ><template v-if="categoryFor(r.key)">{{ categoryFor(r.key) }} · </template
+              >{{ countText(r.eventCount) }}</span
+            >
             <span v-if="pointsText(r.key)" class="fr-homie-points">{{ pointsText(r.key) }}</span>
           </button>
           <button
@@ -138,7 +148,13 @@
   import { allRiders, homieEntries, matchesQuery } from '@/composables/freeride/homies';
   import { TIER_COLORS } from '@/composables/freeride/pins';
   import type { Athlete, FreerideEvent } from '@/composables/freeride/types';
-  import { formatPoints, isFinished, rankHomies, riderPoints } from '@/composables/freeride/riders';
+  import {
+    formatPoints,
+    groupHomies,
+    isFinished,
+    riderCategory,
+    riderPoints,
+  } from '@/composables/freeride/riders';
   import { countryCode, flagUrl } from '@/composables/freeride/countries';
 
   const props = withDefaults(
@@ -208,10 +224,15 @@
     { icon: '🥈', label: '2nd' },
     { icon: '🥉', label: '3rd' },
   ];
-  const rankedHomies = computed(() => rankHomies(props.homies, props.athletes));
-  const homieRows = computed(() =>
-    rankedHomies.value.filter((r) => matchesQuery(r.homie.name, query.value)),
+  const groupedHomies = computed(() => groupHomies(props.homies, props.athletes, props.events));
+  const showGroupHeads = computed(() => groupedHomies.value.length > 1);
+  const homieGroups = computed(() =>
+    groupedHomies.value
+      .map((g) => ({ ...g, rows: g.rows.filter((r) => matchesQuery(r.homie.name, query.value)) }))
+      .filter((g) => g.rows.length),
   );
+  const homieRows = computed(() => homieGroups.value.flatMap((g) => g.rows));
+  const categoryFor = (key: string) => riderCategory(props.athletes, props.events, key);
   const searching = computed(() => query.value.trim().length >= 2);
   const otherRows = computed(() => {
     const keys = new Set(props.homies.map((h) => h.key));
@@ -302,6 +323,17 @@
     border: 1px solid #dde3ea;
     border-radius: 4px;
     font: inherit;
+  }
+  .fr-homies-cat {
+    margin: 12px 0 2px;
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fr-ice);
+  }
+  .fr-homie-group:first-of-type .fr-homies-cat {
+    margin-top: 0;
   }
   .fr-homies-empty,
   .fr-homies-none {
