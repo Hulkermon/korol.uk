@@ -6,6 +6,7 @@ import type {
   RiderRanking,
   Tier,
 } from './types';
+import { riderId } from './homies';
 
 export const TIER_ORDER: Tier[] = ['pro', 'challenger', 'qualifier', 'junior'];
 
@@ -65,6 +66,57 @@ export function rankHomies<H extends { key: string; name: string }>(
     })),
     ...unranked.map((homie) => ({ homie, medal: null })),
   ];
+}
+
+export const CATEGORIES = ['Ski Men', 'Ski Women', 'Snowboard Men', 'Snowboard Women'] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+/** Discipline + gender of a division name, e.g. 'Master Ski Women' or 'Snowboard Men U-19'. */
+export function categoryOf(division: string | null | undefined): Category | null {
+  if (!division) return null;
+  const discipline = /snowboard/i.test(division)
+    ? 'Snowboard'
+    : /ski/i.test(division)
+      ? 'Ski'
+      : null;
+  const gender = /\bwomen\b/i.test(division) ? 'Women' : /\bmen\b/i.test(division) ? 'Men' : null;
+  return discipline && gender ? `${discipline} ${gender}` : null;
+}
+
+/** A rider's category: from their primary ranking, else from the first division they entered. */
+export function riderCategory(
+  athletes: Record<string, Athlete>,
+  events: FreerideEvent[],
+  key: string,
+): Category | null {
+  const a = athletes[key];
+  const fromRanking = categoryOf(a ? primaryRanking(a)?.division : null);
+  if (fromRanking) return fromRanking;
+  const sorted = [...events].sort((x, y) => x.start.localeCompare(y.start));
+  for (const e of sorted)
+    for (const d of e.divisions) {
+      if (!d.riders.some((r) => riderId(r) === key) && !d.results.some((r) => r.athleteId === key))
+        continue;
+      const c = categoryOf(d.name);
+      if (c) return c;
+    }
+  return null;
+}
+
+/** Splits homies into one leaderboard per category (each with its own medals), uncategorised last. */
+export function groupHomies<H extends { key: string; name: string }>(
+  homies: H[],
+  athletes: Record<string, Athlete>,
+  events: FreerideEvent[],
+): { category: Category | null; rows: { homie: H; medal: 1 | 2 | 3 | null }[] }[] {
+  const buckets = new Map<Category | null, H[]>();
+  for (const h of homies) {
+    const c = riderCategory(athletes, events, h.key);
+    buckets.set(c, [...(buckets.get(c) ?? []), h]);
+  }
+  return [...CATEGORIES, null]
+    .filter((c) => buckets.has(c))
+    .map((category) => ({ category, rows: rankHomies(buckets.get(category)!, athletes) }));
 }
 
 export interface ProfileEntry {

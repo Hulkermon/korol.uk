@@ -4,6 +4,9 @@ import {
   isFinished,
   primaryRanking,
   rankHomies,
+  categoryOf,
+  riderCategory,
+  groupHomies,
   riderPoints,
   riderProfile,
 } from '@/composables/freeride/riders';
@@ -231,5 +234,93 @@ describe('formatPoints', () => {
   it('formats with separators', () => {
     expect(formatPoints(5100)).toBe('5,100 pts');
     expect(formatPoints(0)).toBe('0 pts');
+  });
+});
+
+describe('categoryOf', () => {
+  it.each([
+    ['Ski Men', 'Ski Men'],
+    ['Ski Women U-19', 'Ski Women'],
+    ['Master Snowboard Women', 'Snowboard Women'],
+    ['Snowboard Men U-15', 'Snowboard Men'],
+    ['Men Ski', 'Ski Men'],
+    ['Women Snowboard', 'Snowboard Women'],
+  ])('%s -> %s', (div, cat) => {
+    expect(categoryOf(div)).toBe(cat);
+  });
+
+  it('returns null for unknown or missing divisions', () => {
+    expect(categoryOf('Open')).toBeNull();
+    expect(categoryOf('Ski')).toBeNull();
+    expect(categoryOf(null)).toBeNull();
+    expect(categoryOf(undefined)).toBeNull();
+  });
+});
+
+describe('riderCategory and groupHomies', () => {
+  const athlete = (id: string, division: string, tier: RiderRanking['tier'], points: number) =>
+    ({
+      id,
+      name: id,
+      nationality: null,
+      image: null,
+      rankings: [{ ...rk(tier, points), division }],
+    }) as Athlete;
+  const event = (id: string, start: string, divisions: [string, string[]][]) =>
+    ({
+      id,
+      name: id,
+      start,
+      divisions: divisions.map(([name, ids]) => ({
+        name,
+        entryCount: ids.length,
+        riders: ids.map((a) => ({ athleteId: a, name: a, nationality: null, status: 'confirmed' })),
+        results: [],
+      })),
+    }) as unknown as FreerideEvent;
+
+  it('prefers the ranking division over event entries', () => {
+    const athletes = { a: athlete('a', 'Snowboard Women', 'qualifier', 10) };
+    const events = [event('e', '2027-01-01', [['Ski Men', ['a']]])];
+    expect(riderCategory(athletes, events, 'a')).toBe('Snowboard Women');
+  });
+
+  it('falls back to the earliest categorised division entered', () => {
+    const events = [
+      event('late', '2027-03-01', [['Snowboard Men', ['b']]]),
+      event('early', '2027-01-01', [
+        ['Open', ['b']],
+        ['Ski Women', ['b']],
+      ]),
+    ];
+    expect(riderCategory({}, events, 'b')).toBe('Ski Women');
+    expect(riderCategory({}, events, 'zzz')).toBeNull();
+  });
+
+  it('ranks each category separately in a fixed order, uncategorised last', () => {
+    const athletes = {
+      sm: athlete('sm', 'Ski Men', 'qualifier', 100),
+      sm2: athlete('sm2', 'Ski Men U-19', 'junior', 9000),
+      sw: athlete('sw', 'Ski Women', 'qualifier', 50),
+      bm: athlete('bm', 'Snowboard Men', 'pro', 1),
+    };
+    const hs = ['bm', 'sw', 'x', 'sm2', 'sm'].map((key) => ({ key, name: key }));
+    const g = groupHomies(hs, athletes, []);
+    expect(g.map((x) => [x.category, x.rows.map((r) => [r.homie.key, r.medal])])).toEqual([
+      [
+        'Ski Men',
+        [
+          ['sm', 1],
+          ['sm2', 2],
+        ],
+      ],
+      ['Ski Women', [['sw', 1]]],
+      ['Snowboard Men', [['bm', 1]]],
+      [null, [['x', null]]],
+    ]);
+  });
+
+  it('returns no groups for no homies', () => {
+    expect(groupHomies([], {}, [])).toEqual([]);
   });
 });
